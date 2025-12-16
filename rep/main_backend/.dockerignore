@@ -1,0 +1,11 @@
+# build에 필요없는 패키지
+node_modules
+dist
+test
+
+# 실행에는 상관없는 패키지
+.eslintrc.js
+.gitignore
+.prettierrc
+cz-config.js
+.env
