@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { CardData, WorkspaceItem } from '@/types/Workspace';
+import { CardData, WorkspaceItem } from '@/types/WorkSpace';
 
 // State 타입 정의
 interface WorkspaceState {
