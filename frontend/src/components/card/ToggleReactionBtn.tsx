@@ -3,8 +3,7 @@
 import { useCardDetailStore } from '@/store/useCardDetailStore';
 
 export default function ToggleReactionBtn() {
-  const { showingReaction, setShowingReaction } = useCardDetailStore();
-
+  const [isActive, setIsActive] = useState(true);
   const onToggleClick = () => {
     setShowingReaction(!showingReaction);
   };
