@@ -30,7 +30,7 @@ const cafe24 = localFont({
 });
 
 export const metadata: Metadata = {
-  title: '클로비',
+  title: '클로비 - Clobby',
   description: '취미, 취향으로 연결하고, 누군가의 시작이 되어보세요.',
 };
 
