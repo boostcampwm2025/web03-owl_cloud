@@ -1,6 +1,9 @@
 import { DUMMY_CARD, DUMMY_USER } from '@/app/card/[id]/dummy';
+import AddReactionBtn from '@/components/card/AddReactionBtn';
 import FollowBtn from '@/components/card/FollowBtn';
 import LikeBtn from '@/components/card/LikeBtn';
+import ReportBtn from '@/components/card/ReportBtn';
+import ShareBtn from '@/components/card/ShareBtn';
 import ToggleReactionBtn from '@/components/card/ToggleReactionBtn';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -11,8 +14,8 @@ export default function CardDetailPage() {
   const cardId = cardData.id;
 
   return (
-    <main className="flex min-h-screen w-full justify-center bg-white">
-      <div className="flex w-full max-w-300 flex-col gap-12 px-6 py-4">
+    <main className="flex min-h-screen w-full items-center justify-center bg-white">
+      <div className="flex w-full max-w-300 flex-col gap-12 px-6 pt-4 pb-8">
         <section className="flex flex-col gap-4">
           <div className="flex items-center gap-4">
             <Link
@@ -41,7 +44,28 @@ export default function CardDetailPage() {
           </div>
         </section>
 
-        <section></section>
+        <section className="flex w-full justify-between">
+          <div className="flex gap-2">
+            <ReportBtn cardId={cardId} />
+            <ShareBtn cardId={cardId} />
+            <AddReactionBtn cardId={cardId} />
+          </div>
+
+          <div className="flex gap-2">
+            <Link href="/" className="btn-sm btn-default h-full">
+              메인 페이지로
+            </Link>
+            <Link href="/landing" className="btn-sm btn-primary">
+              <Image
+                src="/icons/card/resetIcon.svg"
+                width={24}
+                height={24}
+                alt="다시 뽑기 아이콘"
+              />
+              <span>다시 뽑기</span>
+            </Link>
+          </div>
+        </section>
       </div>
     </main>
   );
