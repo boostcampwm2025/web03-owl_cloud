@@ -4,6 +4,7 @@ import { motion, useSpring } from 'framer-motion';
 import CardItem from '@/components/card/CardItem';
 import { useMotionValue } from 'framer-motion';
 import { useState } from 'react';
+import SlideGuide from '@/components/card/SlideGuide';
 
 const VISIBLE_COUNT = 90;
 
@@ -71,6 +72,9 @@ export default function LandingPage() {
           />
         ))}
       </motion.div>
+
+      {/* 슬라이드 가이드 */}
+      <SlideGuide />
     </main>
   );
 }
