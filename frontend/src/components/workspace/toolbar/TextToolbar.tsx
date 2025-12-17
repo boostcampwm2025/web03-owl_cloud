@@ -24,10 +24,16 @@ type TextToolbarProps = {
 const ALIGN_ORDER: TextItem['align'][] = ['left', 'center', 'right'];
 
 const ALIGN_ICON: Record<TextItem['align'], string> = {
-  left: '/icons/toolbar/align-left.svg',
-  center: '/icons/toolbar/align-center.svg',
-  right: '/icons/toolbar/align-right.svg',
+  left: '/icons/toolbar/alignLeft.svg',
+  center: '/icons/toolbar/alignCenter.svg',
+  right: '/icons/toolbar/alignRight.svg',
 };
+
+const BOLD_ICON = '/icons/toolbar/bold.svg';
+const PLUS_ICON = '/icons/toolbar/plus.svg';
+const MINUS_ICON = '/icons/toolbar/minus.svg';
+const STRIKE_ICON = '/icons/toolbar/strike.svg';
+const UNDERLINE_ICON = '/icons/toolbar/underline.svg';
 
 export default function TextToolbar({
   selectedText,
@@ -84,7 +90,7 @@ export default function TextToolbar({
       {/* 폰트 크기 */}
       <div className="flex items-center overflow-hidden rounded border border-gray-300">
         <IconButton
-          icon="/icons/toolbar/minus.svg"
+          icon={MINUS_ICON}
           title="글꼴 크기 줄이기"
           variant="ghost"
           onClick={() =>
@@ -106,7 +112,7 @@ export default function TextToolbar({
         />
 
         <IconButton
-          icon="/icons/toolbar/plus.svg"
+          icon={PLUS_ICON}
           title="글꼴 크기 늘리기"
           variant="ghost"
           onClick={() =>
@@ -117,7 +123,7 @@ export default function TextToolbar({
 
       {/* 스타일 */}
       <IconButton
-        icon="/icons/toolbar/text-bold.svg"
+        icon={BOLD_ICON}
         active={isBold}
         color="lime"
         title="굵게"
@@ -125,7 +131,7 @@ export default function TextToolbar({
       />
 
       <IconButton
-        icon="/icons/toolbar/underline.svg"
+        icon={UNDERLINE_ICON}
         active={decoration === 'underline'}
         title="밑줄"
         onClick={() =>
@@ -137,7 +143,7 @@ export default function TextToolbar({
       />
 
       <IconButton
-        icon="/icons/toolbar/editor-strike.svg"
+        icon={STRIKE_ICON}
         active={decoration === 'line-through'}
         title="취소선"
         onClick={() =>
