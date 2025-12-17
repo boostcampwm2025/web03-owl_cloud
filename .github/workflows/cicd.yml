@@ -244,7 +244,7 @@ jobs:
             cd /root/app
 
             # env 파일
-            echo "${{ secrets.NODE_BACKEND_ENV_TEST_SERVER }}" > .env
+            echo "${{ secrets.NODE_BACKEND_ENV_TEST_SERVER }}" > .env.backend
             
             # compose.env 파일 생성
             cat << EOF > compose.env
