@@ -40,6 +40,13 @@ export default function LandingPage() {
           카드를 골라보세요
         </h1>
       </div>
+      <div className="absolute top-24 w-full text-center text-white">
+        <h1 className="text-[36px] leading-snug font-semibold">
+          새로운 시작이 될
+          <br />
+          카드를 골라보세요
+        </h1>
+      </div>
 
       {/* 카드 영역 */}
       <motion.div
