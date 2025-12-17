@@ -79,9 +79,12 @@ export default function TextToolbar({
       <input
         type="number"
         value={selectedText.fontSize}
-        onChange={(e) => {
-          onUpdate('fontSize', Number(e.target.value));
-        }}
+        onChange={(e) =>
+          onUpdate(
+            'fontSize',
+            Math.min(100, Math.max(1, Number(e.target.value))),
+          )
+        }
         className={`${inputClass} w-16`}
         min={1}
         max={100}
@@ -148,7 +151,7 @@ export default function TextToolbar({
       </select>
 
       {/* 5. 색상 */}
-      <div className="relative h-8 w-8 cursor-pointer overflow-hidden rounded border border-gray-300 transition-all hover:ring-2 hover:ring-blue-200">
+      <div className="relative h-8 w-8 cursor-pointer overflow-hidden rounded border border-gray-300">
         <input
           type="color"
           value={selectedText.fill}
