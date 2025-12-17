@@ -1,0 +1,20 @@
+# CI/CD 파이프라인에서 초반 build 후 테스트에서 사용할 예정
+services:
+  main-backend-app:
+    container_name: main-backend-app
+    build: 
+      context: ./rep/main_backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env.backend
+    restart: unless-stopped
+  
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
