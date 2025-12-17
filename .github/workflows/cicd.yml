@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - dev
-  pull_request:
-    branches:
-      - dev
 
 # 같은 dev 브런치는 업데이트가 되면 가장 최신것만 실행됩니다.
 concurrency:
