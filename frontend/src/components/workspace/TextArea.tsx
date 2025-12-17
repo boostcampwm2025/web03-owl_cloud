@@ -68,6 +68,10 @@ export default function TextArea({
     textarea.style.resize = 'none';
     textarea.style.overflow = 'hidden';
 
+    textarea.style.whiteSpace = 'pre-wrap';
+    textarea.style.overflowWrap = 'break-word';
+    textarea.style.wordBreak = 'break-all';
+
     // 회전
     textarea.style.transformOrigin = 'left top';
     textarea.style.transform = `rotate(${textNode.rotation()}deg)`;
