@@ -15,10 +15,8 @@ const geistMono = Geist_Mono({
 
 const suit = localFont({
   src: './fonts/SUIT-Variable.woff2',
-  src: './fonts/SUIT-Variable.woff2',
   display: 'swap',
   variable: '--font-suit',
-  weight: '100 900',
   weight: '100 900',
 });
 
