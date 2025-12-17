@@ -188,6 +188,25 @@ jobs:
         working-directory: ./deploy/test
         run: docker compose --env-file compose.env -f docker-compose.yml down
 
+      # 테스트 실패시 에러 로깅 확인
+      - name: 디버그 로그 수집
+        if: failure()
+        working-directory: ./deploy/test
+        run: |
+          docker compose --env-file compose.env -f docker-compose.yml ps
+
+          # docker gateway 로그 확인
+          docker logs gateway --tail=200 || true
+
+          # docker backend nginx 로그 확인 
+          docker logs main-backend-nginx --tail=200 || true
+
+          # backend app 로그 확인
+          docker logs main-backend-app-1 --tail=200 || true
+          docker logs main-backend-app-2 --tail=200 || true
+          docker logs main-backend-app-3 --tail=200 || true
+
+
   # 테스트 서버로 전송
   deploy-staging-server:
     name: 배포용 파일 테스트 서버 업로드
