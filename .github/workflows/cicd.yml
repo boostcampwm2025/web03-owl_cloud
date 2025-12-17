@@ -146,6 +146,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Docker compose에 쓰일 환경변수 설정
+        working-directory: ./deploy/test
         run: |
           cat << "EOF" > compose.env
           MAIN_BACKEND_IMG=${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_MAIN_BACKEND_TEST_SERVER_IMG }}
