@@ -61,7 +61,7 @@ export default function CardItem({
         <Image
           src={tarotBackImg}
           alt="카드"
-          className="rounded-xl object-cover shadow-lg"
+          className="rounded-xl object-cover"
           draggable={false}
           priority
         />
