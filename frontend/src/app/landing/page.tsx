@@ -1,4 +1,16 @@
-import Button from '@/components/common/button';
+'use client';
+
+import { motion, useSpring } from 'framer-motion';
+import CardItem from '@/components/card/CardItem';
+import { useMotionValue } from 'framer-motion';
+import { useState } from 'react';
+
+const VISIBLE_COUNT = 90;
+
+// 임시 카드 데이터
+const CARDS = Array.from({ length: VISIBLE_COUNT }, (_, i) => ({
+  id: `card-${i}`,
+}));
 
 export default function LandingPage() {
   return (
@@ -27,32 +39,37 @@ export default function LandingPage() {
           <span className="h-px flex-1 bg-neutral-500" />
         </div>
 
-        <section
-          className="flex flex-col items-center gap-8"
-          aria-labelledby="join-meeting-title"
-        >
-          <h2
-            id="join-meeting-title"
-            className="text-2xl font-bold text-neutral-900"
-          >
-            회의 참여하기
-          </h2>
-
-          <form className="flex w-full flex-col gap-6">
-            <label htmlFor="meeting-code" className="sr-only">
-              회의 코드 또는 링크
-            </label>
-
-            <input
-              id="meeting-code"
-              placeholder="코드 또는 링크를 입력해주세요"
-              className="w-full rounded-sm border border-neutral-300 px-2 py-3 text-base outline-none focus:border-sky-600"
-            />
-
-            <Button type="submit">참여하기</Button>
-          </form>
-        </section>
-      </div>
+      {/* 카드 영역 */}
+      <motion.div
+        className="absolute -bottom-210 left-1/2 -translate-x-1/2"
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.06}
+        onDragStart={() => {
+          setIsDragging(true);
+          setHoveredIndex(null);
+        }}
+        onDrag={(_, info) => {
+          rawRotation.set(rawRotation.get() + info.delta.x * 0.08);
+        }}
+        onDragEnd={(_, info) => {
+          rawRotation.set(rawRotation.get() + info.velocity.x * 0.02);
+          setIsDragging(false);
+        }}
+      >
+        {CARDS.map((card, idx) => (
+          <CardItem
+            key={card.id}
+            index={idx}
+            total={CARDS.length}
+            rotation={smoothRotation}
+            isDragging={isDragging}
+            isHovered={hoveredIndex === idx}
+            onHoverStart={() => !isDragging && setHoveredIndex(idx)}
+            onHoverEnd={() => setHoveredIndex(null)}
+          />
+        ))}
+      </motion.div>
     </main>
   );
 }
