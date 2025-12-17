@@ -1,6 +1,6 @@
 import { idVo } from '@domain/shared';
 import {
-  memeTypeVo,
+  mimeTypeVo,
   profilePathVo,
   userIdVo,
   UserProfileProps,
@@ -31,7 +31,7 @@ export class UserProfile {
     this.id = idVo(id);
     this.user_id = userIdVo(user_id);
     this.profile_path = profilePathVo(profile_path);
-    this.mime_type = memeTypeVo(mime_type);
+    this.mime_type = mimeTypeVo(mime_type);
     this.created_at =
       created_at && created_at instanceof Date ? created_at : new Date();
     this.updated_at =
@@ -49,7 +49,7 @@ export class UserProfile {
   public getProfilePath(): UserProfileProps['profile_path'] {
     return this.profile_path;
   }
-  public getMemeType(): UserProfileProps['mime_type'] {
+  public getMimeType(): UserProfileProps['mime_type'] {
     return this.mime_type;
   }
   public getCreatedAt(): Exclude<UserProfileProps['created_at'], undefined> {

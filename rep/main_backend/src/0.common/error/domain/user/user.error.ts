@@ -81,10 +81,10 @@ export class NotAllowProviderType extends BaseError {
   }
 }
 
-export class NotAllowMemeType extends BaseError {
+export class NotAllowMimeType extends BaseError {
   constructor(types: Array<string>) {
     super({
-      message: `가능한 이미지의 meme type은 ${types.join(', ')} 입니다.`,
+      message: `가능한 이미지의 mime type은 ${types.join(', ')} 입니다.`,
       status: 500,
     });
   }

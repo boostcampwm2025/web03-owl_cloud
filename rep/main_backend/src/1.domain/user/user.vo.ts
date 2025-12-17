@@ -4,7 +4,7 @@ import {
   NotAllowMaxLengthText,
   NotTypeHash,
   NotAllowProviderType,
-  NotAllowMemeType,
+  NotAllowMimeType,
 } from '@error/domain/user/user.error';
 import { baseVo } from '@domain/shared';
 
@@ -147,8 +147,8 @@ export function profilePathVo(profile_path: UserProfileProps['profile_path']) {
   return profile_path;
 }
 
-// meme_type와 관련해서
-const memeTypeList: Array<string> = [
+// mime_type와 관련해서
+const mimeTypeList: Array<string> = [
   'image/apng',
   'image/avif',
   'image/gif',
@@ -156,15 +156,15 @@ const memeTypeList: Array<string> = [
   'image/png',
   'image/svg+xml',
   'image/webp',
-]; // 가능한 meme type들
-export function memeTypeVo(mime_type: UserProfileProps['mime_type']) {
-  const name: string = 'meme_type';
+]; // 가능한 mime type들
+export function mimeTypeVo(mime_type: UserProfileProps['mime_type']) {
+  const name: string = 'mime_type';
 
   baseVo({ name, value: mime_type, type: 'string' });
   mime_type = mime_type.trim().toLowerCase();
 
-  if (!memeTypeList.includes(mime_type))
-    throw new NotAllowMemeType(memeTypeList);
+  if (!mimeTypeList.includes(mime_type))
+    throw new NotAllowMimeType(mimeTypeList);
 
   return mime_type;
 }

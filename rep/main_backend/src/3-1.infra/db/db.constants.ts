@@ -32,7 +32,7 @@ export const DB_USER_BASES_ATTRIBUTE_NAME = Object.freeze({
 export const DB_USER_PROFILES_ATTRIBUTE_NAME = Object.freeze({
   ...DB_USER_BASES_ATTRIBUTE_NAME,
   PROFILE_PATH: 'profile_path',
-  MEME_TYPE: 'meme_type',
+  MIME_TYPE: 'mime_type',
   ...DB_BASE_ATTRIBTE_NAME,
 } as const);
 
