@@ -26,6 +26,10 @@ interface WorkspaceActions {
   // 선택 및 뷰 조작
   selectItem: (id: string | null) => void;
   setZoom: (zoom: number) => void;
+
+  // 워크스페이스 크기 및 배경 설정
+  resizeWorkspace: (width: number, height: number) => void;
+  setBackground: (color: string) => void;
 }
 
 // 초기 카드 데이터
@@ -33,8 +37,8 @@ const initialCardData: CardData = {
   id: 'card-id',
   title: 'card-title',
   userId: 'user-id',
-  workspaceWidth: 800,
-  workspaceHeight: 600,
+  workspaceWidth: 1200,
+  workspaceHeight: 700,
   backgroundColor: '#ffffff',
   items: [],
   createdAt: new Date().toISOString(),
@@ -83,5 +87,19 @@ export const useWorkspaceStore = create<WorkspaceState & WorkspaceActions>(
     selectItem: (id) => set({ selectedId: id }),
 
     setZoom: (zoom) => set({ zoom }),
+
+    resizeWorkspace: (width, height) =>
+      set((state) => ({
+        cardData: {
+          ...state.cardData,
+          workspaceWidth: width,
+          workspaceHeight: height,
+        },
+      })),
+
+    setBackground: (color) =>
+      set((state) => ({
+        cardData: { ...state.cardData, backgroundColor: color },
+      })),
   }),
 );
