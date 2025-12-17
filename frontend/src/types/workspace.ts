@@ -44,7 +44,6 @@ export interface TextItem extends BaseItem {
   letterSpacing?: number;
   stroke?: string;
   strokeWidth?: number;
-  wrap?: string;
 }
 
 // 이미지

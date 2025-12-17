@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 export default function ToggleReactionBtn() {
-  const [isActive, setIsActive] = useState(false);
+  const [isActive, setIsActive] = useState(true);
   const onToggleClick = () => {
     // 전역 변수로 Card에 전달
 
