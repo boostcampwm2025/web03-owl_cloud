@@ -2,7 +2,7 @@
 export type ItemType = 'text' | 'image' | 'video';
 
 // 텍스트 정렬 및 스타일 옵션
-export type TextAlign = 'left' | 'center' | 'right';
+export type TextAlign = 'left' | 'center' | 'right' | 'justify';
 
 // 폰트 스타일 옵션
 export type FontStyle = 'normal' | 'italic' | 'bold' | 'bold italic';
