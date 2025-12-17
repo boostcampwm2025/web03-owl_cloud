@@ -47,18 +47,9 @@ export default function CardItem({
       style={{
         rotate,
         y: -RADIUS,
-        x: '-50%', // 중앙 정렬 보정
         transformOrigin: `10% ${RADIUS}px`,
         cursor: isDragging ? 'grabbing' : 'grab',
       }}
-      //   whileHover={
-      //     isDragging
-      //       ? undefined
-      //       : {
-      //           y: -RADIUS - 30,
-      //           scale: 1.06,
-      //         }
-      //   }
       transition={{
         type: 'spring',
         stiffness: 260,
