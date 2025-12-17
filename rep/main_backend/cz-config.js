@@ -1,5 +1,6 @@
 module.exports = {
   types: [
+    { value: '🌈 Update', name: '🌈 Update:\tUpdating changes' },
     { value: '📍 Feat', name: '📍 Feat:\tAdd a new feature' },
     { value: '🔨 Fix', name: '🔨 Fix:\tModify production, UI,UX code' },
     { value: '📝 Docs', name: '📝 Docs:\tAdd or update documentation' },
@@ -28,8 +29,13 @@ module.exports = {
       name: '🔧 Rename:\tmove file or rename folder names',
     },
   ],
+  messages: {
+    type: '커밋 변경유형을 선택해주세요.\n',
+    subject: '커밋제목을 50자이내로 명확하게 작성해주세요.\n',
+    body: '본문을 작성 해주세요. 여러줄 작성시 "|" 를 사용하여 줄바꿈하세요. (첫줄|둘째줄):\n',
+    confirmCommit: '모든 커밋메시지를 제대로 입력하셨나요? (y | n)',
+  },
   allowCustomScopes: false,
-  allowBreakingChanges: ['feat', 'fix'],
-  skipQuestions: ['body'],
-  subjectLimit: 100,
+  skipQuestions: ['scope', 'customScope'],
+  subjectLimit: 60,
 };
