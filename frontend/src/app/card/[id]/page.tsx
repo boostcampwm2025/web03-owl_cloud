@@ -1,5 +1,6 @@
 import { DUMMY_CARD, DUMMY_USER } from '@/app/card/[id]/dummy';
 import AddReactionBtn from '@/components/card/AddReactionBtn';
+import Card from '@/components/card/Card';
 import FollowBtn from '@/components/card/FollowBtn';
 import LikeBtn from '@/components/card/LikeBtn';
 import ReportBtn from '@/components/card/ReportBtn';
@@ -36,7 +37,9 @@ export default function CardDetailPage() {
             <FollowBtn cardId={cardId} hasFollowed={false} />
           </div>
 
-          <article className="aspect-12/7 w-full rounded-2xl bg-neutral-100 p-4"></article>
+          <article className="flex aspect-12/7 w-full justify-center overflow-hidden rounded-2xl bg-neutral-100 p-4">
+            <Card cardData={cardData} />
+          </article>
 
           <div className="flex w-full items-center justify-between">
             <LikeBtn cardId={cardId} hasLiked={false} likeCount={0} />

@@ -1,10 +1,12 @@
+import { CardData } from '@/types/workspace';
+
 export const DUMMY_USER = {
   user_id: '1',
   nickname: '토니',
   profile_path: 'https://picsum.photos/id/237/200/300',
 };
 
-export const DUMMY_CARD = {
+export const DUMMY_CARD: CardData = {
   id: '550e8400-e29b-41d4-a716-446655440000',
   title: '제목입니다.',
   userId: '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
