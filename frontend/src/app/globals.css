@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: var(--font-suit), sans-serif;
+  --font-suit: var(--font-suit), sans-serif;
   --font-cafe24: var(--font-cafe24), sans-serif;
 }
 
