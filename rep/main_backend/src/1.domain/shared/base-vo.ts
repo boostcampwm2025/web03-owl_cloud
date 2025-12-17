@@ -12,7 +12,7 @@ export function baseVo({
 }: {
   name: string;
   value: any;
-  type: "string" | "number" | "boolean";
+  type: 'string' | 'number' | 'boolean';
 }): void | never {
   // null
   if (!value || value === '' || value === undefined)
