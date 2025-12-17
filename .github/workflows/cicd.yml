@@ -182,6 +182,24 @@ jobs:
         working-directory: ./test/intergration-build-test
         run: ./frontend-intergration-test.sh ${{ vars.TEST_URL }}
 
+      # 테스트 실패시 에러 로깅 확인
+      - name: 디버그 로그 수집
+        if: failure()
+        working-directory: ./deploy/test
+        run: |
+          docker compose --env-file compose.env -f docker-compose.yml ps
+
+          # docker gateway 로그 확인
+          docker logs gateway --tail=200 || true
+
+          # docker backend nginx 로그 확인 
+          docker logs main-backend-nginx --tail=200 || true
+
+          # backend app 로그 확인
+          docker logs main-backend-app-1 --tail=200 || true
+          docker logs main-backend-app-2 --tail=200 || true
+          docker logs main-backend-app-3 --tail=200 || true
+
       # docker 내리기
       - name: docker 내림
         if: always()
