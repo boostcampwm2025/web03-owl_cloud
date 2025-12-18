@@ -3,8 +3,8 @@
 import { WorkspaceItem } from '@/types/workspace';
 
 // 아이템 컴포넌트
-import TextItem from './TextItem';
-// import ImageItem from './ImageItem';
+// import TextItem from './TextItem';
+import ImageItem from './ImageItem';
 // import VideoItem from './VideoItem';
 
 interface RenderItemProps {
@@ -40,14 +40,6 @@ export default function RenderItem({
       );
 
     case 'image':
-      return (
-        <ImageItem
-          item={item}
-          isSelected={isSelected}
-          onSelect={() => onSelect(item.id)}
-          onChange={onChange}
-        />
-      );
       return (
         <ImageItem
           item={item}
