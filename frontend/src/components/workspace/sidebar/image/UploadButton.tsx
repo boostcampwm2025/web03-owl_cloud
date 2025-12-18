@@ -94,7 +94,7 @@ export default function UploadButton({ onUpload }: UploadButtonProps) {
             이미지 업로드
           </p>
           <p className="text-sm text-neutral-500 group-hover:text-lime-700">
-            클릭해서 파일을 선택하세요
+            내 PC에서 이미지를 선택하세요
           </p>
         </div>
       </button>
