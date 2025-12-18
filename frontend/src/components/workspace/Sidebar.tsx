@@ -59,7 +59,6 @@ export default function Sidebar() {
             label="카드"
             isActive={activeTab === 'card'}
             onClick={() => toggleTab('card')}
-            onClick={() => toggleTab('card')}
           />
           <NavButton
             icon="/icons/sidebar/textIcon.svg"
@@ -70,6 +69,7 @@ export default function Sidebar() {
               setActiveTab('text');
 =======
             onClick={() => toggleTab('text')}
+            onClick={() => toggleTab('text')}
             onDoubleClick={() => {
               handleAddText();
             }}
@@ -79,13 +79,11 @@ export default function Sidebar() {
             label="이미지"
             isActive={activeTab === 'image'}
             onClick={() => toggleTab('image')}
-            onClick={() => toggleTab('image')}
           />
           <NavButton
             icon="/icons/sidebar/videoIcon.svg"
             label="동영상"
             isActive={activeTab === 'video'}
-            onClick={() => toggleTab('video')}
             onClick={() => toggleTab('video')}
           />
         </div>
@@ -132,7 +130,6 @@ export default function Sidebar() {
 
       {/* 사이드바 상세 패널 */}
       {activeTab === 'card' && <CardPanel />}
-      {activeTab === 'text' && <TextPanel />}
       {activeTab === 'text' && <TextPanel />}
       {/* TODO : 상세 패널 추가 */}
       {/* {activeTab === 'text' && <TextPanel />} */}
