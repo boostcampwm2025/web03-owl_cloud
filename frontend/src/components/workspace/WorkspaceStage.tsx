@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
+import Konva from 'konva';
 import { Stage, Layer, Rect, Transformer } from 'react-konva';
 import { useWorkspaceStore } from '@/store/useWorkspaceStore';
 
@@ -12,7 +13,7 @@ export default function WorkspaceStage() {
     useWorkspaceStore();
 
   // 접근 Ref 설정 (stage : 워크스페이스 / transformer : 선택 및 변형 도구)
-  const stageRef = useRef<any>(null);
+  const stageRef = useRef<Konva.Stage | null>(null);
   const transformerRef = useRef<any>(null);
 
   // Hydration 방지용
