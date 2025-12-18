@@ -2,13 +2,13 @@ import { useWorkspaceStore } from '@/store/useWorkspaceStore';
 import { WorkspaceItem } from '@/types/workspace';
 
 export function useAddText() {
-  const { addItem } = useWorkspaceStore();
+  const addItem = useWorkspaceStore((state) => state.addItem);
 
   const handleAddText = () => {
     const newTextItem: WorkspaceItem = {
       id: crypto.randomUUID(),
       type: 'text',
-      text: '@@@',
+      text: '텍스트를 입력하세요.',
       fontSize: 24,
       fontFamily: 'Arial',
       fill: '#000000',

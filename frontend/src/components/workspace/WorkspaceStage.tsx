@@ -4,20 +4,20 @@ import React, { useRef, useEffect, useState } from 'react';
 import Konva from 'konva';
 import { Stage, Layer, Rect, Transformer } from 'react-konva';
 import { useWorkspaceStore } from '@/store/useWorkspaceStore';
+import TextArea from './text/TextArea';
 
 import RenderItem from './items/RenderItem';
 
 export default function WorkspaceStage() {
   // Store 상태 및 액션
-  const {
-    cardData,
-    selectedId,
-    selectItem,
-    updateItem,
-    zoom,
-    removeItem,
-    setEditingNode,
-  } = useWorkspaceStore();
+  const cardData = useWorkspaceStore((s) => s.cardData);
+  const selectedId = useWorkspaceStore((s) => s.selectedId);
+  const zoom = useWorkspaceStore((s) => s.zoom);
+  const removeItem = useWorkspaceStore((s) => s.removeItem);
+  const selectItem = useWorkspaceStore((s) => s.selectItem);
+  const updateItem = useWorkspaceStore((s) => s.updateItem);
+  const editingNode = useWorkspaceStore((s) => s.editingNode);
+  const setEditingNode = useWorkspaceStore((s) => s.setEditingNode);
 
   // 접근 Ref 설정 (stage : 워크스페이스 / transformer : 선택 및 변형 도구)
   const stageRef = useRef<Konva.Stage | null>(null);
@@ -62,7 +62,7 @@ export default function WorkspaceStage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // 아이템 선택
-      if (!selectedId) return;
+      if (!selectedId || editingNode) return;
 
       // 키 감지
       if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -77,27 +77,27 @@ export default function WorkspaceStage() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedId, removeItem]);
+  }, [selectedId, removeItem, editingNode]);
 
   // 선택 해제
   const handleCheckDeselect = (
     e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
   ) => {
     // 선택 대상이 스테이지인 경우(하단 워크스페이스가 bg-rect)
+    if (editingNode) return;
     const clickedOnEmpty =
       e.target === e.target.getStage() || e.target.hasName('bg-rect');
 
     // 선택 해제
     if (clickedOnEmpty) {
       selectItem(null);
-      setEditingNode(null);
     }
   };
 
   if (!mounted) return null;
 
   return (
-    <div className="bg-white shadow-2xl">
+    <div className="relative bg-white shadow-2xl">
       <Stage
         width={cardData.workspaceWidth * zoom}
         height={cardData.workspaceHeight * zoom}
@@ -146,6 +146,21 @@ export default function WorkspaceStage() {
           />
         </Layer>
       </Stage>
+
+      {editingNode && (
+        <TextArea
+          textNode={editingNode}
+          onChange={(newText) => {
+            updateItem(editingNode.id(), {
+              text: newText,
+            });
+          }}
+          onClose={() => {
+            setEditingNode(null);
+            selectItem(null);
+          }}
+        />
+      )}
     </div>
   );
 }

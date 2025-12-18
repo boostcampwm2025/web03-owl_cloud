@@ -4,7 +4,9 @@ import { useWorkspaceStore } from '@/store/useWorkspaceStore';
 import TextToolbar from './TextToolbar';
 
 export default function ToolbarManager() {
-  const { cardData, selectedId, updateItem } = useWorkspaceStore();
+  const cardData = useWorkspaceStore((state) => state.cardData);
+  const selectedId = useWorkspaceStore((state) => state.selectedId);
+  const updateItem = useWorkspaceStore((state) => state.updateItem);
   const selectedItem = cardData.items.find((item) => item.id === selectedId);
 
   if (!selectedItem) return null;
