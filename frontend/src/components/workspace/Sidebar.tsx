@@ -8,7 +8,7 @@ import { TextItem, ImageItem, VideoItem } from '@/types/workspace';
 
 import NavButton from './sidebar/NavButton';
 import CardPanel from './sidebar/card/CardPanel';
-import VideoPanel from './sidebar/video/VideoPanel';
+import ImagePanel from './sidebar/image/ImagePanel';
 
 type TabType = 'card' | 'text' | 'image' | 'video';
 
@@ -41,8 +41,6 @@ export default function Sidebar() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [cardData]);
-
-  // TODO : 각 아이템 추가 핸들러 구현
 
   return (
     <aside className="z-1 flex h-full border-r border-neutral-200 bg-white shadow-sm">
@@ -125,8 +123,8 @@ export default function Sidebar() {
       {activeTab === 'card' && <CardPanel />}
       {/* TODO : 상세 패널 추가 */}
       {/* {activeTab === 'text' && <TextPanel />} */}
-      {/* {activeTab === 'image' && <ImagePanel />} */}
-      {activeTab === 'video' && <VideoPanel />}
+      {activeTab === 'image' && <ImagePanel />}
+      {/* {activeTab === 'video' && <VideoPanel />} */}
     </aside>
   );
 }
