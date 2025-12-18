@@ -8,6 +8,7 @@ import { TextItem, ImageItem, VideoItem } from '@/types/workspace';
 
 import NavButton from './sidebar/NavButton';
 import CardPanel from './sidebar/card/CardPanel';
+import VideoPanel from './sidebar/video/VideoPanel';
 
 type TabType = 'card' | 'text' | 'image' | 'video';
 
@@ -125,7 +126,7 @@ export default function Sidebar() {
       {/* TODO : 상세 패널 추가 */}
       {/* {activeTab === 'text' && <TextPanel />} */}
       {/* {activeTab === 'image' && <ImagePanel />} */}
-      {/* {activeTab === 'video' && <VideoPanel />} */}
+      {activeTab === 'video' && <VideoPanel />}
     </aside>
   );
 }
