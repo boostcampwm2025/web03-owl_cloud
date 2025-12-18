@@ -123,7 +123,7 @@ jobs:
             # 최신 이미지 pull후 build 후 실행
             docker compose --env-file compose.env -f docker-compose.yml pull
             docker compose --env-file compose.env -f docker-compose.yml up -d --remove-orphans
-            docker image prune -f
+            docker image prune -a -f
 
             # 상태창 확인
             docker ps

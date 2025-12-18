@@ -259,7 +259,7 @@ jobs:
 
             # 전에거 삭제 후 재시작 하기
             docker compose --env-file compose.env -f docker-compose.yml up -d --remove-orphans
-            docker image prune -f
+            docker image prune -a -f
 
             # docker compose 작동 확인
             docker ps
