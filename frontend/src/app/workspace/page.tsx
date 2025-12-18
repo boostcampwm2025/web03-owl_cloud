@@ -12,7 +12,7 @@ const WorkspaceStage = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[700px] w-[1200px] items-center justify-center bg-white text-neutral-400">
+      <div className="flex h-175 w-300 items-center justify-center bg-white text-neutral-400">
         {/* spinner 구현 */}
         카드제작소 로딩 중...
       </div>
