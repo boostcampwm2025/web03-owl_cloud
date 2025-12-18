@@ -60,18 +60,6 @@ export default function TextArea({
     // 박스 사이징
     textarea.style.boxSizing = 'border-box';
 
-    // 브라우저 기본 스타일 제거
-    textarea.style.margin = '0';
-    textarea.style.border = 'none';
-    textarea.style.outline = 'none';
-    textarea.style.background = 'transparent';
-    textarea.style.resize = 'none';
-    textarea.style.overflow = 'hidden';
-
-    textarea.style.whiteSpace = 'pre-wrap';
-    textarea.style.overflowWrap = 'break-word';
-    textarea.style.wordBreak = 'break-all';
-
     // 회전
     textarea.style.transformOrigin = 'left top';
     textarea.style.transform = `rotate(${textNode.rotation()}deg)`;
@@ -123,8 +111,8 @@ export default function TextArea({
   return (
     <textarea
       ref={ref}
-      className="absolute z-1000 m-0 border-none bg-transparent p-0 focus:outline-none"
       spellCheck={false}
+      className="wrap-break-words absolute z-1000 m-0 box-border resize-none overflow-hidden border-none bg-transparent p-0 break-all whitespace-pre-wrap outline-none focus:outline-none"
     />
   );
 }
