@@ -31,9 +31,6 @@ export default function TextItem({ item, onSelect, onChange }: TextItemProps) {
       onDblClick={(e) => {
         setEditingNode(e.target as Konva.Text);
       }}
-      onDblClick={(e) => {
-        setEditingNode(e.target as Konva.Text);
-      }}
       onDragEnd={(e) => {
         onChange({
           x: e.target.x(),
