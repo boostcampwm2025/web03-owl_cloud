@@ -50,18 +50,6 @@ services:
     environment:
       - PORT=3000
       - HOSTNAME=0.0.0.0
-    healthcheck:
-      test: 
-        [
-          "CMD-SHELL",
-          "node -e \"require('http').get('http://localhost:3000/', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
-        ]
-      interval: 5s
-      timeout: 2s
-      retries: 20
-      start_period: 30s
-    networks:
-      - clobby-network
 
   # 실제 서빙해주는 gateway 입니다 나중에 kubernetes로 변경을 한다면 이 부분은 변경되거나 사라집니다.
   gateway:
@@ -72,8 +60,7 @@ services:
     volumes:
       - ./nginx.gateway.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - frontend:
-        condition: service_healthy
+      - frontend
       - main-backend-nginx
     networks:
       - clobby-network

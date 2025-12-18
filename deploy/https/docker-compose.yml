@@ -46,17 +46,6 @@ services:
     environment:
       - PORT=3000
       - HOSTNAME=0.0.0.0
-    # frontend도 헬스 체크 추가
-    healthcheck:
-      test: 
-        [
-          "CMD-SHELL",
-          "node -e \"require('http').get('http://localhost:3000/', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
-        ]
-      interval: 5s
-      timeout: 2s
-      retries: 20
-      start_period: 30s 
 
   # gateway가 다르다. 
   gateway:
@@ -71,8 +60,7 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - main-backend-nginx
-      - frontend:
-        condition: service_healthy
+      - frontend
     networks:
       - clobby-network
 
