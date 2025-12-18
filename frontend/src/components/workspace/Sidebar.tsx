@@ -9,9 +9,9 @@ import { useAddText } from '@/hooks/useAddText';
 
 import NavButton from './sidebar/NavButton';
 import CardPanel from './sidebar/card/CardPanel';
-import ImagePanel from './sidebar/image/ImagePanel';
+import TextPanel from './sidebar/TextPanel';
 
-type TabType = 'card' | 'text' | 'image' | 'video';
+type TabType = 'card' | 'text' | 'image' | 'video' | null;
 
 export default function Sidebar() {
   const [activeTab, setActiveTab] = useState<TabType>('card');
@@ -45,6 +45,12 @@ export default function Sidebar() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [cardData]);
 
+  const toggleTab = (tab: TabType) => {
+    setActiveTab((prev) => (prev === tab ? null : tab));
+  };
+
+  // TODO : 각 아이템 추가 핸들러 구현
+
   return (
     <aside className="z-1 flex h-full border-r border-neutral-200 bg-white shadow-sm">
       {/* 좌측 네비게이션 */}
@@ -54,15 +60,13 @@ export default function Sidebar() {
             icon="/icons/sidebar/cardIcon.svg"
             label="카드"
             isActive={activeTab === 'card'}
-            onClick={() => setActiveTab('card')}
+            onClick={() => toggleTab('card')}
           />
           <NavButton
             icon="/icons/sidebar/textIcon.svg"
             label="텍스트"
             isActive={activeTab === 'text'}
-            onClick={() => {
-              setActiveTab('text');
-            }}
+            onClick={() => toggleTab('text')}
             onDoubleClick={() => {
               handleAddText();
             }}
@@ -71,17 +75,13 @@ export default function Sidebar() {
             icon="/icons/sidebar/imageIcon.svg"
             label="이미지"
             isActive={activeTab === 'image'}
-            onClick={() => {
-              setActiveTab('image');
-            }}
+            onClick={() => toggleTab('image')}
           />
           <NavButton
             icon="/icons/sidebar/videoIcon.svg"
             label="동영상"
             isActive={activeTab === 'video'}
-            onClick={() => {
-              setActiveTab('video');
-            }}
+            onClick={() => toggleTab('video')}
           />
         </div>
 
@@ -127,6 +127,7 @@ export default function Sidebar() {
 
       {/* 사이드바 상세 패널 */}
       {activeTab === 'card' && <CardPanel />}
+      {activeTab === 'text' && <TextPanel />}
       {/* TODO : 상세 패널 추가 */}
       {/* {activeTab === 'text' && <TextPanel />} */}
       {activeTab === 'image' && <ImagePanel />}
