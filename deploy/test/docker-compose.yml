@@ -46,6 +46,10 @@ services:
     # 환경 변수가 있다면
     # env_file:
     #   - ./.env.frontend
+    # 기본적인 환경 설정은 여기서 
+    environment:
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
     networks:
       - clobby-network
     # fronend가 빌드 될때까지 대기 
@@ -53,12 +57,12 @@ services:
       test: 
         [
           "CMD-SHELL",
-          "node -e \"require('http').get('http://127.0.0.1:3000/', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+          "node -e \"require('http').get('http://localhost:3000/', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
         ]
       interval: 5s
       timeout: 2s
       retries: 20
-      start_period: 10s
+      start_period: 30s
 
   # frontend를 더 효율적으로 서빙하기 위한 nginx - 지금은 큰 의미 없지만 추후 추가 가능하다.
   # 마찬가지로 frontend도 만약 성능 최적화를 위해서 html 같은 파일을 정적으로 서빙하기 위해서 이렇게 해도 좋을것 같다.

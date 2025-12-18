@@ -43,6 +43,20 @@ services:
     image: "${FRONTEND_IMG}:latest"
     networks:
       - clobby-network
+    environment:
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    # frontend도 헬스 체크 추가
+    healthcheck:
+      test: 
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://localhost:3000/', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+        ]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+      start_period: 30s      
 
   frontend-nginx:
     container_name: frontend-nginx
@@ -50,7 +64,8 @@ services:
     volumes:
       - ./nginx.frontend.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - frontend
+      frontend:
+        condition: service_healthy
     networks:
       - clobby-network
     restart: unless-stopped
