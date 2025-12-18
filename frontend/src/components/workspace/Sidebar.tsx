@@ -8,10 +8,8 @@ import { TextItem, ImageItem, VideoItem } from '@/types/workspace';
 
 import NavButton from './sidebar/NavButton';
 import CardPanel from './sidebar/card/CardPanel';
-import TextPanel from './sidebar/TextPanel';
+import ImagePanel from './sidebar/image/ImagePanel';
 
-type TabType = 'card' | 'text' | 'image' | 'video' | null;
-type TabType = 'card' | 'text' | 'image' | 'video' | null;
 
 export default function Sidebar() {
   const [activeTab, setActiveTab] = useState<TabType>('card');
@@ -42,12 +40,6 @@ export default function Sidebar() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [cardData]);
-
-  const toggleTab = (tab: TabType) => {
-    setActiveTab((prev) => (prev === tab ? null : tab));
-  };
-
-  // TODO : 각 아이템 추가 핸들러 구현
 
   return (
     <aside className="z-1 flex h-full border-r border-neutral-200 bg-white shadow-sm">
@@ -132,7 +124,6 @@ export default function Sidebar() {
       {activeTab === 'text' && <TextPanel />}
       {/* TODO : 상세 패널 추가 */}
       {/* {activeTab === 'text' && <TextPanel />} */}
-      {activeTab === 'image' && <ImagePanel />}
       {activeTab === 'image' && <ImagePanel />}
       {/* {activeTab === 'video' && <VideoPanel />} */}
     </aside>
