@@ -1,15 +1,18 @@
 'use client';
 
+import { useCardDetailStore } from '@/store/useCardDetailStore';
 import Image from 'next/image';
 import { useState } from 'react';
 
 interface LikeBtnProps {
-  cardId: string;
   hasLiked: boolean;
   likeCount: number;
 }
 
-export default function LikeBtn({ cardId, hasLiked, likeCount }: LikeBtnProps) {
+export default function LikeBtn({ hasLiked, likeCount }: LikeBtnProps) {
+  const { cardData } = useCardDetailStore();
+  const { id } = cardData;
+
   const [isLiked, setIsLiked] = useState(hasLiked);
   const [count, setCount] = useState(likeCount);
   const onLikeClick = () => {

@@ -17,7 +17,7 @@ export const DUMMY_CARD: CardData = {
     {
       id: 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d',
       type: 'image',
-      src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAE...',
+      src: 'https://picsum.photos/id/800/600',
       naturalWidth: 800,
       naturalHeight: 600,
       x: 100,
@@ -33,7 +33,7 @@ export const DUMMY_CARD: CardData = {
     {
       id: 'f2g3h4i5-j6k7-4l8m-9n0o-1p2q3r4s5t6u',
       type: 'image',
-      src: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ...',
+      src: 'https://picsum.photos/id/500/500',
       naturalWidth: 500,
       naturalHeight: 500,
       x: 600,

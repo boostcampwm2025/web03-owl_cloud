@@ -1,13 +1,12 @@
 'use client';
 
+import { useCardDetailStore } from '@/store/useCardDetailStore';
 import { useState } from 'react';
 
-interface FollowBtnProps {
-  cardId: string;
-  hasFollowed: boolean;
-}
+export default function FollowBtn({ hasFollowed }: { hasFollowed: boolean }) {
+  const { cardData } = useCardDetailStore();
+  const { id } = cardData;
 
-export default function FollowBtn({ cardId, hasFollowed }: FollowBtnProps) {
   const [isFollowing, setIsFollowing] = useState(hasFollowed);
   const onFollowClick = () => {
     // cardId로 팔로우 API 호출

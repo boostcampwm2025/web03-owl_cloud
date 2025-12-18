@@ -1,8 +1,12 @@
 'use client';
 
+import { useCardDetailStore } from '@/store/useCardDetailStore';
 import Image from 'next/image';
 
-export default function ReportBtn({ cardId }: { cardId: string }) {
+export default function ReportBtn() {
+  const { cardData } = useCardDetailStore();
+  const { id } = cardData;
+
   const onReportClick = () => {
     // cardId로 신고 API 호출
   };

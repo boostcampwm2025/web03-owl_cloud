@@ -1,20 +1,19 @@
 'use client';
 
 import AddReactionIcon from '@/components/card/AddReactionIcon';
-import { useState } from 'react';
+import { useCardDetailStore } from '@/store/useCardDetailStore';
 
-export default function AddReactionBtn({ cardId }: { cardId: string }) {
-  const [isActive, setIsActive] = useState(false);
+export default function AddReactionBtn() {
+  const { addingReaction, setAddingReaction } = useCardDetailStore();
+
   const onClick = () => {
-    // 전역 변수로 cardId인 Card에 전달
-
-    setIsActive((prev) => !prev);
+    setAddingReaction(!addingReaction);
   };
 
   return (
     <button
       onClick={onClick}
-      className={`btn-sm ${isActive ? 'btn-active' : 'btn-default'}`}
+      className={`btn-sm ${addingReaction ? 'btn-active' : 'btn-default'}`}
     >
       <AddReactionIcon />
       <span>반응 추가</span>

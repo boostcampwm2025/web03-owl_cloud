@@ -1,8 +1,12 @@
 'use client';
 
+import { useCardDetailStore } from '@/store/useCardDetailStore';
 import Image from 'next/image';
 
-export default function ShareBtn({ cardId }: { cardId: string }) {
+export default function ShareBtn() {
+  const { cardData } = useCardDetailStore();
+  const { id } = cardData;
+
   const onShareClick = () => {
     // cardId로 공유
   };

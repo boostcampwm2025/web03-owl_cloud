@@ -10,9 +10,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 export default function CardDetailPage() {
+  // API 호출 부분
   const { user_id, nickname, profile_path } = DUMMY_USER;
   const cardData = DUMMY_CARD;
-  const cardId = cardData.id;
 
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-white">
@@ -34,24 +34,24 @@ export default function CardDetailPage() {
                 {nickname}
               </span>
             </Link>
-            <FollowBtn cardId={cardId} hasFollowed={false} />
+            <FollowBtn hasFollowed={false} />
           </div>
 
           <article className="flex aspect-12/7 w-full justify-center overflow-hidden rounded-2xl bg-neutral-100 p-4">
-            <Card cardData={cardData} />
+            <Card initialData={cardData} />
           </article>
 
           <div className="flex w-full items-center justify-between">
-            <LikeBtn cardId={cardId} hasLiked={false} likeCount={0} />
+            <LikeBtn hasLiked={false} likeCount={0} />
             <ToggleReactionBtn />
           </div>
         </section>
 
         <section className="flex w-full justify-between">
           <div className="flex gap-2">
-            <ReportBtn cardId={cardId} />
-            <ShareBtn cardId={cardId} />
-            <AddReactionBtn cardId={cardId} />
+            <ReportBtn />
+            <ShareBtn />
+            <AddReactionBtn />
           </div>
 
           <div className="flex gap-2">
