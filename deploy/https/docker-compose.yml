@@ -56,19 +56,7 @@ services:
       interval: 5s
       timeout: 2s
       retries: 20
-      start_period: 30s      
-
-  frontend-nginx:
-    container_name: frontend-nginx
-    image: nginx:latest
-    volumes:
-      - ./nginx.frontend.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      frontend:
-        condition: service_healthy
-    networks:
-      - clobby-network
-    restart: unless-stopped
+      start_period: 30s 
 
   # gateway가 다르다. 
   gateway:
@@ -83,7 +71,8 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - main-backend-nginx
-      - frontend-nginx
+      - frontend:
+        condition: service_healthy
     networks:
       - clobby-network
 
