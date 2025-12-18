@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { v4 as uuidv4 } from 'uuid';
 import { useWorkspaceStore } from '@/store/useWorkspaceStore';
-import { TextItem, ImageItem, VideoItem } from '@/types/Workspace';
+import { TextItem, ImageItem, VideoItem } from '@/types/workspace';
 
 import NavButton from './sidebar/NavButton';
 import CardPanel from './sidebar/card/CardPanel';
