@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, useSpring } from 'framer-motion';
+import { AnimatePresence, motion, useSpring } from 'framer-motion';
 import CardItem from '@/components/card/CardItem';
 import { useMotionValue } from 'framer-motion';
 import { useState } from 'react';
@@ -35,15 +35,46 @@ export default function LandingPage() {
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-[#9E3B34]">
       {/* 랜딩 타이틀 */}
-      {!selectedId && (
-        <div className="absolute top-24 w-full text-center text-white">
-          <h1 className="text-[36px] leading-snug font-semibold">
-            새로운 시작이 될
-            <br />
-            카드를 골라보세요
-          </h1>
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {!selectedId && (
+          <motion.div
+            key="default-title"
+            className="absolute top-24 w-full text-center text-white"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4 }}
+          >
+            <h1 className="text-[36px] leading-snug font-semibold">
+              새로운 시작이 될
+              <br />
+              카드를 골라보세요
+            </h1>
+          </motion.div>
+        )}
+        {selectedId && (
+          <motion.div
+            key="selected-title"
+            className="absolute top-24 w-full text-center text-white"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{
+              opacity: [0, 1, 1, 0],
+              y: [-10, 0, 0, -10],
+            }}
+            transition={{
+              times: [0, 0.1, 0.8, 1],
+              duration: 2.8,
+              ease: 'easeInOut',
+            }}
+          >
+            <h1 className="text-[36px] leading-snug font-semibold">
+              과연 어떤
+              <br />
+              카드일까요...?
+            </h1>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 카드 영역 */}
       <motion.div
@@ -82,7 +113,7 @@ export default function LandingPage() {
       </motion.div>
 
       {/* 슬라이드 가이드 */}
-      <SlideGuide />
+      {!selectedId && <SlideGuide />}
     </main>
   );
 }
