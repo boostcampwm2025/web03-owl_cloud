@@ -25,6 +25,7 @@ export default function WorkspaceStage() {
 
   const selectedItem = cardData.items.find((item) => item.id === selectedId);
   const isTextSelected = selectedItem?.type === 'text';
+
   // Hydration 방지용
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -135,7 +136,8 @@ export default function WorkspaceStage() {
             />
           ))}
 
-          {/* 선택,변형 */}
+          {/* 요소 클릭시 뜨는 크기 조절 바
+          Text 일때는 좌 우 조절바만 띄움*/}
           <Transformer
             ref={transformerRef}
             enabledAnchors={
@@ -158,9 +160,11 @@ export default function WorkspaceStage() {
             anchorStroke="#65a30d"
             borderStroke="#65a30d"
             borderStrokeWidth={1.5}
+            // 회전시 해당 각도 부근은 정렬 잘되도록
             rotationSnaps={[0, 90, 180, 270]}
             rotationSnapTolerance={10}
             keepRatio={false}
+            // 박스 최소 너비
             boundBoxFunc={(oldBox, newBox) => {
               newBox.width = Math.max(30, newBox.width);
               return newBox;

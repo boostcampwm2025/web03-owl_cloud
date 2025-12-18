@@ -28,6 +28,7 @@ export default function TextItem({ item, onSelect, onChange }: TextItemProps) {
       visible={!isEditing}
       draggable
       onClick={onSelect}
+      // 더블 클릭시 해당 텍스트를 editingNode로 설정
       onDblClick={(e) => {
         setEditingNode(e.target as Konva.Text);
       }}
@@ -38,6 +39,7 @@ export default function TextItem({ item, onSelect, onChange }: TextItemProps) {
         });
       }}
       // 박스 늘릴때 텍스트 늘어짐 보정
+      // scale을 1로 초기화함
       onTransform={(e) => {
         const node = e.target;
         const scaleX = node.scaleX();
@@ -49,6 +51,7 @@ export default function TextItem({ item, onSelect, onChange }: TextItemProps) {
           scaleY: 1,
         });
       }}
+      // 최종 저장
       onTransformEnd={(e) => {
         const node = e.target;
         node.height();

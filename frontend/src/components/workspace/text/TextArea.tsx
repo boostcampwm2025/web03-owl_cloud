@@ -98,6 +98,9 @@ export default function TextArea({
     textarea.addEventListener('keydown', handleKeyDown);
     textarea.addEventListener('input', handleInput);
 
+    // 외부 영역 클릭 시 textarea가 즉시 blur 되면서 onChange가 누락되는 문제가 있어
+    // 이벤트 등록 시점을 다음 이벤트 루프로 미룸
+    // 캡처링이나 textarea blur, React Portal 활용도 가능
     const timer = setTimeout(() => {
       window.addEventListener('mousedown', handleOutsideClick);
     });

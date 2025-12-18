@@ -42,6 +42,7 @@ export default function Sidebar() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [cardData]);
 
+  // 사이드바 상세 패널 활성화 / 비활성화를 위한 토글
   const toggleTab = (tab: TabType) => {
     setActiveTab((prev) => (prev === tab ? null : tab));
   };

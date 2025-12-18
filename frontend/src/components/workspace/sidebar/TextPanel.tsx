@@ -8,6 +8,7 @@ export default function TextPanel() {
   return (
     <div className="scrollbar-thin scrollbar-thumb-gray-200 h-full w-80 overflow-y-auto bg-white p-5">
       <button
+        // 텍스트 추가
         onClick={() => {
           handleAddText();
         }}
