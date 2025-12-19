@@ -4,6 +4,7 @@ import React from 'react';
 import dynamic from 'next/dynamic';
 import { useWorkspaceStore } from '@/store/useWorkspaceStore';
 import Sidebar from '@/components/workspace/Sidebar';
+import ToolbarManager from '@/components/workspace/toolbar/ToolbarManager';
 
 // Konva Stage : 브라우저 API(window)를 사용 -> ssr: false 설정 필수
 const WorkspaceStage = dynamic(
@@ -11,7 +12,7 @@ const WorkspaceStage = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[700px] w-[1200px] items-center justify-center bg-white text-neutral-400">
+      <div className="flex h-175 w-300 items-center justify-center bg-white text-neutral-400">
         {/* spinner 구현 */}
         카드제작소 로딩 중...
       </div>
@@ -25,8 +26,11 @@ export default function WorkspacePage() {
   return (
     <div className="flex h-screen w-full flex-row overflow-hidden">
       <Sidebar />
+      <div className="relative flex min-w-0 flex-1 flex-col">
+        <div className="absolute top-4 left-1/2 z-50 -translate-x-1/2">
+          <ToolbarManager />
+        </div>
 
-      <div className="flex min-w-0 flex-1 flex-col">
         {/* 워크스페이스 영역*/}
         <main className="relative flex flex-1 items-center justify-center overflow-hidden bg-neutral-200">
           <WorkspaceStage />

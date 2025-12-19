@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { CardData, WorkspaceItem } from '@/types/workspace';
+import Konva from 'konva';
 
 // State 타입 정의
 interface WorkspaceState {
@@ -8,6 +9,9 @@ interface WorkspaceState {
 
   // 선택된 아이템 ID
   selectedId: string | null;
+
+  // 편집중인 text 노드
+  editingNode: Konva.Text | null;
 
   // 화면 줌 레벨 (1 = 100%)
   zoom: number;
@@ -26,6 +30,9 @@ interface WorkspaceActions {
   // 선택 및 뷰 조작
   selectItem: (id: string | null) => void;
   setZoom: (zoom: number) => void;
+
+  //  편집중인 text 노드 선택
+  setEditingNode: (node: Konva.Text | null) => void;
 
   // 워크스페이스 크기 및 배경 설정
   resizeWorkspace: (width: number, height: number) => void;
@@ -53,6 +60,9 @@ export const useWorkspaceStore = create<WorkspaceState & WorkspaceActions>(
     zoom: 1,
 
     setCardData: (data) => set({ cardData: data }),
+
+    editingNode: null,
+    setEditingNode: (node) => set({ editingNode: node }),
 
     addItem: (item) =>
       set((state) => ({

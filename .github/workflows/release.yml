@@ -127,4 +127,7 @@ jobs:
 
             # 상태창 확인
             docker ps
+
+            # 이유를 알 수 없지만 지금 NEXT - gateway에 연결 문제가 발생하고 있다.
+            docker restart gateway
             echo "서버 배포 완료"

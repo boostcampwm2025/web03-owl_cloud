@@ -1,19 +1,30 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
+import Konva from 'konva';
 import { Stage, Layer, Rect, Transformer } from 'react-konva';
 import { useWorkspaceStore } from '@/store/useWorkspaceStore';
+import TextArea from './text/TextArea';
 
 import RenderItem from './items/RenderItem';
 
 export default function WorkspaceStage() {
   // Store 상태 및 액션
-  const { cardData, selectedId, selectItem, updateItem, zoom, removeItem } =
-    useWorkspaceStore();
+  const cardData = useWorkspaceStore((state) => state.cardData);
+  const selectedId = useWorkspaceStore((state) => state.selectedId);
+  const zoom = useWorkspaceStore((state) => state.zoom);
+  const removeItem = useWorkspaceStore((state) => state.removeItem);
+  const selectItem = useWorkspaceStore((state) => state.selectItem);
+  const updateItem = useWorkspaceStore((state) => state.updateItem);
+  const editingNode = useWorkspaceStore((state) => state.editingNode);
+  const setEditingNode = useWorkspaceStore((state) => state.setEditingNode);
 
   // 접근 Ref 설정 (stage : 워크스페이스 / transformer : 선택 및 변형 도구)
-  const stageRef = useRef<any>(null);
-  const transformerRef = useRef<any>(null);
+  const stageRef = useRef<Konva.Stage | null>(null);
+  const transformerRef = useRef<Konva.Transformer | null>(null);
+
+  const selectedItem = cardData.items.find((item) => item.id === selectedId);
+  const isTextSelected = selectedItem?.type === 'text';
 
   // Hydration 방지용
   const [mounted, setMounted] = useState(false);
@@ -39,10 +50,10 @@ export default function WorkspaceStage() {
         // 찾으면 transformer node 배열 추가 후 화면 갱신
         // 못찾으면 빈 배열
         if (selectedNode) {
-          transformerRef.current.nodes([selectedNode]);
-          transformerRef.current.getLayer().batchDraw();
+          transformerRef.current?.nodes([selectedNode]);
+          transformerRef.current?.getLayer()?.batchDraw();
         } else {
-          transformerRef.current.nodes([]);
+          transformerRef.current?.nodes([]);
         }
       } else {
         // 선택된게 없으면 빈배열
@@ -55,7 +66,7 @@ export default function WorkspaceStage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // 아이템 선택
-      if (!selectedId) return;
+      if (!selectedId || editingNode) return;
 
       // 키 감지
       if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -70,11 +81,14 @@ export default function WorkspaceStage() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedId, removeItem]);
+  }, [selectedId, removeItem, editingNode]);
 
   // 선택 해제
-  const handleCheckDeselect = (e: any) => {
+  const handleCheckDeselect = (
+    e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
+  ) => {
     // 선택 대상이 스테이지인 경우(하단 워크스페이스가 bg-rect)
+    if (editingNode) return;
     const clickedOnEmpty =
       e.target === e.target.getStage() || e.target.hasName('bg-rect');
 
@@ -87,7 +101,7 @@ export default function WorkspaceStage() {
   if (!mounted) return null;
 
   return (
-    <div className="bg-white shadow-2xl">
+    <div className="relative bg-white shadow-2xl">
       <Stage
         width={cardData.workspaceWidth * zoom}
         height={cardData.workspaceHeight * zoom}
@@ -122,19 +136,57 @@ export default function WorkspaceStage() {
             />
           ))}
 
-          {/* 선택,변형 */}
+          {/* 요소 클릭시 뜨는 크기 조절 바
+          Text 일때는 좌 우 조절바만 띄움*/}
           <Transformer
             ref={transformerRef}
-            // 박스 크기 제한
+            enabledAnchors={
+              isTextSelected
+                ? ['middle-left', 'middle-right']
+                : [
+                    'top-left',
+                    'top-right',
+                    'bottom-left',
+                    'bottom-right',
+                    'top-center',
+                    'bottom-center',
+                    'middle-left',
+                    'middle-right',
+                  ]
+            }
+            anchorSize={10}
+            anchorCornerRadius={5}
+            anchorStrokeWidth={1.5}
+            anchorStroke="#65a30d"
+            borderStroke="#65a30d"
+            borderStrokeWidth={1.5}
+            // 회전시 해당 각도 부근은 정렬 잘되도록
+            rotationSnaps={[0, 90, 180, 270]}
+            rotationSnapTolerance={10}
+            keepRatio={false}
+            // 박스 최소 너비
             boundBoxFunc={(oldBox, newBox) => {
-              if (newBox.width < 5 || newBox.height < 5) {
-                return oldBox;
-              }
+              newBox.width = Math.max(30, newBox.width);
               return newBox;
             }}
           />
         </Layer>
       </Stage>
+
+      {editingNode && (
+        <TextArea
+          textNode={editingNode}
+          onChange={(newText) => {
+            updateItem(editingNode.id(), {
+              text: newText,
+            });
+          }}
+          onClose={() => {
+            setEditingNode(null);
+            selectItem(null);
+          }}
+        />
+      )}
     </div>
   );
 }

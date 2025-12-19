@@ -8,6 +8,7 @@ interface NavButtonProps {
   label: string;
   isActive: boolean;
   onClick: () => void;
+  onDoubleClick?: () => void;
 }
 
 // Sidebar Button 컴포넌트
@@ -16,10 +17,12 @@ export default function NavButton({
   label,
   isActive,
   onClick,
+  onDoubleClick,
 }: NavButtonProps) {
   return (
     <button
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       className={`group relative flex w-full flex-col items-center justify-center gap-1 py-4 transition ${
         isActive
           ? 'text-lime-600'

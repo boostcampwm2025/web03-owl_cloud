@@ -1,0 +1,23 @@
+name: dev -> main 라인
+
+# main 브런치는 오직 dev 브런치에서만 접근이 가능하다.
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-branch:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: develop에서 온 pr인지 확인하는 로직
+        # base_ref는 대상이 되는 branch이고 head_ref은 merge가 되야 하는 branch 이다.
+        run: |
+          echo "Base: ${{ github.base_ref }}"
+          echo "Head: ${{ github.head_ref }}"
+          if [ "${{ github.head_ref }}" != "develop" ]; then
+            echo "❌ develop에서 보낸 pr요청이 아닙니다."
+            exit 1
+          fi
+          echo "✅ develop branch 확인"
+  
