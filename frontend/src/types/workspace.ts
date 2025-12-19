@@ -7,6 +7,9 @@ export type TextAlign = 'left' | 'center' | 'right';
 // 폰트 스타일 옵션
 export type FontStyle = 'normal' | 'italic' | 'bold' | 'bold italic';
 
+// 비디오 소스 타입
+export type VideoSourceType = 'upload' | 'youtube';
+
 // 공통 속성
 export interface BaseItem {
   id: string;
@@ -54,7 +57,11 @@ export interface ImageItem extends BaseItem {
 // 비디오
 export interface VideoItem extends BaseItem {
   type: 'video';
+  sourceType: VideoSourceType;
+  // upload 경우 : 파일 URL
+  // youtube의 경우 : 임베드 URL
   src: string;
+  // 썸네일
   poster?: string;
   naturalWidth: number;
   naturalHeight: number;
