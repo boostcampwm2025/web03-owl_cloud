@@ -23,6 +23,7 @@ export function useAddText() {
       rotation: 0,
       scaleX: 1,
       scaleY: 1,
+      zIndex: cardData.items.length,
       wrap: 'char',
     };
 
