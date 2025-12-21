@@ -15,9 +15,9 @@ jobs:
         run: |
           echo "Base: ${{ github.base_ref }}"
           echo "Head: ${{ github.head_ref }}"
-          if [ "${{ github.head_ref }}" != "develop" ]; then
-            echo "❌ develop에서 보낸 pr요청이 아닙니다."
+          if [ "${{ github.head_ref }}" != "dev" ]; then
+            echo "❌ dev에서 보낸 pr요청이 아닙니다."
             exit 1
           fi
-          echo "✅ develop branch 확인"
+          echo "✅ dev branch 확인"
   
