@@ -72,3 +72,12 @@ export class NotAllowCardItemIamgeStatusValue extends BaseError {
     })
   };
 };
+
+export class NotAllowCreateCardItemCheckType extends BaseError {
+  constructor() {
+    super({
+      message : "text type이외에 다른 타입은 assets을 같이 저장해주어야 합니다.",
+      status : 500
+    })
+  };
+};
