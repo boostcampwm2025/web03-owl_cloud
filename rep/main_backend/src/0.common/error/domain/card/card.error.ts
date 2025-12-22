@@ -54,3 +54,21 @@ export class NotAllowTextAlignType extends BaseError {
     })
   };
 };
+
+export class NotAllowCardItemIamgeMimeType extends BaseError {
+  constructor() {
+    super({
+      message : "카드 이미지의 mime_type의 종류를 다시 확인해주시길 바랍니다.",
+      status : 500
+    })
+  };
+};
+
+export class NotAllowCardItemIamgeStatusValue extends BaseError {
+  constructor() {
+    super({
+      message : "카드 이미지 업로드 상태의 상태값을 다시 확인해주시길 바랍니다.",
+      status : 500
+    })
+  };
+};

@@ -149,6 +149,7 @@ CREATE TABLE `Card_items` (
   is_locked BOOLEAN,
   is_visible BOOLEAN,
   `name` VARCHAR(255),
+  `option` JSON NOT NULL, -- image, text, video이든 추가 적인 상태에 대해서 여기에 저장한다. 
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP,
@@ -208,107 +209,22 @@ CREATE TABLE `Card_likes` (
 );
 ```
 
-## Card_item_texts
+## Card_item_assets 
 
-### 1. 스키마
+### 1. 스키마 
 ```sql
-CREATE TABLE `Card_item_texts` (
+CREATE TABLE `Card_item_assets`(
   item_id BINARY(16) PRIMARY KEY NOT NULL,
-  `text` TEXT NOT NULL,
-  font_size INT UNSIGNED NOT NULL,
-  font_family VARCHAR(100) NOT NULL,
-  fill VARCHAR(32) NOT NULL,
-  font_style VARCHAR(100) NOT NULL,
-  text_decoration VARCHAR(100) NOT NULL,
-  align ENUM('left', 'center', 'right', 'justify') NOT NULL,
-  wrap VARCHAR(20) NOT NULL,
+  key_name VARCHAR(2048) NOT NULL,
+  mime_type VARCHAR(50) NOT NULL,
+  `size` BIGINT UNSIGNED NOT NULL, 
+  `status` ENUM('uploading', 'ready', 'failed') NOT NULL
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-  CONSTRAINT fk_card_item_card_item_text_item_id FOREIGN KEY (`item_id`) REFERENCES `Card_items`(`item_id`) ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT check_card_item_texts_font_size CHECK(`font_size` > 0),
-  CONSTRAINT check_card_item_fill
-    CHECK (
-      fill REGEXP '^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$'
-      OR fill REGEXP '^rgb\\([0-9]{1,3},[0-9]{1,3},[0-9]{1,3}\\)$'
-      OR fill REGEXP '^rgba\\([0-9]{1,3},[0-9]{1,3},[0-9]{1,3},(0(\\.[0-9]+)?|1(\\.0+)?)\\)$'
-      OR fill IN ('transparent', 'currentColor')
-    )
+  CONSTRAINT fk_card_item_card_item_asset_item_id FOREIGN KEY (`item_id`) REFERENCES `Card_items`(`item_id`) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT check_card_item_asset_mime_type CHECK(`mime_type` IN (
+    'image/apng', 'image/avif', 'image/gif', 'image/jpeg', 'image/png', 'image/svg+xml', 'image/webp', 'video/mp4', 'video/webm', 'video/ogg'
+  ))
 );
-```
-
-### Card_item_images
-
-### 1. 스키마
-```sql
-CREATE TABLE `Card_item_images` (
-  item_id BINARY(16) PRIMARY KEY NOT NULL,
-  src VARCHAR(2048) NOT NULL,
-  mime_type VARCHAR(15) NOT NULL,
-  `size` INT UNSIGNED NOT NULL, 
-  `status` ENUM('uploading', 'ready', 'failed') NOT NULL,
-  natural_width INT UNSIGNED NOT NULL,
-  natural_height INT UNSIGNED NOT NULL,
-  corner_radius INT UNSIGNED,
-  stroke VARCHAR(32),
-  stroke_width INT UNSIGNED,
-  `filter` VARCHAR(255),
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
-  
-  CONSTRAINT fk_card_item_card_item_image_item_id FOREIGN KEY (`item_id`) REFERENCES `Card_items`(`item_id`) ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT check_card_item_image_mime_type CHECK(`mime_type` IN ('image/apng', 'image/avif', 'image/gif', 'image/jpeg', 'image/png', 'image/svg+xml', 'image/webp')),
-  CONSTRAINT check_card_item_image_natural_width_natural_height CHECK(`natural_width` > 0 AND `natural_height` > 0),
-  CONSTRAINT check_card_item_image_stroke
-    CHECK (
-      stroke IS NULL
-      OR stroke REGEXP '^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$'
-      OR stroke REGEXP '^rgb\\([0-9]{1,3},[0-9]{1,3},[0-9]{1,3}\\)$'
-      OR stroke REGEXP '^rgba\\([0-9]{1,3},[0-9]{1,3},[0-9]{1,3},(0(\\.[0-9]+)?|1(\\.0+)?)\\)$'
-      OR stroke IN ('transparent', 'currentColor') 
-    )
-);
-```
-
-## Card_item_videos
-
-### 1. 스키마
-
-```sql
-CREATE TABLE `Card_item_videos`(
-  item_id BINARY(16) PRIMARY KEY NOT NULL,
-  src VARCHAR(2048) NOT NULL,
-  mime_type VARCHAR(50) NOT NULL,
-  `size` BIGINT UNSIGNED NOT NULL, 
-  `status` ENUM('uploading', 'ready', 'failed') NOT NULL,
-  poster VARCHAR(2048),
-  natural_width INT UNSIGNED NOT NULL,
-  natural_height INT UNSIGNED NOT NULL,
-  duration INT,
-  is_auto_play BOOLEAN NOT NULL DEFAULT FALSE,
-  is_loop BOOLEAN NOT NULL DEFAULT FALSE,
-  is_muted BOOLEAN NOT NULL DEFAULT FALSE,
-  volume INT UNSIGNED NOT NULL DEFAULT 100,
-  corner_radius INT UNSIGNED,
-  stroke VARCHAR(32),
-  stroke_width INT UNSIGNED,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
-
-  CONSTRAINT fk_card_item_card_item_video_item_id FOREIGN KEY (`item_id`) REFERENCES `Card_items`(`item_id`) ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT check_card_item_video_mime_type CHECK(`mime_type` IN ('video/mp4', 'video/webm', 'video/ogg')),
-  CONSTRAINT check_card_item_video_volume CHECK(`volume` BETWEEN 0 AND 100),
-  CONSTRAINT check_card_item_video_duration CHECK (`duration` IS NULL OR `duration` >= 0),
-  CONSTRAINT check_card_item_video_corner_radius CHECK (`corner_radius` IS NULL OR `corner_radius` >= 0),
-  CONSTRAINT check_card_item_video_stroke_width CHECK (`stroke_width` IS NULL OR `stroke_width` >= 0),
-  CONSTRAINT check_card_item_video_natural_width_natural_height CHECK(`natural_width` > 0 AND `natural_height` > 0),
-    CONSTRAINT check_card_item_video_stroke
-    CHECK (
-      stroke IS NULL
-      OR stroke REGEXP '^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$'
-      OR stroke REGEXP '^rgb\\([0-9]{1,3},[0-9]{1,3},[0-9]{1,3}\\)$'
-      OR stroke REGEXP '^rgba\\([0-9]{1,3},[0-9]{1,3},[0-9]{1,3},(0(\\.[0-9]+)?|1(\\.0+)?)\\)$'
-      OR stroke IN ('transparent', 'currentColor') 
-    )
-);  
 ```

@@ -150,3 +150,15 @@ export function cardItemNameVo( name : Exclude<CardItemProps["name"], undefined>
 
   return name;
 };
+
+export function cardItemSrcVo( src : string ) : string {
+  const name : string = "src";
+
+  baseVo({ name, value : src, type : "string" });
+  src = src.trim();
+
+  const length : number = 2048;
+  if ( src.length > length ) throw new NotAllowMaxLengthText({ name, length });
+
+  return src;
+}
