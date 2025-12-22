@@ -147,7 +147,7 @@ export function cardItemIsLockedVo(
 ): boolean {
   const name: string = 'is_locked';
 
-  baseVo({ name, value: is_locked, type: 'boolean' });
+  if ( is_locked !== false ) baseVo({ name, value: is_locked, type: 'boolean' });
 
   return is_locked;
 }
@@ -158,7 +158,7 @@ export function cardItemIsVisibleVo(
 ): boolean {
   const name: string = 'is_visible';
 
-  baseVo({ name, value: is_visible, type: 'boolean' });
+  if ( is_visible !== false ) baseVo({ name, value: is_visible, type: 'boolean' });
 
   return is_visible;
 }

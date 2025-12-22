@@ -1,5 +1,5 @@
-import { NotAllowMaxLengthText } from '@/0.common/error/domain/user/user.error';
-import { baseVo } from '@/1.domain/shared';
+import { NotAllowMaxLengthText } from '@error/domain/user/user.error';
+import { baseVo } from '@domain/shared';
 
 export type CategoryProps = {
   id: number;

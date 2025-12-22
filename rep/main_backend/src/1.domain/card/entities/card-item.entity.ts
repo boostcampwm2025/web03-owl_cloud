@@ -63,12 +63,12 @@ export class CardItem {
     this.x = cardItemPositionVo('x', x);
     this.y = cardItemPositionVo('y', y);
     this.width = cardItemSizeVo('width', width);
-    this.height = height ? cardItemSizeVo('height', height) : undefined;
+    this.height = height || height === 0 ? cardItemSizeVo('height', height) : undefined;
     this.rotation = cardItemRotationVo(rotation);
     this.scale_x = cardItemScaleVo('scale_x', scale_x);
     this.scale_y = cardItemScaleVo('scale_y', scale_y);
-    this.opacity = opacity ? cardItemOpacityVo(opacity) : undefined;
-    this.z_index = z_index ? cardItemZindexVo(z_index) : undefined;
+    this.opacity = opacity || opacity === 0 ? cardItemOpacityVo(opacity) : undefined;
+    this.z_index = z_index || z_index === 0 ? cardItemZindexVo(z_index) : undefined;
     this.is_locked =
       is_locked !== undefined ? cardItemIsLockedVo(is_locked) : undefined;
     this.is_visible =
