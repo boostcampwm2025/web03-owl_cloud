@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { GetUrlTypes, MultiPartResponseDataDto, UploadMultipartDataDto } from "../dto";
+import { GetUrlTypes, MultiPartResponseDataDto, UploadMultipartDataDto } from "@app/card/queries/dto";
 import { SelectDataFromCache } from "@app/ports/cache/cache.inbound";
 import { SelectDataFromDb } from "@app/ports/db/db.inbound";
 import { NotFoundCardItemAssetKeyName } from "@error/application/card/card.error";

@@ -1,42 +1,42 @@
 import { Injectable } from "@nestjs/common";
-import { CheckCardItemDataUrlProps } from "../dto";
+import { CheckCardItemDatasUrlProps } from "../dto";
 import { SelectDataFromCache } from "@app/ports/cache/cache.inbound";
 import { SelectDataFromDb } from "@app/ports/db/db.inbound";
 import { NotAllowUpdateDataToCache, NotAllowUpdateDataToDb, NotAllowUploadDataToCheck, NotFoundCardItemAssetKeyName } from "@error/application/card/card.error";
-import { CheckUploadDataFromDisk } from "@app/ports/disk/disk.inbound";
+import { CheckUploadDatasFromDisk } from "@app/ports/disk/disk.inbound";
 import { UpdateValueToDb } from "@app/ports/db/db.outbound";
 import { UpdateDataToCache } from "@app/ports/cache/cache.outbound";
 
 
-type CheckCarItemDataUsecaseValues = {
+type CheckCarItemDatasUsecaseValues = {
   cardAssetNamespace : string;
   itemIdKeyName : string;
   itemIdAttribute : string;  
   statusKeyName : string;
 };
 
-type CheckCardItemDataUsecaseProps<T, ET, DT> = {
-  usecaseValues : CheckCarItemDataUsecaseValues;
+type CheckCardItemDatasUsecaseProps<T, ET, DT> = {
+  usecaseValues : CheckCarItemDatasUsecaseValues;
   selectCardAssetFromCache : SelectDataFromCache<T>; // cache 
   selectCardAssetFromDb : SelectDataFromDb<ET>;  // db
-  checkUploadFromDisk : CheckUploadDataFromDisk<DT>;
+  checkUploadFromDisk : CheckUploadDatasFromDisk<DT>;
   updateCardAssetToDb : UpdateValueToDb<ET>; // db upadate
   updateCardAssetToCache : UpdateDataToCache<T>; // cache update
 };
 
 @Injectable()
-export class CheckCardItemDataUsecase<T, ET, DT> {
+export class CheckCardItemDatasUsecase<T, ET, DT> {
 
-  private readonly usecaseValues : CheckCardItemDataUsecaseProps<T, ET, DT>["usecaseValues"];
-  private readonly selectCardAssetFromCache : CheckCardItemDataUsecaseProps<T, ET, DT>["selectCardAssetFromCache"];
-  private readonly selectCardAssetFromDb : CheckCardItemDataUsecaseProps<T, ET, DT>["selectCardAssetFromDb"];
-  private readonly checkUploadFromDisk : CheckCardItemDataUsecaseProps<T, ET, DT>["checkUploadFromDisk"];
-  private readonly updateCardAssetToDb : CheckCardItemDataUsecaseProps<T, ET, DT>["updateCardAssetToDb"];
-  private readonly updateCardAssetToCache : CheckCardItemDataUsecaseProps<T, ET, DT>["updateCardAssetToCache"];
+  private readonly usecaseValues : CheckCardItemDatasUsecaseProps<T, ET, DT>["usecaseValues"];
+  private readonly selectCardAssetFromCache : CheckCardItemDatasUsecaseProps<T, ET, DT>["selectCardAssetFromCache"];
+  private readonly selectCardAssetFromDb : CheckCardItemDatasUsecaseProps<T, ET, DT>["selectCardAssetFromDb"];
+  private readonly checkUploadFromDisk : CheckCardItemDatasUsecaseProps<T, ET, DT>["checkUploadFromDisk"];
+  private readonly updateCardAssetToDb : CheckCardItemDatasUsecaseProps<T, ET, DT>["updateCardAssetToDb"];
+  private readonly updateCardAssetToCache : CheckCardItemDatasUsecaseProps<T, ET, DT>["updateCardAssetToCache"];
 
   constructor({ 
     usecaseValues, selectCardAssetFromCache, selectCardAssetFromDb, checkUploadFromDisk, updateCardAssetToDb, updateCardAssetToCache
-  } : CheckCardItemDataUsecaseProps<T, ET, DT>) {
+  } : CheckCardItemDatasUsecaseProps<T, ET, DT>) {
     this.usecaseValues = usecaseValues;
     this.selectCardAssetFromCache = selectCardAssetFromCache;
     this.selectCardAssetFromDb = selectCardAssetFromDb;
@@ -45,9 +45,9 @@ export class CheckCardItemDataUsecase<T, ET, DT> {
     this.updateCardAssetToCache = updateCardAssetToCache;
   }
 
-  async execute( dto : CheckCardItemDataUrlProps ) : Promise<void> {
+  async execute( dto : CheckCardItemDatasUrlProps ) : Promise<void> {
 
-    // 1. key_name 찾기 (cache -> db)
+    // 1. key_name 찾기
     let filePath : string | undefined;
     const namespace : string = `${this.usecaseValues.cardAssetNamespace}:${dto.card_id}:${dto.item_id}`.trim();
     filePath = await this.selectCardAssetFromCache.select({ 
@@ -60,7 +60,7 @@ export class CheckCardItemDataUsecase<T, ET, DT> {
     }
 
     // 2. 검증 
-    const checked : boolean = await this.checkUploadFromDisk.check({ pathName : filePath, etag : dto.etag });
+    const checked : boolean = await this.checkUploadFromDisk.checks({ pathName : filePath, tags : dto.tags }); // 여기 안에서 문제가 발생하면 어디가 문제 였는지 이야기 해주면 될 것 같다. 
     if ( !checked ) throw new NotAllowUploadDataToCheck(undefined);
 
     // 3. 변경 ( db, cache )

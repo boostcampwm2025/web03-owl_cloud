@@ -45,3 +45,12 @@ export class CheckUploadDataFromDisk<T> extends InboundBaseDisk<T> {
     throw new NullInterfaceError();
   };
 };
+
+@Injectable()
+export class CheckUploadDatasFromDisk<T> extends InboundBaseDisk<T> {
+  constructor( disk : T ) { super(disk); };
+
+  public async checks({ pathName, tags } : { pathName : string, tags : any }) : Promise<boolean> | never {
+    throw new NullInterfaceError();
+  };
+};
