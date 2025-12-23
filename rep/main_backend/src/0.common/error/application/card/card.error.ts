@@ -18,3 +18,21 @@ export class NotCreateCardAndCardStateError extends BaseError {
     });
   };
 };
+
+export class NotCreateCardItemData extends BaseError {
+  constructor() {
+    super({
+      message: 'card item을 생성하지 못했습니다.',
+      status: 500,
+    });
+  };
+};
+
+export class NotAllowCreateCardItemNotUploadInfo extends BaseError {
+  constructor() {
+    super({
+      message: 'upload용 데이터에 데이터를 추가하지 않았습니다.,',
+      status: 500,
+    });
+  };
+};

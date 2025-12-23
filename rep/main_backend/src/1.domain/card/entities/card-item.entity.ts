@@ -144,8 +144,7 @@ export class CardItem {
   }
 
   getData():
-    | Required<Omit<CardItemProps, 'deleted_at'>>
-    | Record<'deleted_at', CardItemProps['deleted_at']> {
+    Required<CardItemProps> {
     return {
       item_id: this.item_id,
       card_id: this.card_id,
@@ -165,7 +164,7 @@ export class CardItem {
       option: this.option,
       created_at: this.created_at,
       updated_at: this.updated_at,
-      deleted_at: this.deleted_at,
+      deleted_at: this.deleted_at || new Date(),
     };
   }
 }

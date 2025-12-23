@@ -13,9 +13,20 @@ class OutboundBaseDb<T> {
 export class InsertValueToDb<T> extends OutboundBaseDb<T> {
   constructor(db: T) {
     super(db);
-  }
+  };
 
   public async insert(entity: any): Promise<boolean> | never {
     throw new NullInterfaceError();
-  }
-}
+  };
+};
+
+@Injectable()
+export class DeleteValueToDb<T> extends OutboundBaseDb<T> {
+  constructor(db: T) {
+    super(db);
+  };
+
+  public async delete({uniqueValue, addOption = undefined} : {uniqueValue: any, addOption : any | undefined}): Promise<boolean> | never {
+    throw new NullInterfaceError();
+  };
+};
