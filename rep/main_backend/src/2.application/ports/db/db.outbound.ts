@@ -30,3 +30,14 @@ export class DeleteValueToDb<T> extends OutboundBaseDb<T> {
     throw new NullInterfaceError();
   };
 };
+
+@Injectable()
+export class UpdateValueToDb<T> extends OutboundBaseDb<T> {
+  constructor(db: T) {
+    super(db);
+  };
+
+  public async update({uniqueValue, updateValue } : {uniqueValue: any, updateValue : any }) : Promise<boolean> | never {
+    throw new NullInterfaceError();
+  };
+};

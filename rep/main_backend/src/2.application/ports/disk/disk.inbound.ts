@@ -36,3 +36,12 @@ export class GetMultiPartUploadUrlFromDisk<T> extends InboundBaseDisk<T> {
     throw new NullInterfaceError();
   }
 };
+
+@Injectable()
+export class CheckUploadDataFromDisk<T> extends InboundBaseDisk<T> {
+  constructor( disk : T ) { super(disk); };
+
+  public async check({ pathName, etag } : { pathName : string, etag : string }) : Promise<boolean> | never {
+    throw new NullInterfaceError();
+  };
+};

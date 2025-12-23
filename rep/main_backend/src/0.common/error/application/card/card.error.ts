@@ -45,3 +45,29 @@ export class NotFoundCardItemAssetKeyName extends BaseError {
     });
   };
 };
+
+export class NotAllowUploadDataToCheck extends BaseError {
+  constructor(dataNumber : number | undefined) {
+    super({
+      message: dataNumber || dataNumber === 0 ? `${dataNumber}번째가 아직 업로드가 되지 않았습니다.` : "아직 데이터가 업로드 되지 않았습니다." ,
+      status: 500,
+    });
+  };
+};
+
+export class NotAllowUpdateDataToDb extends BaseError {
+  constructor() {
+    super({
+      message: 'db에 데이터를 업데이트 하지 못했습니다.',
+      status: 500,
+    });
+  };
+}
+export class NotAllowUpdateDataToCache extends BaseError {
+  constructor() {
+    super({
+      message: 'cache에 데이터를 업데이트 하지 못했습니다.',
+      status: 500,
+    });
+  };
+};

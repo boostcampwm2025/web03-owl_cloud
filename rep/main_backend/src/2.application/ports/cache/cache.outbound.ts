@@ -42,3 +42,23 @@ export class DeleteDataToCache<T> extends OutboundBaseCache<T> {
     throw new NullInterfaceError();
   }
 }
+
+
+@Injectable()
+export class UpdateDataToCache<T> extends OutboundBaseCache<T> {
+  constructor(cache: T) {
+    super(cache);
+  }  
+
+  public async updateKey({
+    namespace,
+    keyName,
+    updateValue
+  } : {
+    namespace : string,
+    keyName : string,
+    updateValue : any
+  }) : Promise<boolean> | never {
+    throw new NullInterfaceError();
+  }
+};
