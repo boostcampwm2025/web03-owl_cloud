@@ -36,3 +36,12 @@ export class NotAllowCreateCardItemNotUploadInfo extends BaseError {
     });
   };
 };
+
+export class NotFoundCardItemAssetKeyName extends BaseError {
+  constructor() {
+    super({
+      message: 'card_item asset에 key_name을 찾지 못했습니다.',
+      status: 500,
+    });
+  };
+};

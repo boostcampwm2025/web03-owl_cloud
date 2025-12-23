@@ -7,41 +7,52 @@ import { NotAllowCreateCardItemNotUploadInfo, NotCreateCardItemData } from "@err
 import { DeleteValueToDb, InsertValueToDb } from "@app/ports/db/db.outbound";
 import { GetMultiPartVerGroupIdFromDisk, GetUploadUrlFromDisk } from "@/2.application/ports/disk/disk.inbound";
 import { Injectable } from "@nestjs/common";
+import { InsertDataToCache } from "@/2.application/ports/cache/cache.outbound";
 
 
-type UploadCardItemUsecaseProps<T, ET> = {
+type UploadCardItemUsecaseProps<T, ET, DT> = {
   itemIdGenerator : IdGenerator;
   insertCardItemToDb : InsertValueToDb<T>;
   insertCardItemAndCardItemAssetToDb : InsertValueToDb<T>;
   deleteCardItemAndCardItemAssetToDb : DeleteValueToDb<T>;
   getUploadUrlFromDisk : GetUploadUrlFromDisk<ET>;
   getMultiVerGroupIdFromDisk : GetMultiPartVerGroupIdFromDisk<ET>;
+  insertCardItemAssetToCache : InsertDataToCache<DT>;
 };
 
+// db에 저장할때 사용하는 데이터 타입
 export type InsertCardItemAndAssetDataProps = {
   cardItem : Required<CardItemProps>;
   cardAsset : Required<CardItemAssetProps>;
 };
 
-@Injectable()
-export class UploadingCardItemUsecase<T, ET> {
+// cache에 저장할때 사용하는 데이터 타입
+export type InsertCardAssetDataProps = {
+  cardAsset : Required<CardItemAssetProps>;
+  upload_id? : string;
+};
 
-  private readonly itemIdGenerator : UploadCardItemUsecaseProps<T, ET>["itemIdGenerator"];
-  private readonly insertCardItemToDb : UploadCardItemUsecaseProps<T, ET>["insertCardItemToDb"];
-  private readonly insertCardItemAndCardItemAssetToDb : UploadCardItemUsecaseProps<T, ET>["insertCardItemAndCardItemAssetToDb"];
-  private readonly deleteCardItemAndCardItemAssetToDb : UploadCardItemUsecaseProps<T, ET>["deleteCardItemAndCardItemAssetToDb"];
-  private readonly getUploadUrlFromDisk : UploadCardItemUsecaseProps<T, ET>["getUploadUrlFromDisk"];
-  private readonly getMultiVerGroupIdFromDisk : UploadCardItemUsecaseProps<T, ET>["getMultiVerGroupIdFromDisk"];
+@Injectable()
+export class UploadingCardItemUsecase<T, ET, DT> {
+
+  private readonly itemIdGenerator : UploadCardItemUsecaseProps<T, ET, DT>["itemIdGenerator"];
+  private readonly insertCardItemToDb : UploadCardItemUsecaseProps<T, ET, DT>["insertCardItemToDb"];
+  private readonly insertCardItemAndCardItemAssetToDb : UploadCardItemUsecaseProps<T, ET, DT>["insertCardItemAndCardItemAssetToDb"];
+  private readonly deleteCardItemAndCardItemAssetToDb : UploadCardItemUsecaseProps<T, ET, DT>["deleteCardItemAndCardItemAssetToDb"];
+  private readonly getUploadUrlFromDisk : UploadCardItemUsecaseProps<T, ET, DT>["getUploadUrlFromDisk"];
+  private readonly getMultiVerGroupIdFromDisk : UploadCardItemUsecaseProps<T, ET, DT>["getMultiVerGroupIdFromDisk"];
+  private readonly insertCardItemAssetToCache : UploadCardItemUsecaseProps<T, ET, DT>["insertCardItemAssetToCache"];
 
   constructor({
-    itemIdGenerator, insertCardItemToDb, insertCardItemAndCardItemAssetToDb, deleteCardItemAndCardItemAssetToDb, getUploadUrlFromDisk, getMultiVerGroupIdFromDisk
-  } : UploadCardItemUsecaseProps<T, ET>) {
+    itemIdGenerator, insertCardItemToDb, insertCardItemAndCardItemAssetToDb, deleteCardItemAndCardItemAssetToDb, getUploadUrlFromDisk, getMultiVerGroupIdFromDisk, insertCardItemAssetToCache
+  } : UploadCardItemUsecaseProps<T, ET, DT>) {
     this.itemIdGenerator = itemIdGenerator;
     this.insertCardItemToDb = insertCardItemToDb;
     this.insertCardItemAndCardItemAssetToDb = insertCardItemAndCardItemAssetToDb;
     this.deleteCardItemAndCardItemAssetToDb = deleteCardItemAndCardItemAssetToDb;
     this.getUploadUrlFromDisk = getUploadUrlFromDisk;
     this.getMultiVerGroupIdFromDisk = getMultiVerGroupIdFromDisk;
+    this.insertCardItemAssetToCache = insertCardItemAssetToCache;
   };
 
   async execute(dto : CreateCardItemDataDto) : Promise<AfterCreateCardItemDataInfo> {
@@ -147,7 +158,13 @@ export class UploadingCardItemUsecase<T, ET> {
             cardAsset.key_name
           ], mime_type : cardAsset.mime_type });
 
-          // 4. item_id, presigned_url 반환
+          // 4. cache에 asset 정보 저장 - upload_id 없음
+          const insertCacheData : InsertCardAssetDataProps = {
+            cardAsset
+          };
+          await this.insertCardItemAssetToCache.insert(insertCacheData);
+
+          // 5. item_id, presigned_url 반환
           const returnDto : AfterCreateCardItemDataInfo = {
             item_id : cardItem.item_id , mini : {upload_url}};
           return returnDto;
@@ -159,7 +176,13 @@ export class UploadingCardItemUsecase<T, ET> {
             cardAsset.key_name
           ], mime_type : cardAsset.mime_type });
 
-          // 4. item_id, upload_id, part_size 반환
+          // 4. cache에 asset 정보 저장 - upload_id 포함
+          const insertCacheData : InsertCardAssetDataProps = {
+            cardAsset, upload_id
+          };
+          await this.insertCardItemAssetToCache.insert(insertCacheData);
+
+          // 5. item_id, upload_id, part_size 반환
           const returnDto : AfterCreateCardItemDataInfo = {
             item_id : cardItem.item_id, big : { upload_id, part_size : 10 }
           };

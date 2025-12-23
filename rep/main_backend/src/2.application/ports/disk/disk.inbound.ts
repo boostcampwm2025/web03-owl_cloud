@@ -27,3 +27,12 @@ export class GetMultiPartVerGroupIdFromDisk<T> extends InboundBaseDisk<T> {
     throw new NullInterfaceError();
   };
 };
+
+@Injectable()
+export class GetMultiPartUploadUrlFromDisk<T> extends InboundBaseDisk<T> {
+  constructor( disk : T ) { super(disk); };
+
+  public async getUrls({ upload_id, pathName, partNumbers } : { upload_id : string, pathName : string, partNumbers : Array<number> }) : Promise<Array<any>> | never {
+    throw new NullInterfaceError();
+  }
+};
