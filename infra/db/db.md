@@ -219,6 +219,7 @@ CREATE TABLE `Card_item_assets`(
   mime_type VARCHAR(50) NOT NULL,
   `size` BIGINT UNSIGNED NOT NULL, 
   `status` ENUM('uploading', 'ready', 'failed') NOT NULL,
+  card_id BINARY(16) NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -227,4 +228,10 @@ CREATE TABLE `Card_item_assets`(
     'image/apng', 'image/avif', 'image/gif', 'image/jpeg', 'image/png', 'image/svg+xml', 'image/webp', 'video/mp4', 'video/webm', 'video/ogg'
   ))
 );
+```
+
+### 2. INDEX
+```sql
+CREATE INDEX idx_card_item_assets_card_id 
+  ON `Card_item_assets`(`card_id`);
 ```

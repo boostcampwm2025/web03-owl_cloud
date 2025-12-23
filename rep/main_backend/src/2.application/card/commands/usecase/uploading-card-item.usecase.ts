@@ -6,6 +6,7 @@ import { CardItemAssetProps, CardItemProps } from "@domain/card/vo";
 import { NotAllowCreateCardItemNotUploadInfo, NotCreateCardItemData } from "@error/application/card/card.error";
 import { DeleteValueToDb, InsertValueToDb } from "@app/ports/db/db.outbound";
 import { GetMultiPartVerGroupIdFromDisk, GetUploadUrlFromDisk } from "@/2.application/ports/disk/disk.inbound";
+import { Injectable } from "@nestjs/common";
 
 
 type UploadCardItemUsecaseProps<T, ET> = {
@@ -22,6 +23,7 @@ export type InsertCardItemAndAssetDataProps = {
   cardAsset : Required<CardItemAssetProps>;
 };
 
+@Injectable()
 export class UploadingCardItemUsecase<T, ET> {
 
   private readonly itemIdGenerator : UploadCardItemUsecaseProps<T, ET>["itemIdGenerator"];
