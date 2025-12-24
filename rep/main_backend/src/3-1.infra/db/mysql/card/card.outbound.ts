@@ -145,7 +145,10 @@ export class InsertCardItemDataToMysql extends InsertValueToDb<Pool> {
     });
 
     const colSql = columns.map((c) => `\`${c}\``).join(", ");
-    const placeholders = columns.map(() => "?").join(", ");
+    const placeholders = columns.map((c) => {
+      if ( c === DB_CARD_ITEMS_ATTRIBUTE_NAME.ITEM_ID || c === DB_CARD_ITEMS_ATTRIBUTE_NAME.CARD_ID ) return "UUID_TO_BIN(?, true)"
+      else return "?"
+    }).join(", ");
 
     try {
       const sql : string = `INSERT INTO \`${tableName}\` (${colSql}) VALUES (${placeholders})`;
@@ -242,7 +245,10 @@ export class InsertCardItemAndCardAssetDataToMysql extends InsertValueToDb<Pool>
       });
 
       const cardItemColSql = cardItemColumns.map((c) => `\`${c}\``).join(", ");
-      const cardItemPlaceholders = cardItemColumns.map(() => "?").join(", ");
+      const cardItemPlaceholders = cardItemColumns.map((c) => {
+        if ( c === DB_CARD_ITEMS_ATTRIBUTE_NAME.CARD_ID || c === DB_CARD_ITEMS_ATTRIBUTE_NAME.ITEM_ID ) return "UUID_TO_BIN(?, true)";
+        else return "?";
+      }).join(", ");
 
       const cardItemTable : string = DB_TABLE_NAME.CARD_ITEMS;
       const cardItemSql : string = `INSERT INTO \`${cardItemTable}\` (${cardItemColSql}) VALUES (${cardItemPlaceholders})`;
@@ -261,7 +267,7 @@ export class InsertCardItemAndCardAssetDataToMysql extends InsertValueToDb<Pool>
       \`${DB_CARD_ITEM_ASSETS_ATTRIBUTE_NAME.CARD_ID}\`,
       \`${DB_CARD_ITEM_ASSETS_ATTRIBUTE_NAME.CREATED_AT}\`,
       \`${DB_CARD_ITEM_ASSETS_ATTRIBUTE_NAME.UPDATED_AT}\`)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+      VALUES (UUID_TO_BIN(?, true), ?, ?, ?, ?, UUID_TO_BIN(?, true), ?, ?)`;
 
       const cardItemAssetEntity = entity.cardAsset;
       const [ cardItemAssetResult ] = await connection.query<ResultSetHeader>(cardItemAssetSql, [
@@ -326,7 +332,7 @@ export class DeleteCardItemAndCardAssetDataToMysql extends DeleteValueToDb<Pool>
 
       const cardItemSql : string = `
       DELETE FROM \`${cardItemTable}\`
-      WHERE \`${DB_CARD_ITEMS_ATTRIBUTE_NAME.ITEM_ID}\` = ?
+      WHERE \`${DB_CARD_ITEMS_ATTRIBUTE_NAME.ITEM_ID}\` = UUID_TO_BIN(?, true)
       `;
 
       const [ deleteCardItemChekced ] = await connection.query<ResultSetHeader>(cardItemSql, [ uniqueValue ]);
@@ -335,7 +341,7 @@ export class DeleteCardItemAndCardAssetDataToMysql extends DeleteValueToDb<Pool>
 
       const cardItemAssetSql : string = `
       DELETE FROM \`${cardItemAssetTable}\`
-      WHERE \`${DB_CARD_ITEM_ASSETS_ATTRIBUTE_NAME.ITEM_ID}\` = ?
+      WHERE \`${DB_CARD_ITEM_ASSETS_ATTRIBUTE_NAME.ITEM_ID}\` = UUID_TO_BIN(?, true)
       `;
 
       const [ deleteCardItemAssetChecked ] = await connection.query<ResultSetHeader>(cardItemAssetSql, [ uniqueValue ]);
