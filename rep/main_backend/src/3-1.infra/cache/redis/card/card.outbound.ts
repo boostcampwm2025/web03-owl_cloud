@@ -1,4 +1,4 @@
-import { InsertDataToCache } from "@app/ports/cache/cache.outbound";
+import { InsertDataToCache, UpdateDataToCache } from "@app/ports/cache/cache.outbound";
 import { Inject, Injectable } from "@nestjs/common";
 import { type RedisClientType } from "redis";
 import { CACHE_CARD_ITEM_ASSET_KEY_NAME, CACHE_CARD_NAMESPACE_NAME, REDIS_SERVER } from "../../cache.constants";
@@ -41,6 +41,53 @@ export class InsertCardItemAssetInitDataToRedis extends InsertDataToCache<RedisC
     const res = await tx.exec();
 
     return res !== null && true;
+  };
+
+};
+
+@Injectable()
+export class UpdateCardItemAssetDataToRedis extends UpdateDataToCache<RedisClientType<any, any>> {
+
+  constructor(
+    @Inject(REDIS_SERVER) cache : RedisClientType<any, any>,
+  ) { super(cache); };
+
+  private async updateKeyValue({
+    cache, namespace, keyName, updateValue
+  } : {
+    cache : RedisClientType<any, any>, namespace : string, keyName : string, updateValue : any
+  }) : Promise<boolean> {
+    const tx = cache.multi();
+    tx.hSet(namespace, keyName, updateValue);
+    tx.expire(namespace, 60 * 60);
+    const res = await tx.exec();
+    return res !== null;
+  }
+
+  async updateKey({ namespace, keyName, updateValue }: { namespace: string; keyName: string; updateValue: any; }): Promise<boolean> {
+    
+    const cache = this.cache;
+
+    // 분명히 이게 맞기는 한데...
+    if ( keyName === CACHE_CARD_ITEM_ASSET_KEY_NAME.STATUS ) {
+      const updateChecked : boolean = await this.updateKeyValue({ cache, namespace, keyName, updateValue });
+
+      // 전이 규칙을 정해 놓는 것이 안전하다. 
+
+      return updateChecked;
+    } 
+    // 다른 데이터는 이런식으로 정합성을 체크하고자 한다.
+    else {
+      await cache.watch(namespace);
+
+      try {
+        // update 확인 
+        const updateChecked : boolean = await this.updateKeyValue({ cache, namespace, keyName, updateValue });
+        return updateChecked;
+      } finally {
+        await cache.unwatch();
+      };
+    };
   };
 
 };
