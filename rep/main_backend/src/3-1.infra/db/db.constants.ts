@@ -128,5 +128,6 @@ export const DB_CARD_ITEM_ASSETS_ATTRIBUTE_NAME = Object.freeze({
   MIME_TYPE : "mime_type",
   SIZE : "size", 
   STATUS : "status",
+  CARD_ID : "card_id",
   ...DB_BASE_ATTRIBTE_NAME
 } as const);

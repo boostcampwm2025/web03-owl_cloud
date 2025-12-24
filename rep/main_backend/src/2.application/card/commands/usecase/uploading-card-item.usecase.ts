@@ -13,7 +13,7 @@ import { InsertDataToCache } from "@/2.application/ports/cache/cache.outbound";
 type UploadCardItemUsecaseProps<T, ET, DT> = {
   itemIdGenerator : IdGenerator;
   insertCardItemToDb : InsertValueToDb<T>; // card_item 정보만 저장할 infra 함수
-  insertCardItemAndCardItemAssetToDb : InsertValueToDb<T>;
+  insertCardItemAndCardItemAssetToDb : InsertValueToDb<T>; // card_item, card_asset 정보를 저장할 수 있는 infra 함수
   deleteCardItemAndCardItemAssetToDb : DeleteValueToDb<T>;
   getUploadUrlFromDisk : GetUploadUrlFromDisk<ET>;
   getMultiVerGroupIdFromDisk : GetMultiPartVerGroupIdFromDisk<ET>;
