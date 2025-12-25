@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsBoolean, IsIn, IsJSON, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, Matches, Max, MaxLength, Min, ValidateIf, ValidateNested } from "class-validator";
+import { ArrayNotEmpty, IsArray, IsBoolean, IsIn, IsInt, IsJSON, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, Matches, Max, MaxLength, Min, ValidateIf, ValidateNested } from "class-validator";
 
 
 export class CreateCardValidate {
@@ -133,5 +133,21 @@ export class CreateCardItemValidate {
   @ValidateNested() // 중첩된 객체를 검증하라는 데코레이터 이다. 
   @Type(() => CreateCardItemInfoValidate)
   file_info? : CreateCardItemInfoValidate
+
+};
+
+export class GetPresignedUrlsValidate {
+
+  @IsNotEmpty()
+  @IsString()
+  upload_id : string;
+
+  @IsArray()
+  @ArrayNotEmpty()
+  @Type(() => Number)
+  @IsInt({ each : true })
+  @Min(1, { each : true })
+  @Max(10000, { each : true })
+  part_numbers : Array<number>
 
 };
