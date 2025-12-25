@@ -4,6 +4,8 @@ import { type RedisClientType } from "redis";
 import { CACHE_CARD_ITEM_ASSET_KEY_NAME, CACHE_CARD_NAMESPACE_NAME, REDIS_SERVER } from "../../cache.constants";
 import { InsertCardAssetDataProps } from "@app/card/commands/usecase";
 import { CardItemAssetProps } from "@domain/card/vo";
+import { ConfigService } from "@nestjs/config";
+import { UpdateCardItemAssetValueProps } from "@app/card/commands/dto";
 
 
 @Injectable()
@@ -88,6 +90,52 @@ export class UpdateCardItemAssetDataToRedis extends UpdateDataToCache<RedisClien
         await cache.unwatch();
       };
     };
+  };
+
+};
+
+// 여기에 값은 덮어쓰기는 해야 하는데.. 
+// item_Card_asset 관련 key_name 정리
+@Injectable()
+export class UpdateCardItemAssetEntityToRedis extends UpdateDataToCache<RedisClientType<any, any>> {
+
+  constructor (
+    @Inject(REDIS_SERVER) cache : RedisClientType<any, any>,
+    private readonly config : ConfigService
+  ) { super(cache); };
+
+  async updateKey({ namespace, keyName, updateValue }: { namespace: string; keyName: string; updateValue: UpdateCardItemAssetValueProps; }): Promise<boolean> {
+    
+    const keyNameMapping  = {
+      key_name: CACHE_CARD_ITEM_ASSET_KEY_NAME.KEY_NAME,
+      mime_type: CACHE_CARD_ITEM_ASSET_KEY_NAME.MIME_TYPE,
+      size: CACHE_CARD_ITEM_ASSET_KEY_NAME.SIZE,
+      status: CACHE_CARD_ITEM_ASSET_KEY_NAME.STATUS
+    } as const;
+
+    type CachecKeyType = keyof typeof keyNameMapping
+
+    const pipe = this.cache.multi(); // 정합성을 위해서 multi로 하는 편을 택하게 되었다. 
+
+    let updated : boolean = false;
+    (Object.keys(keyNameMapping) as Array<CachecKeyType>).forEach((kName : CachecKeyType) => {
+
+      const kValue = updateValue[kName];
+      
+      if ( kValue !== undefined ) {
+        updated = true;
+
+        const keyName : string = keyNameMapping[kName];
+
+        pipe.hSet(namespace, keyName, String(kValue)); // 데이터 저장
+      }
+    });
+
+    if ( !updated ) return true;
+
+    pipe.expire(namespace, 60 * 60);
+    const res = await pipe.exec();
+    return Array.isArray(res);
   };
 
 };
