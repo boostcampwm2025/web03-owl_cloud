@@ -23,7 +23,7 @@ type GetMultipartDataUrlUsecaseProps<T, ET, DT> = {
   selectCardAssetFromDb : SelectDataFromDb<ET>;  // 없으면 db
   pathMapping : PathMapping // path를 만드는 인터페이스
   getUploadUrlsFromDisk : GetMultiPartUploadUrlFromDisk<DT>; // url들 가져오는거
-  insertCardAssetToCache : InsertDataToCache<ET>; // 데이터 추가 하는 로직
+  insertCardAssetToCache : InsertDataToCache<T>; // 데이터 추가 하는 로직
 };
 
 // upload_id를 발급 받았을때 그를 바탕으로 데이터를 가져오고 싶을때 사용
