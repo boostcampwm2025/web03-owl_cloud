@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, Req, UseGuards, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Body, Controller, HttpCode, Param, Post, Req, UseGuards, UsePipes, ValidationPipe } from "@nestjs/common";
 import { JwtGuard } from "../auth/guards";
 import { type Request } from "express";
 import { CardService } from "./card.service";
@@ -61,6 +61,7 @@ export class CardController {
     transform : true,
     whitelist : true
   }))
+  @HttpCode(200) // 200으로 response
   async getPresignedUrlsController(
     @Body() dto : GetPresignedUrlsValidate,
     @Param("card_id") card_id : string,
