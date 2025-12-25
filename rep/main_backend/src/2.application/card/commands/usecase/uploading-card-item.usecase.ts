@@ -184,7 +184,7 @@ export class UploadingCardItemUsecase<T, ET, DT> {
 
           // 5. item_id, upload_id, part_size 반환
           const returnDto : AfterCreateCardItemDataInfo = {
-            item_id : cardItem.item_id, big : { upload_id, part_size : 10 }
+            item_id : cardItem.item_id, big : { upload_id, part_size : 10 * 1024 * 1024 }
           };
           return returnDto;
         }
