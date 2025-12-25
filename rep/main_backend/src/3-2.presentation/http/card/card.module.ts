@@ -5,7 +5,7 @@ import { CardService } from "./card.service";
 import { CheckCardItemDatasUsecase, CheckCardItemDataUsecase, CreateCardUsecase, UpdateCardItemDataUsecase, UploadingCardItemUsecase } from "@app/card/commands/usecase";
 import { CARD_ITEM_ASSET_NAMESPACE, CARD_ITEM_ID_ATTRIBUTE_NAME, CARD_ITEM_ID_KEY_NAME, CARD_ITEM_STATUS_ATTRIBUTE_NAME, CARD_ITEM_STATUS_KEY_NAME, CardIdGenerator, CardItemPathMapping } from "./card.interface";
 import { DeleteCardItemAndCardAssetDataToMysql, InsertCardAndCardStateDataToMysql, InsertCardItemAndCardAssetDataToMysql, InsertCardItemDataToMysql, UpdateCardItemAssetDataToMysql, UpdateCardItemAssetEntityToMySql } from "@infra/db/mysql/card/card.outbound";
-import { CheckPresignedUrlFromAwsS3, CheckUploadDatasFromAwsS3, GetMultipartUploadIdFromS3Bucket, GetPresignedUrlFromS3Bucket, GetPresignedUrlsFromS3Bucket } from "@infra/disk/s3/adapters/disk.inbound";
+import { CheckPresignedUrlFromAwsS3, CheckUploadDatasFromAwsS3, GetCompleteMultipartTagsFromAwsS3, GetMultipartUploadIdFromS3Bucket, GetPresignedUrlFromS3Bucket, GetPresignedUrlsFromS3Bucket } from "@infra/disk/s3/adapters/disk.inbound";
 import { InsertCardItemAssetInitDataToRedis, UpdateCardItemAssetDataToRedis, UpdateCardItemAssetEntityToRedis } from "@infra/cache/redis/card/card.outbound";
 import { GetMultipartDataUrlUsecase } from "@app/card/queries/usecase";
 import { CACHE_CARD_ITEM_ASSET_KEY_NAME, CACHE_CARD_NAMESPACE_NAME } from "@infra/cache/cache.constants";
@@ -214,6 +214,7 @@ import { CompleteUploadToAwsS3 } from "@/3-1.infra/disk/s3/adapters/disk.outboun
         selectCardAssetFromDb : SelectCardItemAssetFromMysql,
         insertCardAssetToCache : InsertCardItemAssetInitDataToRedis,
         getUploadUrlFromDisk : GetPresignedUrlFromS3Bucket,
+        getCompleteUploadUrlFromDisk : GetCompleteMultipartTagsFromAwsS3,
         getMultiVerGroupIdFromDisk : GetMultipartUploadIdFromS3Bucket,
         updateCardAssetToDb : UpdateCardItemAssetEntityToMySql,
         updateCardAssetToCache : UpdateCardItemAssetEntityToRedis
@@ -221,7 +222,7 @@ import { CompleteUploadToAwsS3 } from "@/3-1.infra/disk/s3/adapters/disk.outboun
         return new UpdateCardItemDataUsecase({
           usecaseValues : {
             cardAssetNamespace, itemIdKeyName, itemIdAttribute
-          }, selectCardAssetFromCache, selectCardAssetFromDb, insertCardAssetToCache, getUploadUrlFromDisk, getMultiVerGroupIdFromDisk, updateCardAssetToDb, updateCardAssetToCache
+          }, selectCardAssetFromCache, selectCardAssetFromDb, insertCardAssetToCache, getUploadUrlFromDisk, getCompleteUploadUrlFromDisk, getMultiVerGroupIdFromDisk, updateCardAssetToDb, updateCardAssetToCache
         })
       },
       inject : [
@@ -232,6 +233,7 @@ import { CompleteUploadToAwsS3 } from "@/3-1.infra/disk/s3/adapters/disk.outboun
         SelectCardItemAssetFromMysql,
         InsertCardItemAssetInitDataToRedis,
         GetPresignedUrlFromS3Bucket,
+        GetCompleteMultipartTagsFromAwsS3,
         GetMultipartUploadIdFromS3Bucket,
         UpdateCardItemAssetEntityToMySql,
         UpdateCardItemAssetEntityToRedis

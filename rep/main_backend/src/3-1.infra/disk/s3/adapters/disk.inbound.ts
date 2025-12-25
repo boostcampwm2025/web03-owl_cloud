@@ -1,13 +1,13 @@
-import { CheckUploadDataFromDisk, CheckUploadDatasFromDisk, GetMultiPartUploadUrlFromDisk, GetMultiPartVerGroupIdFromDisk, GetUploadUrlFromDisk } from "@app/ports/disk/disk.inbound";
-import { CreateMultipartUploadCommand, HeadObjectCommand, ListPartsCommand, ListPartsCommandOutput, Part, PutObjectCommand, S3Client, UploadPartCommand } from "@aws-sdk/client-s3";
+import { CheckUploadDataFromDisk, CheckUploadDatasFromDisk, GetMultiPartUploadUrlFromDisk, GetMultiPartVerCompleteGroupIdFromDisk, GetMultiPartVerGroupIdFromDisk, GetUploadUrlFromDisk } from "@app/ports/disk/disk.inbound";
+import { CreateMultipartUploadCommand, HeadObjectCommand, ListMultipartUploadsCommand, ListPartsCommand, ListPartsCommandOutput, Part, PutObjectCommand, S3Client, UploadPartCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Inject, Injectable } from "@nestjs/common";
 import { S3_DISK } from "../../disk.constants";
 import { ConfigService } from "@nestjs/config";
 import path from "path";
 import { GetUrlTypes } from "@app/card/queries/dto";
-import { DiskError } from "@error/infra/card/card.error";
-import { CheckCardItemDataTag } from "@app/card/commands/dto";
+import { DiskError, NotMakeUploadId } from "@error/infra/card/card.error";
+import { ChangeFileType, CheckCardItemDataTag, CompletePartsType } from "@app/card/commands/dto";
 
 
 @Injectable()
@@ -216,6 +216,140 @@ export class CheckUploadDatasFromAwsS3 extends CheckUploadDatasFromDisk<S3Client
 
 
     return true;
+  };
+
+};
+
+@Injectable()
+export class GetCompleteMultipartTagsFromAwsS3 extends GetMultiPartVerCompleteGroupIdFromDisk<S3Client> {
+
+  constructor(
+    @Inject(S3_DISK) disk : S3Client,
+    private readonly config : ConfigService
+  ) { super(disk); };
+
+  private parseEtag(etag: string) : string {
+    return etag.replace(/"/g, "").trim();
+  }
+
+  // upload_id를 찾는다. 
+  private async findUploadId({
+    Bucket, key_name
+  } : {
+    Bucket : string;
+    key_name : string;
+  }) : Promise<string | undefined> {
+    
+    const disk = this.disk;
+
+    const res = await disk.send(
+      new ListMultipartUploadsCommand({
+        Bucket,
+        Prefix : key_name
+      })
+    );
+
+    const uploads = res.Uploads ?? [];
+    if ( uploads.length === 0 ) return undefined;
+
+    // 가장 최신의 key를 가져온다.
+    const matched = uploads
+    .filter((u) => u.Key === key_name && u.UploadId)
+    .sort((a, b) => {
+      const ta = a.Initiated ? new Date(a.Initiated).getTime() : 0;
+      const tb = b.Initiated ? new Date(b.Initiated).getTime() : 0;
+      return tb - ta;
+    });
+
+    return matched[0]?.UploadId;
+  };
+
+  // 새로운 upload_id를 만든다. 
+  private async createUploadId({
+    Bucket, key_name, mime_type
+  } : {
+    Bucket : string, key_name : string, mime_type : string
+  }) : Promise<string> {
+
+    const res = await this.disk.send(
+      new CreateMultipartUploadCommand({
+        Bucket,
+        Key: key_name,
+        ContentType: mime_type,
+        // 필요하면 Metadata/CacheControl 등 추가
+      })
+    );
+
+    if ( !res.UploadId ) throw new NotMakeUploadId();
+
+    return res.UploadId;
+  }
+
+  // 완료 목록 가져오기 
+  private async loadCompleteParts({
+    Bucket, key_name, UploadId
+  } : {
+    Bucket : string; key_name : string; UploadId : string;
+  }) : Promise<Array<CompletePartsType>> {
+
+    const disk = this.disk;
+
+    let parts : Array<CompletePartsType> = [];
+    let nextPartNumberMarker: string | undefined = undefined;
+
+    while ( true ) {
+      const res : ListPartsCommandOutput = await disk.send(
+        new ListPartsCommand({
+          Bucket,
+          Key : key_name,
+          UploadId,
+          PartNumberMarker : nextPartNumberMarker
+        })
+      );
+
+      for ( const p of res.Parts ?? [] ) {
+        if ( p.PartNumber && p.ETag ) {
+          parts.push({
+            part_number : p.PartNumber,
+            etag : this.parseEtag(p.ETag)
+          })
+        }
+      };
+
+      if ( !res.IsTruncated ) break;
+      nextPartNumberMarker = res.NextPartNumberMarker?.toString();
+      if (!nextPartNumberMarker) break;
+    };
+
+    parts.sort((a, b) => (a.part_number ?? 0) - (b.part_number ?? 0));
+    return parts;
+  };
+
+  async getCompleteMultiId({ pathName, mime_type }: { pathName: Array<string>; mime_type: string; }): Promise<ChangeFileType> {
+
+    const key_name : string = path.posix.join(...pathName);
+    const Bucket : string = this.config.get<string>("NODE_APP_AWS_BUCKET_NAME", "Bucket");
+
+    // upload_id를 먼저 찾는다. 
+    let UploadId : string | undefined = await this.findUploadId({ Bucket, key_name });
+
+    // 만약 없다면 새로운 upload_id를 발급하고 빈 완료목록을 준다.
+    if ( !UploadId ) {
+      UploadId = await this.createUploadId({ Bucket, key_name, mime_type });
+
+      return {
+        upload_id : UploadId,
+        complete_parts : []
+      };
+    };
+
+    // 완료 목록을 가져온다. 
+    const complete_parts : Array<CompletePartsType> = await this.loadCompleteParts({ Bucket, key_name, UploadId });
+
+    return {
+      upload_id : UploadId,
+      complete_parts
+    };
   };
 
 };

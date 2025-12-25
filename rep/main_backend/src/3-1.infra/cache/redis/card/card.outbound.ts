@@ -110,7 +110,8 @@ export class UpdateCardItemAssetEntityToRedis extends UpdateDataToCache<RedisCli
       key_name: CACHE_CARD_ITEM_ASSET_KEY_NAME.KEY_NAME,
       mime_type: CACHE_CARD_ITEM_ASSET_KEY_NAME.MIME_TYPE,
       size: CACHE_CARD_ITEM_ASSET_KEY_NAME.SIZE,
-      status: CACHE_CARD_ITEM_ASSET_KEY_NAME.STATUS
+      status: CACHE_CARD_ITEM_ASSET_KEY_NAME.STATUS,
+      upload_id : CACHE_CARD_ITEM_ASSET_KEY_NAME.UPLOAD_ID
     } as const;
 
     type CachecKeyType = keyof typeof keyNameMapping

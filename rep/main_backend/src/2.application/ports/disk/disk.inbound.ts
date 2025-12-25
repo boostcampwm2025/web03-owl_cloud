@@ -29,6 +29,15 @@ export class GetMultiPartVerGroupIdFromDisk<T> extends InboundBaseDisk<T> {
 };
 
 @Injectable()
+export class GetMultiPartVerCompleteGroupIdFromDisk<T> extends InboundBaseDisk<T> {
+  constructor( disk : T ) { super(disk) };
+
+  public async getCompleteMultiId( { pathName, mime_type } : { pathName : Array<string>, mime_type : string } ) : Promise<any> | never {
+    throw new NullInterfaceError();
+  };
+};
+
+@Injectable()
 export class GetMultiPartUploadUrlFromDisk<T> extends InboundBaseDisk<T> {
   constructor( disk : T ) { super(disk); };
 

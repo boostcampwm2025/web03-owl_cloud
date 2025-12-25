@@ -36,3 +36,12 @@ export class NotCompleteDataToDisk extends BaseError {
     });
   }
 }
+
+export class NotMakeUploadId extends BaseError {
+  constructor() {
+    super({
+      message: 'upload_id를 만들지 못했습니다.',
+      status: 500,
+    });
+  }
+}

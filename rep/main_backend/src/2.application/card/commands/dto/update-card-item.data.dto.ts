@@ -28,9 +28,14 @@ type BigSizeFileType = {
   part_size : number;
 };
 
-type ChangeFileType = {
+export type CompletePartsType = {
+  part_number : number;
+  etag : string;
+};
+
+export type ChangeFileType = {
   upload_id : string;
-  complete_part_number : Array<number>;
+  complete_parts : Array<CompletePartsType>
 };  
 
 export type AfterUpdateCardItemDataInfo = {

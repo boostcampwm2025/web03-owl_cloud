@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { AfterCreateCardItemDataInfo, AfterUpdateCardItemDataInfo, UpdateCardItemAssetValueProps, UpdateCardItemInfoProps } from "../dto";
+import { AfterCreateCardItemDataInfo, AfterUpdateCardItemDataInfo, ChangeFileType, UpdateCardItemAssetValueProps, UpdateCardItemInfoProps } from "../dto";
 import { CardAggregate } from "@domain/card/card.aggregate";
 import { Card, CardItemAsset } from "@domain/card/entities";
 import { CardItemAssetProps } from "@domain/card/vo";
@@ -9,7 +9,7 @@ import { SelectDataFromDb } from "@app/ports/db/db.inbound";
 import { InsertCardAssetDataProps } from "./uploading-card-item.usecase";
 import { NotAllowCardItemMimeTypeValue, NotAllowUpdateCardItemDataToCacheOrDb, NotCreateCardItemData, NotFoundCardItemAssetKeyName } from "@error/application/card/card.error";
 import { InsertDataToCache, UpdateDataToCache } from "@app/ports/cache/cache.outbound";
-import { GetMultiPartVerGroupIdFromDisk, GetUploadUrlFromDisk } from "@app/ports/disk/disk.inbound";
+import { GetMultiPartVerCompleteGroupIdFromDisk, GetMultiPartVerGroupIdFromDisk, GetUploadUrlFromDisk } from "@app/ports/disk/disk.inbound";
 import { UpdateValueToDb } from "@app/ports/db/db.outbound";
 
 
@@ -25,6 +25,7 @@ type UpdateCardItemDataUsecaseProps<T, ET, DT> = {
   selectCardAssetFromDb : SelectDataFromDb<ET>;
   insertCardAssetToCache : InsertDataToCache<T>; 
   getUploadUrlFromDisk : GetUploadUrlFromDisk<DT>;
+  getCompleteUploadUrlFromDisk : GetMultiPartVerCompleteGroupIdFromDisk<DT>;
   getMultiVerGroupIdFromDisk : GetMultiPartVerGroupIdFromDisk<DT>;
   updateCardAssetToDb : UpdateValueToDb<ET>; // db에 데이터 수정하기 
   updateCardAssetToCache : UpdateDataToCache<T>; // cache에 데이터 수정하기
@@ -38,18 +39,20 @@ export class UpdateCardItemDataUsecase<T, ET, DT> {
   private readonly selectCardAssetFromDb : UpdateCardItemDataUsecaseProps<T, ET, DT>["selectCardAssetFromDb"];
   private readonly insertCardAssetToCache : UpdateCardItemDataUsecaseProps<T, ET, DT>["insertCardAssetToCache"];
   private readonly getUploadUrlFromDisk : UpdateCardItemDataUsecaseProps<T, ET, DT>["getUploadUrlFromDisk"];
+  private readonly getCompleteUploadUrlFromDisk : UpdateCardItemDataUsecaseProps<T, ET, DT>["getCompleteUploadUrlFromDisk"];
   private readonly getMultiVerGroupIdFromDisk : UpdateCardItemDataUsecaseProps<T, ET, DT>["getMultiVerGroupIdFromDisk"];
   private readonly updateCardAssetToDb : UpdateCardItemDataUsecaseProps<T, ET, DT>["updateCardAssetToDb"];
   private readonly updateCardAssetToCache : UpdateCardItemDataUsecaseProps<T, ET, DT>["updateCardAssetToCache"];
 
   constructor({
-    usecaseValues, selectCardAssetFromCache, selectCardAssetFromDb, insertCardAssetToCache, getUploadUrlFromDisk, getMultiVerGroupIdFromDisk, updateCardAssetToDb, updateCardAssetToCache
+    usecaseValues, selectCardAssetFromCache, selectCardAssetFromDb, insertCardAssetToCache, getUploadUrlFromDisk, getCompleteUploadUrlFromDisk, getMultiVerGroupIdFromDisk, updateCardAssetToDb, updateCardAssetToCache
   } : UpdateCardItemDataUsecaseProps<T, ET, DT>) {
     this.usecaseValues = usecaseValues;
     this.selectCardAssetFromCache = selectCardAssetFromCache;
     this.selectCardAssetFromDb = selectCardAssetFromDb;
     this.insertCardAssetToCache = insertCardAssetToCache;
     this.getUploadUrlFromDisk = getUploadUrlFromDisk;
+    this.getCompleteUploadUrlFromDisk = getCompleteUploadUrlFromDisk;
     this.getMultiVerGroupIdFromDisk = getMultiVerGroupIdFromDisk;
     this.updateCardAssetToDb = updateCardAssetToDb;
     this.updateCardAssetToCache = updateCardAssetToCache;
@@ -141,14 +144,35 @@ export class UpdateCardItemDataUsecase<T, ET, DT> {
         return returnDto;
       } else {
         // 만약 같은 파일이라면?? 이부분에서 어떻게 추가를 할지 고민이다. -> 내생각에는 완료 목록도 같이 준다면 좋을 것 같다. 
+        if ( (cardAsset.key_name === checkCardAsset.key_name) && ( cardAsset.mime_type === checkCardAsset.mime_type ) && ( cardAsset.size === checkCardAsset.size ) ) {
+          // 3. 업데이트 완료된 파일 목록을 준다. 
+          const completeParts : ChangeFileType = await this.getCompleteUploadUrlFromDisk.getCompleteMultiId({ pathName : [
+            checkCardAsset.card_id, 
+            checkCardAsset.item_id, 
+            checkCardAsset.key_name
+          ], mime_type : checkCardAsset.mime_type });
 
-        // 3. 업데이트 완료된 파일 목록을 준다. 
+          // 만역 파일이 존재하지 않는다면 새로 발급해서 주는 방향으로 고민하려고 했다. 
 
-        // 4. 수정 없이 반환 -> 이미 uploading이기도 하고 모든게 그대로 이게 때문이다. -> 시간은 늘릴지 고민이다. 
+          // 4. cache에 upload_id만 수정 필요
+          const updateValue : UpdateCardItemAssetValueProps = {
+            item_id : checkCardAsset.item_id,
+            status : "uploading",
+            size : checkCardAsset.size,
+            key_name : checkCardAsset.key_name,
+            mime_type : dto.mime_type,
+            upload_id : completeParts.upload_id
+          };
+          const cacheUpdated : boolean = await this.updateCardAssetToCache.updateKey({ namespace, keyName : this.usecaseValues.itemIdKeyName, updateValue }); // cache 업데이트
+          if ( !cacheUpdated ) throw new NotAllowUpdateCardItemDataToCacheOrDb();
 
-
-        // 같은 파일이 아니면 새로운걸로 간주해서 변경하면 그만이다. 
-
+          // 5. 반환
+          const returnDto : AfterUpdateCardItemDataInfo = {
+            item_id : checkCardAsset.item_id, change : completeParts
+          };
+          return returnDto;
+        } 
+        // 같은 파일이 아니면 새로운걸로 간주해서 변경하면 그만이다.
         // 3. upload_id, part_size 
         const upload_id : string = await this.getMultiVerGroupIdFromDisk.getMultiId({ pathName : [
           checkCardAsset.card_id, 
