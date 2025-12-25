@@ -4,7 +4,7 @@ import { type Request } from "express";
 import { CardService } from "./card.service";
 import { Payload } from "@app/auth/commands/dto";
 import { CreateCardItemValidate, CreateCardValidate } from "./card.validate";
-import { CreateCardDto, CreateCardItemDataDto } from "@app/card/commands/dto";
+import { AfterCreateCardItemDataInfo, CreateCardDto, CreateCardItemDataDto } from "@app/card/commands/dto";
 
 
 @Controller("api/cards")
@@ -30,7 +30,7 @@ export class CardController {
       ...cardDto,
       user_id : payload.user_id
     };
-    const card_id : string = await this.cardService.CreateCardService(dto);
+    const card_id : string = await this.cardService.createCardService(dto);
     return {card_id};
   }
 
@@ -44,15 +44,14 @@ export class CardController {
   async createCardItemController(
     @Body() dto : CreateCardItemValidate,
     @Param("card_id") card_id : string
-  ) {
+  ) : Promise<AfterCreateCardItemDataInfo> {
     // 저장할 루트
     const payloadDto : CreateCardItemDataDto = {
       ...dto,
       card_id,
     };
-    
-
-
+    const afterCardItemDto = await this.cardService.createCardItemService(payloadDto);
+    return afterCardItemDto
   }
 
 };
