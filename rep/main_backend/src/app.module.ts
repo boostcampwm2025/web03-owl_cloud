@@ -13,6 +13,7 @@ import { RedisModule } from '@infra/cache/redis/redis';
 import { JwtModule } from '@infra/auth/jwt/jwt.module';
 import { CardModule } from '@present/http/card/card.module';
 import { S3DiskModule } from '@infra/disk/s3/disk';
+import { RedisChannelModule } from './3-1.infra/channel/redis/channel';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { S3DiskModule } from '@infra/disk/s3/disk';
     RedisModule, // redis를 사용하기 위한 모듈
     JwtModule, // jwt를 사용하기 위한 모듈
     S3DiskModule, // s3를 사용하기 위한 모듈
+    RedisChannelModule, // redis를 활용한 pub sub을 이용하기 위한 모듈
 
     // 우리가 집적 만든 모듈
     SettingModule, // 헬스 체크를 위한 모듈
