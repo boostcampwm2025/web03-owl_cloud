@@ -119,6 +119,12 @@ export class Card {
   @Field(() => String)
   background_color : string;
 
+  @Field(() => Int)
+  like_count : number;
+
+  @Field(() => Int)
+  view_count : number;
+
   @Field(() => [CardItem])
   card_items : CardItem[];
 

@@ -57,6 +57,8 @@ export class CreateCardUsecase<T> {
     const insertChecked : boolean = await this.insertCardAndCardStateToDb.insert(insertCardAndCardStateData);
     if ( !insertChecked ) throw new NotCreateCardStateError();
 
+    // 추후 cache를 추가하는게 좋아 보이기는 한다. 
+
     // 3. card_id 반환
     return cardAggregate.getCard().getCardId();
   };
