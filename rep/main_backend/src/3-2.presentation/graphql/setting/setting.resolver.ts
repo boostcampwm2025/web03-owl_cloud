@@ -2,7 +2,7 @@ import { Resolver, Query } from "@nestjs/graphql";
 
 
 @Resolver()
-export class SettingResolver {
+export class SettingGraphqlResolver {
 
   @Query(() => String)
   health() : string {

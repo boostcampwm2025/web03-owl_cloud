@@ -94,11 +94,30 @@ export class CardItem {
 
 };
 
+// 해당 card에 대해서 추가를 해준다. 
 @ObjectType()
 export class Card {
 
   @Field(() => ID)
   card_id : string;
+
+  @Field(() => Int)
+  category_id : number;
+
+  @Field(() => String, { nullable : true })
+  thumbnail_path  : string | null;
+
+  @Field(() => String)
+  title : string;
+
+  @Field(() => Int)
+  workspace_width : number;
+
+  @Field(() => Int)
+  workspace_height : number;
+
+  @Field(() => String)
+  background_color : string;
 
   @Field(() => [CardItem])
   card_items : CardItem[];

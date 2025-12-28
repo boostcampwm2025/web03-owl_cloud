@@ -19,7 +19,8 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from "path";
 import { type Request, type Response } from "express";
-import { SettingGraphqlModule } from './3-2.presentation/graphql/setting/setting.module';
+import { SettingGraphqlModule } from '@present/graphql/setting/setting.module';
+import { CardGraphqlModule } from "@present/graphql/card/card.module";
 
 @Module({
   imports: [
@@ -51,8 +52,9 @@ import { SettingGraphqlModule } from './3-2.presentation/graphql/setting/setting
     SettingModule, // 헬스 체크를 위한 모듈
     AuthModule, // 인증과 관련된 모듈
     CardModule, // card와 관련된 모듈
-
     SettingGraphqlModule, // graphql에 헬스체크를 위한 모듈
+    CardGraphqlModule, // graphql에서 card와 관련된 모듈
+
   ],
   controllers: [],
   providers: [],

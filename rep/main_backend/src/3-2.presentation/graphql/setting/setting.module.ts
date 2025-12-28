@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
-import { SettingResolver } from "./setting.resolver";
+import { SettingGraphqlResolver } from "./setting.resolver";
 
 
 @Module({
-  providers : [SettingResolver]
+  providers : [SettingGraphqlResolver]
 })
 export class SettingGraphqlModule {};
