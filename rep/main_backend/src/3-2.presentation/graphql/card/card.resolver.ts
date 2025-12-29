@@ -11,14 +11,14 @@ export class CardGraphqlResover {
   ) {};
 
   @Query(() => Card, { name : "card" }) // card_id를 대입할 수 있고 그걸 Args로 받는다. 
-  async card(@Args("card_id", { type : () => ID }) card_id : string) {
-    
+  async card(@Args("card_id", { type : () => ID }) card_id : string) : Promise<Card> {
+    return this.cardService.cardService(card_id);
   };
 
   // 모든 카드를 다 가져오는 로직
   @ResolveField(() => [CardItem], { name : "card_items" })
-  async cardItems(@Parent() card : Card) {
-    
+  async cardItems(@Parent() card : Card) : Promise<CardItem[]> {
+    return this.cardService.cardItemService(card.card_id);
   }
 
   // 카드에 아이템을 수정하는 로직 
