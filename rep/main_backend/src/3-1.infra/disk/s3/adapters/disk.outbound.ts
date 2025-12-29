@@ -6,6 +6,7 @@ import { ConfigService } from "@nestjs/config";
 import { NotCompleteDataToDisk } from "@error/infra/card/card.error";
 
 
+// 업로드 확인하는 로직
 @Injectable()
 export class CompleteUploadToAwsS3 extends CompleteUploadFileToDisk<S3Client> {
 

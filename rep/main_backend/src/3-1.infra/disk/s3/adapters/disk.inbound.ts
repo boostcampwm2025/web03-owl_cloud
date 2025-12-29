@@ -1,5 +1,5 @@
-import { CheckUploadDataFromDisk, CheckUploadDatasFromDisk, GetMultiPartUploadUrlFromDisk, GetMultiPartVerCompleteGroupIdFromDisk, GetMultiPartVerGroupIdFromDisk, GetUploadUrlFromDisk } from "@app/ports/disk/disk.inbound";
-import { CreateMultipartUploadCommand, HeadObjectCommand, ListMultipartUploadsCommand, ListPartsCommand, ListPartsCommandOutput, Part, PutObjectCommand, S3Client, UploadPartCommand } from "@aws-sdk/client-s3";
+import { CheckUploadDataFromDisk, CheckUploadDatasFromDisk, GetMultiPartUploadUrlFromDisk, GetMultiPartVerCompleteGroupIdFromDisk, GetMultiPartVerGroupIdFromDisk, GetUploadUrlFromDisk, GetUploadUrlsFromDisk } from "@app/ports/disk/disk.inbound";
+import { CreateMultipartUploadCommand, GetObjectCommand, HeadObjectCommand, ListMultipartUploadsCommand, ListPartsCommand, ListPartsCommandOutput, Part, PutObjectCommand, S3Client, UploadPartCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Inject, Injectable } from "@nestjs/common";
 import { S3_DISK } from "../../disk.constants";
@@ -220,6 +220,7 @@ export class CheckUploadDatasFromAwsS3 extends CheckUploadDatasFromDisk<S3Client
 
 };
 
+// 완료한 multipary tag를 다시 가져오는거 -> 업데이트 할때 사용될 예정
 @Injectable()
 export class GetCompleteMultipartTagsFromAwsS3 extends GetMultiPartVerCompleteGroupIdFromDisk<S3Client> {
 
@@ -352,4 +353,37 @@ export class GetCompleteMultipartTagsFromAwsS3 extends GetMultiPartVerCompleteGr
     };
   };
 
+};
+
+// card_item의 파일에 대해서 -> 전체 파일을 열때 presieng_url을 발급
+@Injectable()
+export class GetPresingendUrlsFromAwsS3 extends GetUploadUrlsFromDisk<S3Client> {
+
+  constructor(
+    @Inject(S3_DISK) disk : S3Client,
+    private readonly config : ConfigService
+  ) { super(disk); };
+
+  // item_id : presiegen_url 이런식으로 줄 예정이다. 
+  async getUrls(paths: Array<{ uniqueKey: string; pathName: string; mime_type: string; }>): Promise<Record<string, string>>  {
+    
+    const Bucket : string = this.config.get<string>("NODE_APP_AWS_BUCKET_NAME", "bucket");
+    const expiresIn : number = this.config.get<number>("NODE_APP_AWS_PRESIGNED_URL_EXPIRES_SEC", 180); // 기본은 3분
+
+    const results : Record<string, string> = {};
+    await Promise.all(
+      paths.map(async (path : { uniqueKey: string; pathName: string; mime_type: string; }) => {
+        const command = new GetObjectCommand({
+          Bucket,
+          Key : path.pathName
+        })
+        const presigend_url = await getSignedUrl(this.disk, command, {
+          expiresIn 
+        })
+        if ( presigend_url ) results[path.uniqueKey] = presigend_url;
+      })
+    );
+    
+    return results;
+  }
 };

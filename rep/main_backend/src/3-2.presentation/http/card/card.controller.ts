@@ -7,8 +7,6 @@ import { CheckEtagsValidate, CheckEtagValidate, CreateCardItemValidate, CreateCa
 import { AfterCreateCardItemDataInfo, AfterUpdateCardItemDataInfo, CheckCardItemDatasUrlProps, CheckCardItemDataUrlProps, CreateCardDto, CreateCardItemDataDto, UpdateCardItemInfoProps } from "@app/card/commands/dto";
 import { MultiPartResponseDataDto, UploadMultipartDataDto } from "@app/card/queries/dto";
 import { RedisSseBrokerService } from "@infra/channel/redis/channel.service";
-import { CHANNEL_SSE_NAME } from "@infra/channel/channel.constants";
-import { map, Observable } from "rxjs";
 
 
 @Controller("api/cards")

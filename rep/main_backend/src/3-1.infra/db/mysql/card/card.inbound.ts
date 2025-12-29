@@ -86,7 +86,7 @@ export class SelectAllCardItemAndAssetFromMysql extends SelectDataFromDb<Pool> {
     db, attributeName, attributeValue
   } : {
     db : Pool, attributeName : string, attributeValue : string
-  }) : Promise<Array<GetCardItemAndAssetListsType>> {
+  }) : Promise<Array<GetCardItemAndAssetListsType> | undefined> {
 
     // card_item과 관련된 테이블
     const cardItemTableName : string = DB_TABLE_NAME.CARD_ITEMS;
@@ -203,11 +203,11 @@ export class SelectAllCardItemAndAssetFromMysql extends SelectDataFromDb<Pool> {
   }
 
   // 해당 card_id에 해당하는 값을 찾으면 된다.
-  async select({ attributeName, attributeValue, }: { attributeName: string; attributeValue: any; }): Promise<Array<GetCardItemAndAssetListsType>> {
+  async select({ attributeName, attributeValue, }: { attributeName: string; attributeValue: any; }): Promise<Array<GetCardItemAndAssetListsType> | undefined> {
     
     const db = this.db;
 
-    const datas : Array<GetCardItemAndAssetListsType> = await this.selectData({ db, attributeName, attributeValue });
+    const datas : Array<GetCardItemAndAssetListsType> | undefined = await this.selectData({ db, attributeName, attributeValue });
 
     return datas;
   }
