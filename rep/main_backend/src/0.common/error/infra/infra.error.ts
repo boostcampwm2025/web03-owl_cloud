@@ -40,3 +40,12 @@ export class ChannelError extends BaseError {
     });
   }
 }
+
+export class CacheError extends BaseError {
+  constructor(message : string) {
+    super({
+      message : `${message}`,
+      status : 500
+    });
+  }
+}

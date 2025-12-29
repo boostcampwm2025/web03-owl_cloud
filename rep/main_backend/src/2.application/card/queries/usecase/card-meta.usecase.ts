@@ -1,5 +1,5 @@
 import { type CardStateProps, type CardProps } from "@domain/card/vo";
-import { SelectDatasFromCache } from "@app/ports/cache/cache.inbound";
+import { SelectDataFromCache } from "@app/ports/cache/cache.inbound";
 import { InsertDataToCache } from "@app/ports/cache/cache.outbound";
 import { SelectDataFromDb } from "@app/ports/db/db.inbound";
 import { Injectable } from "@nestjs/common";
@@ -10,14 +10,14 @@ import { CardAndStatReturns } from "../dto";
 
 type CardMetaUsecaseValues = {
   cardNamespace : string;
-  cardStatNamespace : string;
+  cardIdKeyName : string;
   cardIdAttributeName : string;
 };
 
 type CardMetaUsecaseProps<T, CT> = {
   usecaseValues : CardMetaUsecaseValues;
   selectCardMetaAndStatFromDb : SelectDataFromDb<T>; // card, stat 데이터를 db에서 받아오는 로직 
-  selectCardMetaAndStatFromCache : SelectDatasFromCache<CT>; // card_ stat 데이터를 cache에서 받아오는 로직 
+  selectCardMetaAndStatFromCache : SelectDataFromCache<CT>; // card_ stat 데이터를 cache에서 받아오는 로직 
   insertCardMetaAndStatToCache : InsertDataToCache<CT>; // card, stat 데이터를 cache로 저장하기
   mappingCardAndStat : DtoMappingEntity // mapping을 위한 port
 };
@@ -52,11 +52,11 @@ export class CardMetaDataUsecase<T, CT> {
     let cardAndStatProps : GetCardMetaAndStatProps | undefined;
 
     // 1. cache에서 card_item, stat을 확인함
-    const namespaces : Array<string> = [
-      `${this.usecaseValues.cardNamespace}:${card_id}`,
-      `${this.usecaseValues.cardStatNamespace}:${card_id}`
-    ]; // card 관련 card_stat관련 cache 찾기
-    cardAndStatProps  = await this.selectCardMetaAndStatFromCache.selects({ namespaces });
+    const namespace : string = `${this.usecaseValues.cardNamespace}:${card_id}`
+     // card 관련 card_stat관련 cache 찾기
+    cardAndStatProps  = await this.selectCardMetaAndStatFromCache.select({
+      namespace, keyName : this.usecaseValues.cardIdKeyName
+    });
     if ( !cardAndStatProps ) {
       // 2. 없으면 db에서 찾는다 
       cardAndStatProps = await this.selectCardMetaAndStatFromDb.select({ 
