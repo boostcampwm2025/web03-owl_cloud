@@ -9,6 +9,7 @@ import { TextItem, ImageItem, VideoItem } from '@/types/workspace';
 import NavButton from './sidebar/NavButton';
 import CardPanel from './sidebar/card/CardPanel';
 import TextPanel from './sidebar/TextPanel';
+import ImagePanel from './sidebar/image/ImagePanel';
 
 type TabType = 'card' | 'text' | 'image' | 'video' | null;
 
