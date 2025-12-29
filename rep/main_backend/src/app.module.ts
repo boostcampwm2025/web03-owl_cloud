@@ -21,6 +21,7 @@ import { join } from "path";
 import { type Request, type Response } from "express";
 import { SettingGraphqlModule } from '@present/graphql/setting/setting.module';
 import { CardGraphqlModule } from "@present/graphql/card/card.module";
+import GraphQLJSON from "graphql-type-json";
 
 @Module({
   imports: [
@@ -34,6 +35,9 @@ import { CardGraphqlModule } from "@present/graphql/card/card.module";
 
       autoSchemaFile : join( process.cwd(), "src/3-2.presentation/graphql/schema.gql" ), // 파일 고정 ( graphql 파일 생성 )
       sortSchema : true, // graphql 파일이 자주 변경되는걸 막아주고 알파벳 순으로 정렬되도록 함
+      resolvers : {
+        JSON : GraphQLJSON // json을 어떤 방식으로 처리해야 하는지 알려줌
+      },
 
       playground : process.env.NODE_ENV !== "production", // graphql 테스트 
       introspection : process.env.NODE_ENV !== "production", // 그 playground를 조회할 수 있게 하는 기능 
