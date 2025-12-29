@@ -19,7 +19,7 @@ type CardMetaUsecaseProps<T, CT> = {
   selectCardMetaAndStatFromDb : SelectDataFromDb<T>; // card, stat 데이터를 db에서 받아오는 로직 
   selectCardMetaAndStatFromCache : SelectDatasFromCache<CT>; // card_ stat 데이터를 cache에서 받아오는 로직 
   insertCardMetaAndStatToCache : InsertDataToCache<CT>; // card, stat 데이터를 cache로 저장하기
-  mappingCardAndStat : DtoMappingEntity 
+  mappingCardAndStat : DtoMappingEntity // mapping을 위한 port
 };
 
 export type GetCardMetaAndStatProps = {
@@ -68,6 +68,7 @@ export class CardMetaDataUsecase<T, CT> {
       await this.insertCardMetaAndStatToCache.insert(cardAndStatProps);
     }
 
+    // 해당 carddto를 원하는 모양으로 mapping 시키기 
     const cardAndStatData : CardAndStatReturns = this.mappingCardAndStat.mapping(cardAndStatProps);
 
     return cardAndStatData;
