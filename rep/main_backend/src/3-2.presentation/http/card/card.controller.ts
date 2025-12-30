@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Param, Patch, Post, Req, Sse, UseGuards, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Body, Controller, HttpCode, Param, Patch, Post, Req, Sse, UseGuards, UsePipes, ValidationPipe, MessageEvent } from "@nestjs/common";
 import { JwtGuard } from "../auth/guards";
 import { type Request } from "express";
 import { CardService } from "./card.service";
@@ -6,12 +6,16 @@ import { Payload } from "@app/auth/commands/dto";
 import { CheckEtagsValidate, CheckEtagValidate, CreateCardItemValidate, CreateCardValidate, GetPresignedUrlsValidate, UpdateCardItemFileValdate } from "./card.validate";
 import { AfterCreateCardItemDataInfo, AfterUpdateCardItemDataInfo, CheckCardItemDatasUrlProps, CheckCardItemDataUrlProps, CreateCardDto, CreateCardItemDataDto, UpdateCardItemInfoProps } from "@app/card/commands/dto";
 import { MultiPartResponseDataDto, UploadMultipartDataDto } from "@app/card/queries/dto";
+import { map, Observable } from "rxjs";
+import { CHANNEL_SSE_NAME } from "@infra/channel/channel.constants";
+import { RedisSseBrokerService } from "@infra/channel/redis/channel.service";
 
 
 @Controller("api/cards")
 export class CardController {
   constructor(
     private readonly cardService : CardService,
+    private readonly redisSseBroker : RedisSseBrokerService
   ) {}
 
   @Post("")
@@ -35,26 +39,25 @@ export class CardController {
     return {card_id};
   };
 
-  // sse를 활용하여 card_id에 해당하는 card_item 리스트를 볼 수 있다. - get 요청 -> 모든 유저가 card를 볼 수 있게 한다. -> 사용하려고 했으나 필요성의 의문
-  // @Sse(":card_id/sse")
-  // sseCardItemListController(
-  //   @Req() req : Request,
-  //   @Param("card_id") card_id : string
-  // ) : Observable<MessageEvent> {
-  //   const channel : string = `${CHANNEL_SSE_NAME.CARD_ITEMS}:${card_id}:list`;
-  //   this.redisSseBroker.subscribe(channel); // 채널에 연결
-  //   req.on("close", () => {
-  //     this.redisSseBroker.release(channel); // 닫히면 channel을 release한다. 
-  //   });
-  //   // 유저에게 현재 card_item_list를 우선적으로 전달해준다. 
+  // sse를 이용해서 해당 카드에 대해서 받아볼 수 있게 할 예정이다. ( 실시간 카드 확인 )
+  @Sse("sse")
+  sseCardItemListController(
+    @Req() req : Request
+  ) : Observable<MessageEvent> {
+    const channel : string = `${CHANNEL_SSE_NAME.CARD_ITEMS}:list`;
+    this.redisSseBroker.subscribe(channel); // 채널에 연결
+    req.on("close", () => {
+      this.redisSseBroker.release(channel); // 닫히면 channel을 release한다. 
+    });
+    // 유저에게 현재 card_item_list를 우선적으로 전달해준다. 
     
-  //   // data에서 가져와서 유저에게 전달한다.
-  //   return this.redisSseBroker.onChannel(channel).pipe(
-  //     map((payload) => ({
-  //       data : payload.data
-  //     }))
-  //   );
-  // };
+    // data에서 가져와서 유저에게 전달한다. -> 해당 payload를 data : any 에 맞게 변형 하는 pipe를 사용
+    return this.redisSseBroker.onChannel(channel).pipe(
+      map((payload) => ({
+        data : payload.data
+      }))
+    );
+  };
 
   @Post(":card_id/items")
   @UseGuards(JwtGuard)
