@@ -6,3 +6,4 @@ export * from "./update-card-item-data.usecase";
 export * from "./update-card-item.usecase";
 export * from "./delete-card-item.usecase";
 export * from "./update-card.usecase";
+export * from "./delete-card.usecase";

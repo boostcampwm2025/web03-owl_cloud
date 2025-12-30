@@ -309,7 +309,7 @@ export class InsertCardItemAndCardAssetDataToMysql extends InsertValueToDb<Pool>
 
 };
 
-// card_item, asset 제거 함수
+// card_item, asset 제거 함수 -> 이 코드는 실제 하드 삭제인 이유는 이 코드가 쓰이는 곳이 오류가 발생했을때 삭제하는 것이기 때문이다. 
 @Injectable()
 export class DeleteCardItemAndCardAssetDataToMysql extends DeleteValueToDb<Pool> {
 
@@ -329,15 +329,6 @@ export class DeleteCardItemAndCardAssetDataToMysql extends DeleteValueToDb<Pool>
 
       await connection.beginTransaction();
 
-      const cardItemTable : string = DB_TABLE_NAME.CARD_ITEMS;
-
-      const cardItemSql : string = `
-      DELETE FROM \`${cardItemTable}\`
-      WHERE \`${DB_CARD_ITEMS_ATTRIBUTE_NAME.ITEM_ID}\` = UUID_TO_BIN(?, true)
-      `;
-
-      const [ deleteCardItemChekced ] = await connection.query<ResultSetHeader>(cardItemSql, [ uniqueValue ]);
-
       const cardItemAssetTable : string = DB_TABLE_NAME.CARD_ITEM_ASSETS;
 
       const cardItemAssetSql : string = `
@@ -346,6 +337,15 @@ export class DeleteCardItemAndCardAssetDataToMysql extends DeleteValueToDb<Pool>
       `;
 
       const [ deleteCardItemAssetChecked ] = await connection.query<ResultSetHeader>(cardItemAssetSql, [ uniqueValue ]);
+
+      const cardItemTable : string = DB_TABLE_NAME.CARD_ITEMS;
+
+      const cardItemSql : string = `
+      DELETE FROM \`${cardItemTable}\`
+      WHERE \`${DB_CARD_ITEMS_ATTRIBUTE_NAME.ITEM_ID}\` = UUID_TO_BIN(?, true)
+      `;
+
+      const [ deleteCardItemChekced ] = await connection.query<ResultSetHeader>(cardItemSql, [ uniqueValue ]);
 
       await connection.commit();
 

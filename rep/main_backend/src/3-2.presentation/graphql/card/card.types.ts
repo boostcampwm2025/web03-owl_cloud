@@ -165,6 +165,20 @@ export class UpdateCardOutput {
   ok : boolean
 };
 
+// card를 삭제하기 위한 input
+@InputType()
+export class DeleteCardInput {
+  @Field(() => ID)
+  card_id : string;
+};
+
+// card 삭제 후 받게 되는 output
+@ObjectType()
+export class DeleteCardOutput {
+  @Field(() => Boolean)
+  ok : boolean
+};
+
 // card_item을 수정하기 위한 input 이라고 할 수 있다. 
 @InputType()
 export class UpdateCardItemInput {
