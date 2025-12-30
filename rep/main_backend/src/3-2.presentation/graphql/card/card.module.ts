@@ -4,13 +4,13 @@ import { CardGraphqlService } from "./card.service";
 import { CardMetaDataUsecase, GetCardItemDatasUsecase } from "@app/card/queries/usecase";
 import { SelectAllCardItemAndAssetFromMysql, SelectCardAndStatFromMysql } from "@infra/db/mysql/card/card.inbound";
 import { SelectCardMetaAndStatFromRedis } from "@infra/cache/redis/card/card.inbound";
-import { DeleteCardAssetToRedis, InsertCardAndCardStatToRedis, UpdateCardStatToRedis } from "@infra/cache/redis/card/card.outbound";
+import { DeleteCardAssetToRedis, DeleteCardToRedis, InsertCardAndCardStatToRedis, UpdateCardStatToRedis, UpdateCardToRedis } from "@infra/cache/redis/card/card.outbound";
 import { CARD_ASSET_NAMESPACE_ATTR, CARD_ID_ATTRIBUTE_NAME_ATTR, CARD_ID_KEY_NAME_ATTR, CARD_NAMESPACE_ATTR, CARD_VIEW_COUNT_ATTRIBUTE_NAME_ATTR, CARD_VIEW_COUNT_KEY_NAME_ATTR, MappingCardToCardStat } from "./card.interface";
 import { CACHE_CARD_KEY_NAME, CACHE_CARD_NAMESPACE_NAME } from "@infra/cache/cache.constants";
 import { DB_CARD_STATS_ATTRIBUTE_NAME, DB_CARDS_ATTRIBUTE_NAME } from "@infra/db/db.constants";
 import { GetPresingendUrlsFromAwsS3 } from "@infra/disk/s3/adapters/disk.inbound";
-import { DeleteCardItemsToMySql, UpdateCardItemsToMysql, UpdateCardStatToMySql } from "@infra/db/mysql/card/card.outbound";
-import { DeleteCardItemsUsecase, UpdateCardItemsUsecase } from "@/2.application/card/commands/usecase";
+import { DeleteCardItemsToMySql, DeleteCardToMysql, UpdateCardItemsToMysql, UpdateCardStatToMySql, UpdateCardToMysql } from "@infra/db/mysql/card/card.outbound";
+import { DeleteCardItemsUsecase, DeleteCardUsecase, UpdateCardItemsUsecase, UpdateCardUsecase } from "@app/card/commands/usecase";
 
 
 @Module({
@@ -106,6 +106,44 @@ import { DeleteCardItemsUsecase, UpdateCardItemsUsecase } from "@/2.application/
         GetPresingendUrlsFromAwsS3,
         UpdateCardStatToMySql,
         UpdateCardStatToRedis
+      ]
+    },
+
+    // card를 수정하기 위한 usecases
+    {
+      provide : UpdateCardUsecase,
+      useFactory : (
+        cardNamespace : string,
+        updateCardToDb : UpdateCardToMysql,
+        updateCardToCache : UpdateCardToRedis
+      ) => {
+        return new UpdateCardUsecase({
+          usecaseValues : { cardNamespace }, updateCardToDb, updateCardToCache
+        })
+      },
+      inject : [
+        CARD_NAMESPACE_ATTR,
+        UpdateCardToMysql,
+        UpdateCardToRedis
+      ]
+    },
+
+    // card를 삭제하기 위한 usecase
+    {
+      provide : DeleteCardUsecase,
+      useFactory : (
+        cardNamespace : string,
+        deleteCardToDb : DeleteCardToMysql,
+        deleteCardToCache : DeleteCardToRedis
+      ) => {
+        return new DeleteCardUsecase({
+          usecaseValues : { cardNamespace }, deleteCardToDb, deleteCardToCache
+        })
+      },
+      inject : [
+        CARD_NAMESPACE_ATTR,
+        DeleteCardToMysql,
+        DeleteCardToRedis
       ]
     },
 
