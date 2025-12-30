@@ -11,9 +11,13 @@ import { DB_CARD_STATS_ATTRIBUTE_NAME, DB_CARDS_ATTRIBUTE_NAME } from "@infra/db
 import { GetPresingendUrlsFromAwsS3 } from "@infra/disk/s3/adapters/disk.inbound";
 import { DeleteCardItemsToMySql, DeleteCardToMysql, UpdateCardItemsToMysql, UpdateCardStatToMySql, UpdateCardToMysql } from "@infra/db/mysql/card/card.outbound";
 import { DeleteCardItemsUsecase, DeleteCardUsecase, UpdateCardItemsUsecase, UpdateCardUsecase } from "@app/card/commands/usecase";
+import { AuthModule } from "@present/http/auth/auth.module";
 
 
 @Module({
+  imports : [
+    AuthModule
+  ],
   providers : [
     CardGraphqlResover, // controller의 역할을 하는 resolver 
 
