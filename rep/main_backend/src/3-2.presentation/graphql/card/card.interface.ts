@@ -5,6 +5,7 @@ import { Injectable } from "@nestjs/common";
 
 
 export const CARD_NAMESPACE_ATTR = Symbol("CARD_NAMESPACE_ATTR");
+export const CARD_ASSET_NAMESPACE_ATTR = Symbol("CARD_ASSET_NAMESPACE_ATTR");
 export const CARD_ID_KEY_NAME_ATTR = Symbol("CARD_ID_KEY_NAME_ATTR");
 export const CARD_ID_ATTRIBUTE_NAME_ATTR = Symbol("CARD_ID_ATTRIBUTE_NAME_ATTR");
 export const CARD_VIEW_COUNT_ATTRIBUTE_NAME_ATTR = Symbol("CARD_VIEW_COUNT_ATTRIBUTE_NAME_ATTR");

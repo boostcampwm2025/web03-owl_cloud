@@ -4,13 +4,13 @@ import { CardGraphqlService } from "./card.service";
 import { CardMetaDataUsecase, GetCardItemDatasUsecase } from "@app/card/queries/usecase";
 import { SelectAllCardItemAndAssetFromMysql, SelectCardAndStatFromMysql } from "@infra/db/mysql/card/card.inbound";
 import { SelectCardMetaAndStatFromRedis } from "@infra/cache/redis/card/card.inbound";
-import { InsertCardAndCardStatToRedis, UpdateCardStatToRedis } from "@infra/cache/redis/card/card.outbound";
-import { CARD_ID_ATTRIBUTE_NAME_ATTR, CARD_ID_KEY_NAME_ATTR, CARD_NAMESPACE_ATTR, CARD_VIEW_COUNT_ATTRIBUTE_NAME_ATTR, CARD_VIEW_COUNT_KEY_NAME_ATTR, MappingCardToCardStat } from "./card.interface";
+import { DeleteCardAssetToRedis, InsertCardAndCardStatToRedis, UpdateCardStatToRedis } from "@infra/cache/redis/card/card.outbound";
+import { CARD_ASSET_NAMESPACE_ATTR, CARD_ID_ATTRIBUTE_NAME_ATTR, CARD_ID_KEY_NAME_ATTR, CARD_NAMESPACE_ATTR, CARD_VIEW_COUNT_ATTRIBUTE_NAME_ATTR, CARD_VIEW_COUNT_KEY_NAME_ATTR, MappingCardToCardStat } from "./card.interface";
 import { CACHE_CARD_KEY_NAME, CACHE_CARD_NAMESPACE_NAME } from "@infra/cache/cache.constants";
 import { DB_CARD_STATS_ATTRIBUTE_NAME, DB_CARDS_ATTRIBUTE_NAME } from "@infra/db/db.constants";
 import { GetPresingendUrlsFromAwsS3 } from "@infra/disk/s3/adapters/disk.inbound";
-import { UpdateCardItemsToMysql, UpdateCardStatToMySql } from "@infra/db/mysql/card/card.outbound";
-import { UpdateCardItemsUsecase } from "@/2.application/card/commands/usecase";
+import { DeleteCardItemsToMySql, UpdateCardItemsToMysql, UpdateCardStatToMySql } from "@infra/db/mysql/card/card.outbound";
+import { DeleteCardItemsUsecase, UpdateCardItemsUsecase } from "@/2.application/card/commands/usecase";
 
 
 @Module({
@@ -44,6 +44,10 @@ import { UpdateCardItemsUsecase } from "@/2.application/card/commands/usecase";
     {
       provide : CARD_VIEW_COUNT_KEY_NAME_ATTR,
       useValue : CACHE_CARD_KEY_NAME.VIEW_COUNT
+    },
+    {
+      provide : CARD_ASSET_NAMESPACE_ATTR,
+      useValue : CACHE_CARD_NAMESPACE_NAME.CACHE_CARD_ITEM_ASSET
     },
     // usecase들 card에 meta 데이터를 보기 위한 usecase
     {
@@ -119,6 +123,23 @@ import { UpdateCardItemsUsecase } from "@/2.application/card/commands/usecase";
     },
 
     // card에 item을 삭제하기 위한 usecase
+    {
+      provide : DeleteCardItemsUsecase,
+      useFactory : (
+        cardAssetNamespace : string,
+        deleteCardItemAndAssetToDb : DeleteCardItemsToMySql,
+        deleteCardAssetToCache : DeleteCardAssetToRedis
+      ) => {
+        return new DeleteCardItemsUsecase({
+          usecaseValues : {cardAssetNamespace}, deleteCardItemAndAssetToDb, deleteCardAssetToCache
+        })
+      },
+      inject : [
+        CARD_ASSET_NAMESPACE_ATTR,
+        DeleteCardItemsToMySql,
+        DeleteCardAssetToRedis
+      ]
+    }
 
   ]
 })

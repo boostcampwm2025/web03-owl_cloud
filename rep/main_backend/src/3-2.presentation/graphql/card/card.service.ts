@@ -1,7 +1,7 @@
 import { CardMetaDataUsecase, GetCardItemDatasUsecase } from "@app/card/queries/usecase";
 import { HttpException, Injectable } from "@nestjs/common";
-import { Card, CardItem, CardItemAssetStatusType, CardItemType, UpdateCardItemInput, UpdateCardItemOutput } from "./card.types";
-import { UpdateCardItemsUsecase } from "@app/card/commands/usecase";
+import { Card, CardItem, CardItemAssetStatusType, CardItemType, DeleteCardItemInput, DeleteCardItemOuput, UpdateCardItemInput, UpdateCardItemOutput } from "./card.types";
+import { DeleteCardItemsUsecase, UpdateCardItemsUsecase } from "@app/card/commands/usecase";
 
 
 @Injectable()
@@ -10,7 +10,8 @@ export class CardGraphqlService {
   constructor(
     private readonly cardMetaDataUsecase : CardMetaDataUsecase<any, any>,
     private readonly getCardItemUsecase : GetCardItemDatasUsecase<any, any, any>,
-    private readonly updateCardItemUsecase : UpdateCardItemsUsecase<any>
+    private readonly updateCardItemUsecase : UpdateCardItemsUsecase<any>,
+    private readonly deleteCardItemsUsecase : DeleteCardItemsUsecase<any, any>
   ) {};
 
   async cardService(card_id : string) : Promise<Card> {
@@ -127,6 +128,25 @@ export class CardGraphqlService {
         },
       );
     };
+  }
+
+  // card_item의 정보를 삭제할때 사용하는 service 
+  async deleteCardItemsService(inputs : DeleteCardItemInput) : Promise<DeleteCardItemOuput> {
+    try {
+      await this.deleteCardItemsUsecase.execute(inputs);
+      return { ok : true };
+    } catch (err) {
+      throw new HttpException(
+        {
+          message: err.message || err,
+          status: err.status || 500,
+        },
+        err.status || 500,
+        {
+          cause: err,
+        },
+      );
+    }
   }
 
 };

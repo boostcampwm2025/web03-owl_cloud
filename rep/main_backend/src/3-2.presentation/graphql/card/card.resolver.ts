@@ -1,5 +1,5 @@
 import { Resolver, ResolveField, Parent, Query, Args, ID, Mutation } from "@nestjs/graphql";
-import { Card, CardItem, DeleteCardItemInput, UpdateCardItemOutput, UpdateCardItemInput } from "./card.types";
+import { Card, CardItem, DeleteCardItemInput, UpdateCardItemOutput, UpdateCardItemInput, DeleteCardItemOuput } from "./card.types";
 import { CardGraphqlService } from "./card.service";
 
 
@@ -34,8 +34,8 @@ export class CardGraphqlResover {
   @Mutation(() => [CardItem], { name : "delete_card_items" })
   async deleteCardItems(
     @Args("inputs", { type: () => DeleteCardItemInput  }) inputs : DeleteCardItemInput
-  ) {
-
-  }
+  ) : Promise<DeleteCardItemOuput> {
+    return this.cardService.deleteCardItemsService(inputs);
+  } 
 
 };
