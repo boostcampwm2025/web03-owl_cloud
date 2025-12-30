@@ -5,7 +5,7 @@ import { CACHE_CARD_ITEM_ASSET_KEY_NAME, CACHE_CARD_KEY_NAME, CACHE_CARD_NAMESPA
 import { InsertCardAssetDataProps } from "@app/card/commands/usecase";
 import { CardItemAssetProps, CardProps, CardStateProps } from "@domain/card/vo";
 import { ConfigService } from "@nestjs/config";
-import { UpdateCardItemAssetValueProps } from "@app/card/commands/dto";
+import { UpdateCardInputDto, UpdateCardItemAssetValueProps } from "@app/card/commands/dto";
 import { GetCardMetaAndStatProps } from "@app/card/queries/usecase";
 
 
@@ -215,5 +215,70 @@ export class DeleteCardAssetToRedis extends DeleteDatasToCache<RedisClientType<a
     await this.cache.del(namespaces);
     return true;
   }
+
+};
+
+// card 정보를 수정하는 로직 
+@Injectable()
+export class UpdateCardToRedis extends UpdateDataToCache<RedisClientType<any, any>> {
+
+  private readonly keyNames = {
+    [ CACHE_CARD_KEY_NAME.CATEGORY_ID ] : true,
+    [ CACHE_CARD_KEY_NAME.THUMBNAIL_PATH ] : true,
+    [ CACHE_CARD_KEY_NAME.TITLE ] : true,
+    [ CACHE_CARD_KEY_NAME.WORKSPACE_WIDTH ] : true,
+    [ CACHE_CARD_KEY_NAME.WORKSPACE_HEIGHT ] : true,
+    [ CACHE_CARD_KEY_NAME.BACKGROUND_COLOR ] : true
+  } as const;
+
+  constructor(
+    @Inject(REDIS_SERVER) cache : RedisClientType<any, any>
+  ) { super(cache); };
+
+  // namespace는 card에 대한 namespace이고 updateValue는 해당 dto 이다. 
+  async updateKey({ namespace, keyName, updateValue }: { namespace: string; keyName: string; updateValue: UpdateCardInputDto; }): Promise<boolean>  {
+    
+    const cache = this.cache;
+
+    const { card_id, ...etc } = updateValue; // card_id 제외
+
+    // 먼저 값이 있는지 확인
+    const exist : number = await cache.exists(namespace);
+    if ( exist === 0 ) return true; // 없으면 수정은 없다.
+
+    // null은 없애고 아닌건 추가한다.
+    const hsetObj : Record<string, string | number> = {};
+    const hdelObj : string[] = []; // 삭제할 거
+
+    for ( const [ k, v ] of Object.entries(etc) ) {
+      if ( !( k in this.keyNames ) ) continue;
+      if ( v === undefined ) continue;
+
+      // 삭제할 요소
+      if ( v === null ) {
+        hdelObj.push(k);
+        continue;
+      };
+      hsetObj[k] = v; // 수정할 요소
+    };
+
+    // 변경할게 없으면 스킵
+    if ( Object.keys(hsetObj).length === 0 && hdelObj.length === 0 ) return true;
+
+    const tx = cache.multi();
+
+    if ( Object.keys(hsetObj).length > 0 ) {
+      tx.hSet(namespace, hsetObj); // 수정할거 추가 
+    };
+
+    if ( hdelObj.length > 0 ) {
+      tx.hDel(namespace, hdelObj); // 삭제할거 ( null 값들 )
+    };
+    tx.expire(namespace, 60 * 60); // 시간 다시 늘리기 
+
+    const res = await tx.exec();
+
+    return res !== null;
+  };
 
 };
