@@ -167,26 +167,26 @@ export default function TextToolbar({
 
       {/* 색상 */}
       <div className="h-8 w-px bg-neutral-200" />
-      <NavButton icon={TextColorIcon} label="TextColor" />
-      <NavButton icon={BgColorIcon} label="BgColor" />
+      <NavButton icon={TextColorIcon} label="글자 색상" />
+      <NavButton icon={BgColorIcon} label="배경 색상" />
 
       {/* 정렬 */}
       <div className="h-8 w-px bg-neutral-200" />
       <NavButton
         icon={AlignLeftIcon}
-        label="AlignLeft"
+        label="좌측 정렬"
         isActive={selectedText.align === 'left'}
         onClick={() => onUpdate('align', 'left')}
       />
       <NavButton
         icon={AlignCenterIcon}
-        label="AlignCenter"
+        label="중앙 정렬"
         isActive={selectedText.align === 'center'}
         onClick={() => onUpdate('align', 'center')}
       />
       <NavButton
         icon={AlignRightIcon}
-        label="AlignRight"
+        label="우측 정렬"
         isActive={selectedText.align === 'right'}
         onClick={() => onUpdate('align', 'right')}
       />
@@ -195,20 +195,20 @@ export default function TextToolbar({
       <div className="h-8 w-px bg-neutral-200" />
       <NavButton
         icon={BoldIcon}
-        label="Bold"
+        label="굵게"
         isActive={isBold}
         onClick={() => toggleStyle('bold')}
       />
       <NavButton
         icon={ItalicIcon}
-        label="Italic"
+        label="기울임"
         isActive={isItalic}
         onClick={() => toggleStyle('italic')}
       />
-      <NavButton icon={LinkIcon} label="Link" />
+      <NavButton icon={LinkIcon} label="링크" />
       <NavButton
         icon={UnderlineIcon}
-        label="Underline"
+        label="밑줄"
         isActive={decoration === 'underline'}
         onClick={() =>
           onUpdate(
@@ -219,7 +219,7 @@ export default function TextToolbar({
       />
       <NavButton
         icon={StrikeThroughIcon}
-        label="StrikeThrough"
+        label="취소선"
         isActive={decoration === 'line-through'}
         onClick={() =>
           onUpdate(
@@ -230,8 +230,8 @@ export default function TextToolbar({
       />
 
       <div className="h-8 w-px bg-neutral-200" />
-      <NavButton icon={UnorderListIcon} label="UnorderList" />
-      <NavButton icon={OrderedListIcon} label="OrderedList" />
+      <NavButton icon={UnorderListIcon} label="순서 없는 목록" />
+      <NavButton icon={OrderedListIcon} label="순서 있는 목록" />
     </div>
   );
 }
