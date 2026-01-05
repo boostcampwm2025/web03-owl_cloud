@@ -1,7 +1,7 @@
 import { type PropsWithChildren } from 'react';
 import type { ButtonColor, ButtonProps } from './Button.types';
-import clsx from 'clsx';
 import { ButtonShape, ButtonSize } from './Button.types';
+import { cn } from '@/utils/cn';
 
 const style: {
   base: string;
@@ -42,7 +42,7 @@ const Button = ({
     <button
       ref={ref}
       type="button"
-      className={clsx(
+      className={cn(
         style.base,
         style.shape[shape],
         style.size[size],
