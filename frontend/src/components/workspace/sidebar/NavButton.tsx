@@ -1,56 +1,36 @@
 'use client';
 
-import React from 'react';
+import { ComponentType, SVGProps } from 'react';
 
-// Sidebar Button에 사용되는 Props 인터페이스
 interface NavButtonProps {
-  icon: string;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
   label: string;
-  isActive: boolean;
-  onClick: () => void;
+  bgColor?: string;
+  isActive?: boolean;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
-// Sidebar Button 컴포넌트
 export default function NavButton({
-  icon,
+  icon: Icon,
   label,
+  bgColor,
   isActive,
   onClick,
 }: NavButtonProps) {
+  const baseBg = bgColor ?? 'bg-neutral-800';
+  const hoverBg = bgColor ? `hover:${bgColor}` : 'hover:bg-neutral-700';
+
   return (
     <button
       onClick={onClick}
-      className={`group relative flex w-full flex-col items-center justify-center gap-1 py-4 transition ${
-        isActive
-          ? 'text-lime-600'
-          : 'text-neutral-500 hover:bg-lime-50 hover:text-neutral-900'
-      }`}
+      title={label}
+      className={`flex h-8 w-8 items-center justify-center rounded ${isActive ? 'bg-sky-700' : baseBg} ${!isActive && hoverBg}`}
     >
-      {/* NavButton Icon 부분 */}
-      <div className="relative h-12 w-12">
-        <div
-          className={`h-full w-full transition-colors duration-200 ${
-            isActive
-              ? 'bg-lime-600'
-              : 'bg-neutral-500 group-hover:bg-neutral-900'
-          }`}
-          style={{
-            maskImage: `url(${icon})`,
-            maskRepeat: 'no-repeat',
-            maskPosition: 'center',
-            maskSize: 'contain',
-
-            // Cross-browsing 막기 위한 Webkit 접두사
-            WebkitMaskImage: `url(${icon})`,
-            WebkitMaskRepeat: 'no-repeat',
-            WebkitMaskPosition: 'center',
-            WebkitMaskSize: 'contain',
-          }}
-        />
-      </div>
-
-      {/* NavButton Label 부분 */}
-      <span className="text-lg">{label}</span>
+      <Icon
+        className="pointer-events-none h-5 w-5 text-neutral-200"
+        aria-hidden
+      />
+      <span className="sr-only">{label}</span>
     </button>
   );
 }
