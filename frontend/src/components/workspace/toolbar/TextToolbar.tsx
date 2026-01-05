@@ -1,7 +1,24 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import { TextItem, FontStyle } from '@/types/workspace';
-import IconButton from './IconButton';
+import NavButton from '../sidebar/NavButton';
+
+import { ArrowDownIcon, MinusIcon, PlusIcon } from '@/assets/icons/common';
+import {
+  TextColorIcon,
+  BgColorIcon,
+  AlignLeftIcon,
+  AlignCenterIcon,
+  AlignRightIcon,
+  BoldIcon,
+  ItalicIcon,
+  LinkIcon,
+  UnderlineIcon,
+  StrikeThroughIcon,
+  UnorderListIcon,
+  OrderedListIcon,
+} from '@/assets/icons/editor';
 
 type EditableTextKey =
   | 'fontFamily'
@@ -21,24 +38,34 @@ type TextToolbarProps = {
   onUpdate: UpdateTextItem;
 };
 
-const ALIGN_ORDER: TextItem['align'][] = ['left', 'center', 'right'];
-
-const ALIGN_ICON: Record<TextItem['align'], string> = {
-  left: '/icons/toolbar/alignLeft.svg',
-  center: '/icons/toolbar/alignCenter.svg',
-  right: '/icons/toolbar/alignRight.svg',
-};
-
-const BOLD_ICON = '/icons/toolbar/bold.svg';
-const PLUS_ICON = '/icons/toolbar/plus.svg';
-const MINUS_ICON = '/icons/toolbar/minus.svg';
-const STRIKE_ICON = '/icons/toolbar/strike.svg';
-const UNDERLINE_ICON = '/icons/toolbar/underline.svg';
+const FONT_OPTIONS = [
+  { label: 'Arial', value: 'Arial' },
+  { label: 'Verdana', value: 'Verdana' },
+  { label: 'Georgia', value: 'Georgia' },
+  { label: 'Courier', value: 'Courier New' },
+  { label: 'Times', value: 'Times New Roman' },
+];
 
 export default function TextToolbar({
   selectedText,
   onUpdate,
 }: TextToolbarProps) {
+  const [isFontDropdownOpen, setIsFontDropdownOpen] = useState(false);
+  const fontDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        fontDropdownRef.current &&
+        !fontDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsFontDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   if (!selectedText) return null;
 
   const isBold = selectedText.fontStyle.includes('bold');
@@ -62,42 +89,60 @@ export default function TextToolbar({
     onUpdate('fontStyle', newStyle as FontStyle);
   };
 
-  const getNextAlign = (current: TextItem['align']): TextItem['align'] => {
-    const index = ALIGN_ORDER.indexOf(current);
-    return ALIGN_ORDER[(index + 1) % ALIGN_ORDER.length];
-  };
-
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white px-3 py-2 shadow-md">
+    <div className="flex items-center gap-2 rounded bg-neutral-800 p-2 text-neutral-50">
       {/* 폰트 종류 */}
-      <div className="hover:bg-gray-50">
-        <select
-          value={selectedText.fontFamily}
-          title="글꼴"
-          onChange={(e) =>
-            onUpdate('fontFamily', e.target.value as TextItem['fontFamily'])
-          }
-          className="hover: h-8 rounded border border-gray-300 px-2 text-sm text-slate-700 focus:outline-none"
+      <div className="relative h-8 w-40" ref={fontDropdownRef} title="글꼴">
+        <button
+          onClick={() => setIsFontDropdownOpen(!isFontDropdownOpen)}
+          className="flex h-full w-full items-center justify-between rounded bg-neutral-700 px-2 text-sm focus:outline-none"
         >
-          <option value="Arial">Arial</option>
-          <option value="Verdana">Verdana</option>
-          <option value="Georgia">Georgia</option>
-          <option value="Courier New">Courier</option>
-          <option value="Times New Roman">Times</option>
-        </select>
+          <span
+            className="truncate"
+            style={{ fontFamily: selectedText.fontFamily }}
+          >
+            {FONT_OPTIONS.find((f) => f.value === selectedText.fontFamily)
+              ?.label || selectedText.fontFamily}
+          </span>
+          <ArrowDownIcon className="h-4 w-4 text-neutral-300" />
+        </button>
+
+        {isFontDropdownOpen && (
+          <ul className="absolute top-full left-0 z-50 mt-1 w-full overflow-hidden rounded bg-neutral-800 py-1 shadow-lg ring-1 ring-white/10">
+            {FONT_OPTIONS.map((option) => (
+              <li
+                key={option.value}
+                onClick={() => {
+                  onUpdate(
+                    'fontFamily',
+                    option.value as TextItem['fontFamily'],
+                  );
+                  setIsFontDropdownOpen(false);
+                }}
+                className={`cursor-pointer px-3 py-1.5 text-sm transition-colors hover:bg-neutral-600 ${
+                  selectedText.fontFamily === option.value
+                    ? 'bg-neutral-600 text-white'
+                    : 'text-neutral-300'
+                } `}
+                style={{ fontFamily: option.value }}
+              >
+                {option.label}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* 폰트 크기 */}
-      <div className="flex items-center overflow-hidden rounded border border-gray-300">
-        <IconButton
-          icon={MINUS_ICON}
-          title="글꼴 크기 줄이기"
-          variant="ghost"
+      <div className="flex items-center rounded bg-neutral-700">
+        <NavButton
+          icon={MinusIcon}
+          label="글꼴 크기 줄이기"
+          bgColor="bg-neutral-700"
           onClick={() =>
             onUpdate('fontSize', Math.max(1, selectedText.fontSize - 1))
           }
         />
-
         <input
           type="number"
           value={selectedText.fontSize}
@@ -108,32 +153,63 @@ export default function TextToolbar({
             if (Number.isNaN(value)) return;
             onUpdate('fontSize', Math.min(100, Math.max(1, value)));
           }}
-          className="h-8 w-10 appearance-none text-center text-sm text-slate-700 outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          className="h-8 w-8 appearance-none bg-transparent text-center text-sm outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         />
-
-        <IconButton
-          icon={PLUS_ICON}
-          title="글꼴 크기 늘리기"
-          variant="ghost"
+        <NavButton
+          icon={PlusIcon}
+          label="글꼴 크기 늘리기"
+          bgColor="bg-neutral-700"
           onClick={() =>
             onUpdate('fontSize', Math.min(100, selectedText.fontSize + 1))
           }
         />
       </div>
 
-      {/* 스타일 */}
-      <IconButton
-        icon={BOLD_ICON}
-        active={isBold}
-        color="lime"
-        title="굵게"
-        onClick={() => toggleStyle('bold')}
+      {/* 색상 */}
+      <div className="h-8 w-px bg-neutral-200/20" />
+      <NavButton icon={TextColorIcon} label="TextColor" />
+      <NavButton icon={BgColorIcon} label="BgColor" />
+
+      {/* 정렬 */}
+      <div className="h-8 w-px bg-neutral-200/20" />
+      <NavButton
+        icon={AlignLeftIcon}
+        label="AlignLeft"
+        isActive={selectedText.align === 'left'}
+        onClick={() => onUpdate('align', 'left')}
+      />
+      <NavButton
+        icon={AlignCenterIcon}
+        label="AlignCenter"
+        isActive={selectedText.align === 'center'}
+        onClick={() => onUpdate('align', 'center')}
+      />
+      <NavButton
+        icon={AlignRightIcon}
+        label="AlignRight"
+        isActive={selectedText.align === 'right'}
+        onClick={() => onUpdate('align', 'right')}
       />
 
-      <IconButton
-        icon={UNDERLINE_ICON}
-        active={decoration === 'underline'}
-        title="밑줄"
+      {/* 스타일 */}
+      <div className="h-8 w-px bg-neutral-200/20" />
+      <NavButton
+        icon={BoldIcon}
+        label="Bold"
+        isActive={isBold}
+        onClick={() => toggleStyle('bold')}
+      />
+      <NavButton
+        icon={ItalicIcon}
+        label="Italic"
+        isActive={isItalic}
+        onClick={() => toggleStyle('italic')}
+      />
+      <NavButton icon={LinkIcon} label="Link" />
+      <NavButton
+        icon={UnderlineIcon}
+        label="Underline"
+        isActive={decoration === 'underline'}
         onClick={() =>
           onUpdate(
             'textDecoration',
@@ -141,11 +217,10 @@ export default function TextToolbar({
           )
         }
       />
-
-      <IconButton
-        icon={STRIKE_ICON}
-        active={decoration === 'line-through'}
-        title="취소선"
+      <NavButton
+        icon={StrikeThroughIcon}
+        label="StrikeThrough"
+        isActive={decoration === 'line-through'}
         onClick={() =>
           onUpdate(
             'textDecoration',
@@ -154,23 +229,9 @@ export default function TextToolbar({
         }
       />
 
-      {/* 정렬 */}
-      <IconButton
-        icon={ALIGN_ICON[selectedText.align]}
-        title={'정렬'}
-        onClick={() => onUpdate('align', getNextAlign(selectedText.align))}
-      />
-
-      {/* 색상 */}
-      <div className="relative h-8 w-8 overflow-hidden rounded-md border border-gray-300">
-        <input
-          type="color"
-          title="텍스트 색상"
-          value={selectedText.fill}
-          onChange={(e) => onUpdate('fill', e.target.value)}
-          className="absolute -top-2 -left-2 h-12 w-12 cursor-pointer border-0 p-0"
-        />
-      </div>
+      <div className="h-8 w-px bg-neutral-200/20" />
+      <NavButton icon={UnorderListIcon} label="UnorderList" />
+      <NavButton icon={OrderedListIcon} label="OrderedList" />
     </div>
   );
 }
