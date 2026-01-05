@@ -19,5 +19,7 @@ export { default as TriangleIcon } from './triangleIcon.svg';
 export { default as UnderlineIcon } from './underlineIcon.svg';
 export { default as UndoIcon } from './undoIcon.svg';
 export { default as UnorderListIcon } from './unorderedListIcon.svg';
+export { default as VideoIcon } from './videoIcon.svg';
+export { default as YoutubeIcon } from './youtubeIcon.svg';
 export { default as ZoomInIcon } from './zoomInIcon.svg';
 export { default as ZoomOutIcon } from './zoomOutIcon.svg';
