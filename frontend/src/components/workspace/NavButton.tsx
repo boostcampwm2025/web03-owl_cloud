@@ -32,7 +32,7 @@ export default function NavButton({
       }`}
     >
       <Icon
-        className="pointer-events-none h-5 w-5 text-neutral-200"
+        className="pointer-events-none h-6 w-6 text-neutral-200"
         aria-hidden
       />
       <span className="sr-only">{label}</span>
