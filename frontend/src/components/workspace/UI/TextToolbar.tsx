@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { TextItem } from '@/types/workspace';
 import NavButton from './NavButton';
 
 import { ArrowDownIcon, MinusIcon, PlusIcon } from '@/assets/icons/common';
