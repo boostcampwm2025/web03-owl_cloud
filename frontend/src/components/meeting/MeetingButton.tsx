@@ -13,7 +13,7 @@ export default function MeetingButton({
   return (
     <button
       {...props}
-      className="flex h-16 w-22 flex-col items-center justify-center gap-0.5 rounded-lg text-neutral-200 hover:bg-neutral-700"
+      className="flex-center h-16 w-22 flex-col gap-0.5 rounded-lg text-neutral-200 hover:bg-neutral-700"
     >
       {icon}
       <span className="text-xs font-bold">{text}</span>
