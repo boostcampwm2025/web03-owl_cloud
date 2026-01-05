@@ -1,8 +1,8 @@
-import HistoryControl from '@/components/workspace/UI/HistoryControl';
-import OverlayControl from '@/components/workspace/UI/OverlayControl';
-import Sidebar from '@/components/workspace/UI/Sidebar';
-import ToolbarManager from '@/components/workspace/UI/ToolbarManager';
-import ZoomControls from '@/components/workspace/UI/ZoomControl';
+import HistoryControl from '@/components/workspace/HistoryControl';
+import OverlayControl from '@/components/workspace/OverlayControl';
+import Sidebar from '@/components/workspace/Sidebar';
+import ToolbarManager from '@/components/workspace/ToolbarManager';
+import ZoomControls from '@/components/workspace/ZoomControl';
 
 export default function Home() {
   return (
