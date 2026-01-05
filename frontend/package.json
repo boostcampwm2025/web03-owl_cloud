@@ -10,6 +10,7 @@
     "cz": "cz"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
     "konva": "^10.0.12",
     "next": "16.0.10",
