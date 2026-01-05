@@ -3,19 +3,19 @@ import Button from '@/components/common/button';
 export default function LandingPage() {
   return (
     <main className="flex min-h-screen items-center justify-center">
-      <section
-        className="m-auto flex w-full max-w-90 flex-col gap-16 px-6 py-4"
-        aria-labelledby="start-meeting-title"
-      >
-        <header className="flex flex-col items-center gap-8">
-          <h1
+      <div className="flex w-full max-w-90 flex-col gap-16 px-6 py-4">
+        <section
+          className="flex flex-col items-center gap-8"
+          aria-labelledby="start-meeting-title"
+        >
+          <h2
             id="start-meeting-title"
             className="text-[24px] font-bold text-neutral-900"
           >
             새 회의 시작
-          </h1>
+          </h2>
           <Button>시작하기</Button>
-        </header>
+        </section>
 
         {/* 구분선 */}
         <div
@@ -27,15 +27,18 @@ export default function LandingPage() {
           <span className="h-px flex-1 bg-neutral-500" />
         </div>
 
-        <section aria-labelledby="join-meeting-title">
+        <section
+          className="flex flex-col items-center gap-8"
+          aria-labelledby="join-meeting-title"
+        >
           <h2
             id="join-meeting-title"
-            className="mb-8 text-center text-[24px] font-bold text-neutral-900"
+            className="text-[24px] font-bold text-neutral-900"
           >
             회의 참여하기
           </h2>
 
-          <form className="flex flex-col gap-6">
+          <form className="flex w-full flex-col gap-6">
             <label htmlFor="meeting-code" className="sr-only">
               회의 코드 또는 링크
             </label>
@@ -49,7 +52,7 @@ export default function LandingPage() {
             <Button type="submit">참여하기</Button>
           </form>
         </section>
-      </section>
+      </div>
     </main>
   );
 }
