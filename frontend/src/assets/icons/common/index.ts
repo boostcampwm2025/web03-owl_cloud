@@ -5,6 +5,8 @@ export { default as CloseIcon } from './closeIcon.svg';
 export { default as CopyIcon } from './copyIcon.svg';
 export { default as EditIcon } from './editIcon.svg';
 export { default as ImageIcon } from './imageIcon.svg';
+export { default as MinusIcon } from './minusIcon.svg';
 export { default as MoreHoriIcon } from './moreHoriIcon.svg';
 export { default as MoreVertIcon } from './moreVertIcon.svg';
+export { default as PlusIcon } from './plusIcon.svg';
 export { default as ShareIcon } from './shareIcon.svg';
