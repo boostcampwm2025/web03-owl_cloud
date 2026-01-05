@@ -1,0 +1,16 @@
+export { default as CamOffIcon } from './camOffIcon.svg';
+export { default as CamOnIcon } from './camOnIcon.svg';
+export { default as ChatIcon } from './chatIcon.svg';
+export { default as CodeIcon } from './codeIcon.svg';
+export { default as DownloadIcon } from './downloadIcon.svg';
+export { default as ExitMeetingIcon } from './exitMeetingIcon.svg';
+export { default as FileIcon } from './fileIcon.svg';
+export { default as InfoIcon } from './infoIcon.svg';
+export { default as MarkedChatIcon } from './markedChatIcon.svg';
+export { default as MemberIcon } from './memberIcon.svg';
+export { default as MicOffIcon } from './micOffIcon.svg';
+export { default as MicOnIcon } from './micOnIcon.svg';
+export { default as SendIcon } from './sendIcon.svg';
+export { default as ShareIcon } from './shareIcon.svg';
+export { default as VolumnIcon } from './volumnIcon.svg';
+export { default as WorkspaceIcon } from './workspaceIcon.svg';

@@ -1,0 +1,10 @@
+export { default as ArrowDownIcon } from './arrowDownIcon.svg';
+export { default as ChevronLeftIcon } from './chevronLeftIcon.svg';
+export { default as ChevronRightIcon } from './chevronRightIcon.svg';
+export { default as CloseIcon } from './closeIcon.svg';
+export { default as CopyIcon } from './copyIcon.svg';
+export { default as EditIcon } from './editIcon.svg';
+export { default as ImageIcon } from './imageIcon.svg';
+export { default as MoreHoriIcon } from './moreHoriIcon.svg';
+export { default as MoreVertIcon } from './moreVertIcon.svg';
+export { default as ShareIcon } from './shareIcon.svg';
