@@ -7,9 +7,9 @@ import { VideoIcon, YoutubeIcon } from '@/assets/icons/editor';
 export default function MediaPanel() {
   return (
     <div className="flex flex-col gap-2">
-      <NavButton icon={ImageIcon} label="image" />
-      <NavButton icon={VideoIcon} label="video" />
-      <NavButton icon={YoutubeIcon} label="youtube" />
+      <NavButton icon={ImageIcon} label="이미지" />
+      <NavButton icon={VideoIcon} label="비디오" />
+      <NavButton icon={YoutubeIcon} label="유튜브 링크" />
     </div>
   );
 }

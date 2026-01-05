@@ -37,20 +37,19 @@ export default function Sidebar() {
     <aside className="fixed top-1/2 left-4 z-50 flex -translate-y-1/2 items-start">
       <div className="relative flex flex-col items-center gap-2 rounded bg-neutral-800 p-2">
         {/* 메인 패널 */}
-
         <NavButton
           icon={CursorIcon}
-          label="move"
+          label="움직이기"
           isActive={activeTab === 'move'}
         />
         <NavButton
           icon={PenIcon}
-          label="draw"
+          label="자유 그리기"
           isActive={activeTab === 'draw'}
         />
         <NavButton
           icon={EraserIcon}
-          label="eraser"
+          label="지우개"
           isActive={activeTab === 'eraser'}
         />
 
@@ -58,21 +57,21 @@ export default function Sidebar() {
 
         <NavButton
           icon={PentagonIcon}
-          label="polygon"
+          label="도형"
           activeBgColor="bg-neutral-700"
           isActive={activeTab === 'polygon'}
           onClick={(e) => handleTabClick('polygon', e)}
         />
         <NavButton
           icon={TextBoxIcon}
-          label="text"
+          label="텍스트"
           activeBgColor="bg-neutral-700"
           isActive={activeTab === 'text'}
           onClick={(e) => handleTabClick('text', e)}
         />
         <NavButton
           icon={ImageIcon}
-          label="media"
+          label="미디어"
           activeBgColor="bg-neutral-700"
           isActive={activeTab === 'media'}
           onClick={(e) => handleTabClick('media', e)}
