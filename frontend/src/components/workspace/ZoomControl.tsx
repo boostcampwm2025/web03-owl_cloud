@@ -1,6 +1,6 @@
 'use client';
 
-import NavButton from './sidebar/NavButton';
+import NavButton from './NavButton';
 import { ZoomOutIcon, ZoomInIcon } from '@/assets/icons/editor';
 
 export default function ZoomControls() {

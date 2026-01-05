@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 
-import NavButton from './sidebar/NavButton';
-import TextPanel from './sidebar/TextPanel';
-import MediaPanel from './sidebar/MediaPanel';
-import PolygonPanel from './sidebar/PolygonPanel';
+import NavButton from './NavButton';
+import TextPanel from './TextPanel';
+import MediaPanel from './MediaPanel';
+import PolygonPanel from './PolygonPanel';
 import { ImageIcon } from '@/assets/icons/common';
 import {
   CursorIcon,

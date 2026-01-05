@@ -1,6 +1,6 @@
 'use client';
 
-import NavButton from './sidebar/NavButton';
+import NavButton from './NavButton';
 import { ShareIcon, CloseIcon } from '@/assets/icons/common';
 
 export default function OverlayControls() {

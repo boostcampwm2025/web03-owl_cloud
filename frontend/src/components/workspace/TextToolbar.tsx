@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { TextItem, FontStyle } from '@/types/workspace';
-import NavButton from '../sidebar/NavButton';
+import NavButton from './NavButton';
 
 import { ArrowDownIcon, MinusIcon, PlusIcon } from '@/assets/icons/common';
 import {
