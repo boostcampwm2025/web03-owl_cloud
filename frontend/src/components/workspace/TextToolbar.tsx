@@ -166,12 +166,12 @@ export default function TextToolbar({
       </div>
 
       {/* 색상 */}
-      <div className="h-8 w-px bg-neutral-200/20" />
+      <div className="h-8 w-px bg-neutral-200" />
       <NavButton icon={TextColorIcon} label="TextColor" />
       <NavButton icon={BgColorIcon} label="BgColor" />
 
       {/* 정렬 */}
-      <div className="h-8 w-px bg-neutral-200/20" />
+      <div className="h-8 w-px bg-neutral-200" />
       <NavButton
         icon={AlignLeftIcon}
         label="AlignLeft"
@@ -192,7 +192,7 @@ export default function TextToolbar({
       />
 
       {/* 스타일 */}
-      <div className="h-8 w-px bg-neutral-200/20" />
+      <div className="h-8 w-px bg-neutral-200" />
       <NavButton
         icon={BoldIcon}
         label="Bold"
@@ -229,7 +229,7 @@ export default function TextToolbar({
         }
       />
 
-      <div className="h-8 w-px bg-neutral-200/20" />
+      <div className="h-8 w-px bg-neutral-200" />
       <NavButton icon={UnorderListIcon} label="UnorderList" />
       <NavButton icon={OrderedListIcon} label="OrderedList" />
     </div>
