@@ -46,7 +46,7 @@ export default function LandingPage() {
             <input
               id="meeting-code"
               placeholder="코드 또는 링크를 입력해주세요"
-              className="focus:border-primary-sky1 h-11 w-full rounded-sm border border-neutral-300 px-3 outline-none"
+              className="h-11 w-full rounded-sm border border-neutral-300 px-3 outline-none focus:border-sky-600"
             />
 
             <Button type="submit">참여하기</Button>
