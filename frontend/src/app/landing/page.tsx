@@ -1,7 +1,6 @@
 'use client';
 
 import { motion, useSpring } from 'framer-motion';
-import { motion, useSpring } from 'framer-motion';
 import CardItem from '@/components/card/CardItem';
 import { useMotionValue } from 'framer-motion';
 import { useState } from 'react';

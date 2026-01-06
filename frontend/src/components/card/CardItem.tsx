@@ -1,6 +1,5 @@
 import { motion, MotionValue, useTransform } from 'framer-motion';
 import Image from 'next/image';
-import tarotBackImg from '@/assets/TarotBack.png';
 
 interface CardItemProps {
   index: number;
@@ -67,13 +66,6 @@ export default function CardItem({
     >
       {/* 카드 */}
       <div className="relative h-60 w-35 select-none">
-        <Image
-          src={tarotBackImg}
-          alt="카드"
-          className="rounded-xl object-cover shadow-lg"
-          draggable={false}
-          priority
-        />
       </div>
     </motion.div>
   );

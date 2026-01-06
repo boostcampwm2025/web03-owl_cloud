@@ -1,6 +1,5 @@
 import { CopyIcon } from '@/assets/icons/common';
 
-import { CopyIcon } from '@/assets/icons/common';
 
 export default function Home() {
   return (
