@@ -2,6 +2,7 @@ import {
   NotEmptyError,
   NotAllowType,
   NotAllowMinValue,
+  NotTypeUUidV7,
 } from '@error/domain/user/user.error';
 
 // 기본적인 vo
@@ -33,3 +34,14 @@ export function idVo(id: number) {
 
   return id;
 }
+
+// uuid랑 관련있음
+export function uuidv7Vo({ uuid, name } : { uuid : string, name : string }) : string {
+
+  baseVo({ name, value : uuid, type : "string" });
+
+  const uuidV7Regxp: RegExp = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!uuidV7Regxp.test(uuid)) throw new NotTypeUUidV7(name);
+
+  return uuid.trim();
+};
