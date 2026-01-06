@@ -10,7 +10,7 @@ export default function LandingPage() {
         >
           <h2
             id="start-meeting-title"
-            className="text-[24px] font-bold text-neutral-900"
+            className="text-2xl font-bold text-neutral-900"
           >
             새 회의 시작
           </h2>
@@ -23,7 +23,7 @@ export default function LandingPage() {
           aria-hidden
         >
           <span className="h-px flex-1 bg-neutral-500" />
-          <span className="text-[14px] font-bold">또는</span>
+          <span className="text-sm font-bold">또는</span>
           <span className="h-px flex-1 bg-neutral-500" />
         </div>
 
@@ -33,7 +33,7 @@ export default function LandingPage() {
         >
           <h2
             id="join-meeting-title"
-            className="text-[24px] font-bold text-neutral-900"
+            className="text-2xl font-bold text-neutral-900"
           >
             회의 참여하기
           </h2>
@@ -46,7 +46,7 @@ export default function LandingPage() {
             <input
               id="meeting-code"
               placeholder="코드 또는 링크를 입력해주세요"
-              className="h-11 w-full rounded-sm border border-neutral-300 px-3 outline-none focus:border-sky-600"
+              className="w-full rounded-sm border border-neutral-300 px-2 py-3 text-base outline-none focus:border-sky-600"
             />
 
             <Button type="submit">참여하기</Button>
