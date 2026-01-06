@@ -59,7 +59,7 @@ export default function TextToolbar() {
 
         {/* 폰트 선택 드롭다운 */}
         {isFontDropdownOpen && (
-          <ul className="absolute top-full left-0 z-50 mt-1 w-full overflow-hidden rounded bg-neutral-800 py-1 shadow-lg ring-1 ring-white/10">
+          <ul className="absolute top-full left-0 z-50 mt-1 w-full overflow-hidden rounded bg-neutral-800 py-1 shadow-lg ring-1 ring-neutral-700">
             {FONT_OPTIONS.map((option) => (
               <li
                 key={option.value}
