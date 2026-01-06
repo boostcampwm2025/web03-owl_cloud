@@ -86,6 +86,7 @@ export default function TextToolbar() {
         <input
           type="number"
           value={16}
+          readOnly
           className="h-8 w-8 appearance-none bg-transparent text-center text-sm outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         />
         <NavButton
