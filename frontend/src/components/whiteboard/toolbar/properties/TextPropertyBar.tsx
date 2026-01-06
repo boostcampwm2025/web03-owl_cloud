@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import NavButton from './common/NavButton';
+import NavButton from '../../common/NavButton';
 
 import { ArrowDownIcon, MinusIcon, PlusIcon } from '@/assets/icons/common';
 import {
@@ -17,7 +17,7 @@ import {
   StrikeThroughIcon,
   UnorderListIcon,
   OrderedListIcon,
-} from '@/assets/icons/editor';
+} from '@/assets/icons/whiteboard';
 
 const FONT_OPTIONS = [
   { label: 'Arial', value: 'Arial' },
@@ -27,7 +27,7 @@ const FONT_OPTIONS = [
   { label: 'Times', value: 'Times New Roman' },
 ];
 
-export default function TextToolbar() {
+export default function TextPropertyBar() {
   const [isFontDropdownOpen, setIsFontDropdownOpen] = useState(false);
   const fontDropdownRef = useRef<HTMLDivElement>(null);
 

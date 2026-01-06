@@ -2,7 +2,7 @@
 
 import NavButton from '../../common/NavButton';
 import { ImageIcon } from '@/assets/icons/common';
-import { VideoIcon, YoutubeIcon } from '@/assets/icons/editor';
+import { VideoIcon, YoutubeIcon } from '@/assets/icons/whiteboard';
 
 export default function MediaPanel() {
   return (

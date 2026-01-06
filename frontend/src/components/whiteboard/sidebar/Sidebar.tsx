@@ -13,7 +13,7 @@ import {
   EraserIcon,
   PentagonIcon,
   TextBoxIcon,
-} from '@/assets/icons/editor';
+} from '@/assets/icons/whiteboard';
 
 type TabType = 'move' | 'draw' | 'eraser' | 'text' | 'polygon' | 'media' | null;
 

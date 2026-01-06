@@ -2,7 +2,7 @@
 
 import NavButton from '../../common/NavButton';
 
-import { TextBoxIcon } from '@/assets/icons/editor';
+import { TextBoxIcon } from '@/assets/icons/whiteboard';
 
 export default function TextPanel() {
   return (
