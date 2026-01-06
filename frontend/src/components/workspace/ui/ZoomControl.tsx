@@ -12,6 +12,7 @@ export default function ZoomControls() {
         <div className="flex h-8 w-20 items-center justify-center rounded bg-neutral-700 text-sm text-white">
           <input
             type="number"
+            readOnly
             value={1000}
             className="w-9 appearance-none bg-transparent text-right text-sm outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
