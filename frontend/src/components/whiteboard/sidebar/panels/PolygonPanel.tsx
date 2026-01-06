@@ -1,8 +1,12 @@
 'use client';
 
-import NavButton from '../../common/NavButton';
+import NavButton from '@/components/whiteboard/common/NavButton';
 
-import { TriangleIcon, SquareIcon, PentagonIcon } from '@/assets/icons/editor';
+import {
+  TriangleIcon,
+  SquareIcon,
+  PentagonIcon,
+} from '@/assets/icons/whiteboard';
 
 export default function PolygonPanel() {
   return (

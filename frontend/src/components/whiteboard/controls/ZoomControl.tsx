@@ -1,7 +1,8 @@
 'use client';
 
-import NavButton from '../common/NavButton';
-import { ZoomOutIcon, ZoomInIcon } from '@/assets/icons/editor';
+import NavButton from '@/components/whiteboard/common/NavButton';
+
+import { ZoomOutIcon, ZoomInIcon } from '@/assets/icons/whiteboard';
 
 export default function ZoomControls() {
   return (

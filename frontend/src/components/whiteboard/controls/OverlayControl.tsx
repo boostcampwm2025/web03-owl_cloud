@@ -1,6 +1,7 @@
 'use client';
 
-import NavButton from '../common/NavButton';
+import NavButton from '@/components/whiteboard/common/NavButton';
+
 import { ShareIcon, CloseIcon } from '@/assets/icons/common';
 
 export default function OverlayControls() {

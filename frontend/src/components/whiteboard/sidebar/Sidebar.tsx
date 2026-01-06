@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 
-import NavButton from '../common/NavButton';
-import TextPanel from './panels/TextPanel';
-import MediaPanel from './panels/MediaPanel';
-import PolygonPanel from './panels/PolygonPanel';
+import NavButton from '@/components/whiteboard/common/NavButton';
+import TextPanel from '@/components/whiteboard/sidebar/panels/TextPanel';
+import MediaPanel from '@/components/whiteboard/sidebar/panels/MediaPanel';
+import PolygonPanel from '@/components/whiteboard/sidebar/panels/PolygonPanel';
+
 import { ImageIcon } from '@/assets/icons/common';
 import {
   CursorIcon,
@@ -13,7 +14,7 @@ import {
   EraserIcon,
   PentagonIcon,
   TextBoxIcon,
-} from '@/assets/icons/editor';
+} from '@/assets/icons/whiteboard';
 
 type TabType = 'move' | 'draw' | 'eraser' | 'text' | 'polygon' | 'media' | null;
 

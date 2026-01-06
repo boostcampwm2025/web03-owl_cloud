@@ -1,8 +1,8 @@
 'use client';
 
-import NavButton from '../../common/NavButton';
+import NavButton from '@/components/whiteboard/common/NavButton';
 import { ImageIcon } from '@/assets/icons/common';
-import { VideoIcon, YoutubeIcon } from '@/assets/icons/editor';
+import { VideoIcon, YoutubeIcon } from '@/assets/icons/whiteboard';
 
 export default function MediaPanel() {
   return (
