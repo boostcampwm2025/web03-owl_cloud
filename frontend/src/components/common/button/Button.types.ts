@@ -1,7 +1,7 @@
 import type { Ref } from 'react';
 
-export type ButtonSize = 'sm' | 'md' | 'lg';
-export type ButtonShape = 'square' | 'sm' | 'rounded';
+export type ButtonSize = 'sm' | 'lg';
+export type ButtonShape = 'square' | 'rounded';
 export type ButtonColor =
   | 'active'
   | 'primary'

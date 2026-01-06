@@ -11,13 +11,11 @@ const style: {
 } = {
   base: 'inline-flex items-center justify-center box-border select-none m-0 p-0 w-fit h-fit cursor-pointer disabled:cursor-default',
   size: {
-    sm: 'w-full max-w-[50px] h-full max-h-[50px] px-3 py-[6px] text-[14px] font-bold',
-    md: '', // TODO
-    lg: 'w-full max-w-[312px] h-full max-h-[52px] py-4 px-2 text-[16px] font-bold',
+    sm: 'h-full max-h-[50px] px-3 py-[6px] text-sm font-bold',
+    lg: 'w-full h-full max-h-[52px] py-4 px-2 text-base font-bold',
   },
   shape: {
     square: 'rounded-lg',
-    sm: 'rounded-sm',
     rounded: 'rounded-full',
   },
   color: {
