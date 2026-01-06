@@ -86,7 +86,6 @@ export default function TextToolbar() {
         <input
           type="number"
           value={16}
-          readOnly
           className="h-8 w-8 appearance-none bg-transparent text-center text-sm outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         />
         <NavButton
@@ -111,9 +110,9 @@ export default function TextToolbar() {
       <div className="h-8 w-px bg-neutral-200" />
       <NavButton icon={BoldIcon} label="굵게" />
       <NavButton icon={ItalicIcon} label="기울임" />
-      <NavButton icon={LinkIcon} label="링크" />
       <NavButton icon={UnderlineIcon} label="밑줄" />
       <NavButton icon={StrikeThroughIcon} label="취소선" />
+      <NavButton icon={LinkIcon} label="링크" />
 
       {/* 목록 */}
       <div className="h-8 w-px bg-neutral-200" />
