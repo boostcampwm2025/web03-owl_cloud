@@ -1,3 +1,4 @@
+
 import HistoryControl from '@/components/whiteboard/controls/HistoryControl';
 import OverlayControl from '@/components/whiteboard/controls/OverlayControl';
 import ZoomControls from '@/components/whiteboard/controls/ZoomControl';
