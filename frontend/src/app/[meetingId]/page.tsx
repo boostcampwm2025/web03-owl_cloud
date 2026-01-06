@@ -1,13 +1,14 @@
 'use client';
 
 import ChatModal from '@/components/meeting/ChatModal';
+import InfoModal from '@/components/meeting/InfoModal';
 import MeetingMenu from '@/components/meeting/MeetingMenu';
 import MemberModal from '@/components/meeting/MemberModal';
 import MemberVideoBar from '@/components/meeting/MemberVideoBar';
 import { useMeeingStore } from '@/store/useMeetingStore';
 
 export default function MeetingPage() {
-  const { isMemberOpen, isChatOpen } = useMeeingStore();
+  const { isInfoOpen, isMemberOpen, isChatOpen } = useMeeingStore();
 
   return (
     <main className="flex h-screen w-screen flex-col bg-neutral-900">
@@ -26,6 +27,8 @@ export default function MeetingPage() {
       </section>
 
       <MeetingMenu />
+
+      {isInfoOpen && <InfoModal />}
     </main>
   );
 }

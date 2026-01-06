@@ -29,6 +29,7 @@ export default function MeetingMenu() {
     members,
     hasNewChat,
     setHasNewChat,
+    isInfoOpen,
     isChatOpen,
     isMemberOpen,
     isWorkspaceOpen,
@@ -39,6 +40,10 @@ export default function MeetingMenu() {
   const toggleAudio = () => setAudio(audio === 'ON' ? 'OFF' : 'ON');
 
   const toggleVideo = () => setVideo(video === 'ON' ? 'OFF' : 'ON');
+
+  const onInfoClick = () => {
+    setIsOpen('isInfoOpen', !isInfoOpen);
+  };
 
   const onMemberClick = () => {
     setIsOpen('isMemberOpen', !isMemberOpen);
@@ -95,6 +100,7 @@ export default function MeetingMenu() {
         <MeetingButton
           icon={<InfoIcon className="h-8 w-8" />}
           text="회의 정보"
+          onClick={onInfoClick}
         />
         <div className="relative">
           <MeetingButton

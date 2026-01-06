@@ -39,9 +39,7 @@ export default function MemberListItem({
           src={profileImg}
           alt={`${name}의 프로필 사진`}
         />
-        <span className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-neutral-50">
-          {name}
-        </span>
+        <span className="ellipsis w-full text-neutral-50">{name}</span>
       </div>
 
       {/* 참가자 상태 */}

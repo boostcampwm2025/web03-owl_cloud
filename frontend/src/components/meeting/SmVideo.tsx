@@ -49,7 +49,7 @@ export default function SmVideo({
       {/* 이름표 */}
       <div className="absolute bottom-2 left-2 flex max-w-[calc(100%-16px)] items-center gap-1 rounded-sm bg-neutral-900 p-1">
         {!audio && <MicOffIcon className="h-3 w-3 shrink-0" />}
-        <span className="w-full overflow-hidden text-xs font-bold text-ellipsis whitespace-nowrap text-neutral-200">
+        <span className="ellipsis w-full text-xs font-bold text-neutral-200">
           {name}
         </span>
       </div>

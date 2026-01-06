@@ -213,3 +213,9 @@ export const DUMMY_CHATS: ChatListItemProps[] = [
     content: { type: 'FILE', fileName: 'final_assets.rar', size: 15800000 },
   },
 ];
+
+export const DUMMY_MEETING_INFO = {
+  id: 'ha8owf-h9afoh-3tojns',
+  host: 'Tony',
+  password: '1234',
+};

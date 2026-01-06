@@ -26,11 +26,11 @@ export default function Modal({
   return (
     <Portal>
       <div
-        className="fixed top-0 left-0 z-50 h-screen w-screen bg-neutral-900/30"
+        className="flex-center fixed top-0 left-0 z-50 h-screen w-screen bg-neutral-900/30"
         onClick={onCancel}
       >
         <dialog
-          className={`absolute top-1/2 left-1/2 flex min-h-40 min-w-80 -translate-1/2 flex-col gap-4 rounded-lg border p-6 ${isLightMode ? styles.dialog.light : styles.dialog.dark}`}
+          className={`relative flex min-h-40 min-w-80 flex-col gap-4 rounded-lg border p-6 ${isLightMode ? styles.dialog.light : styles.dialog.dark}`}
           onClick={(e) => e.stopPropagation()}
         >
           <h2
