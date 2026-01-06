@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import NavButton from '../common/NavButton';
+import NavButton from './common/NavButton';
 
 import { ArrowDownIcon, MinusIcon, PlusIcon } from '@/assets/icons/common';
 import {
