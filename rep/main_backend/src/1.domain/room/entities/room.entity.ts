@@ -28,6 +28,8 @@ export class Room {
     this.created_at = created_at && created_at instanceof Date ? created_at : new Date;
     this.updated_at = updated_at && updated_at instanceof Date ? updated_at : new Date;
     this.deleted_at = deleted_at && deleted_at instanceof Date ? deleted_at : null;
+
+    Object.freeze(this);
   }
 
   getRoomId() : RoomProps["room_id"] { return this.room_id; };
