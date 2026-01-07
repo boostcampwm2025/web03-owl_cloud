@@ -1,5 +1,8 @@
+import { useMediaDevices } from '@/hooks/useMediaDevices';
 import Button from '../common/button';
+import { DeviceDropdown } from './DeviceDropdown';
 import { MediaPreview } from './media/MediaPreview';
+import { CamOnIcon, MicOnIcon, VolumnIcon } from '@/assets/icons/meeting';
 
 export default function MeetingLobby({
   meetingId,
@@ -11,25 +14,51 @@ export default function MeetingLobby({
   const meetingLeader = 'Tony';
   const meetingMemberCnt = 9;
 
+  const {
+    microphones,
+    cameras,
+    speakers,
+    micId,
+    cameraId,
+    speakerId,
+    setMicId,
+    setCameraId,
+    setSpeakerId,
+  } = useMediaDevices();
+
   return (
     <main className="box-border flex min-h-screen items-center justify-center gap-20 px-6 py-4">
       {/* 영상, 마이크 설정 부분 */}
       <section className="flex w-full max-w-160 flex-col gap-6">
         <MediaPreview />
 
-        {/* TODO: control button */}
         <div className="flex w-full items-center gap-4 text-sm">
-          <button className="w-full rounded-sm border px-3 py-2">
-            sample button1
-          </button>
+          <DeviceDropdown
+            label="스피커"
+            devices={speakers}
+            icon={VolumnIcon}
+            selectedId={speakerId}
+            onSelect={setSpeakerId}
+            className="flex-1"
+          />
 
-          <button className="w-full rounded-sm border px-3 py-2">
-            sample button1
-          </button>
+          <DeviceDropdown
+            label="마이크"
+            devices={microphones}
+            icon={MicOnIcon}
+            selectedId={micId}
+            onSelect={setMicId}
+            className="flex-1"
+          />
 
-          <button className="w-full rounded-sm border px-3 py-2">
-            sample button1
-          </button>
+          <DeviceDropdown
+            label="카메라"
+            devices={cameras}
+            icon={CamOnIcon}
+            selectedId={cameraId}
+            onSelect={setCameraId}
+            className="flex-1"
+          />
         </div>
       </section>
 
