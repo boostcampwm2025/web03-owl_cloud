@@ -20,19 +20,12 @@ FROM base AS build
 # pnpm 설치를 위한 파일 복사
 COPY package.json pnpm-lock.yaml ./
 
-# mediasoup는 C++로 만든 바이너리 패키지를 준비하는 패키지가 필요한다. 이 스크립트 설치를 막는 문제가 발생한다. -> 이를 해결하기 위한 요소1
-RUN pnpm config set ignore-scripts false 
-
 # 임시 캐시 볼륨을 마운트 하고 (이미지에는 안남고 빌드 캐시로만) -> pnpm-store라는 캐시 공간을 공유하고 그 공간을 정한다.
 # buildkit을 이용해서 빌드를 빠르게 한다 
 RUN --mount=type=cache,id=pnpm-store-backend,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 
-# 현재 발생하는 mediasoup poinstall 안되는 사례를 이걸 이용해서 안전하게 하려한다. 
-RUN set -eux; \
-  node -e "const path=require('path'); console.log(path.dirname(require.resolve('mediasoup/package.json')))" > /tmp/MSDIR; \
-  cd "$(cat /tmp/MSDIR)"; \
-  npm run postinstall 
+RUN pnpm rebuild mediasoup
 
 COPY . .
 

@@ -91,5 +91,11 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "mediasoup",
+      "argon2"
+    ]
   }
 }
