@@ -72,7 +72,7 @@ export default function TextArea({
         textarea.style.top = `${centerY - currentHeight / 2}px`;
       } else {
         textarea.style.left = `${absPos.x}px`;
-        textarea.style.top = `${absPos.y + 1}px`;
+        textarea.style.top = `${absPos.y}px`;
       }
     };
 
