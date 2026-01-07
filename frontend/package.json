@@ -1,6 +1,11 @@
 {
   "name": "frontend",
   "version": "0.1.0",
+  "sideEffects": [
+    "*.css",
+    "*.scss",
+    "**/*.css"
+  ],
   "private": true,
   "scripts": {
     "dev": "next dev",
