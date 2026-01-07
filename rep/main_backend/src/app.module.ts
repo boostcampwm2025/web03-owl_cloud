@@ -14,7 +14,8 @@ import { RedisModule } from '@infra/cache/redis/cache';
 import { JwtModule } from '@infra/auth/jwt/jwt.module';
 import { S3DiskModule } from '@infra/disk/s3/disk';
 import { RedisChannelModule } from '@infra/channel/redis/channel';
-import { RoomModule } from "./3-2.presentation/http/room/room.module";
+import { RoomModule } from "@present/http/room/room.module";
+import { SignalingWebsocketModule  } from "@present/websocket/signaling/signaling.module";
 
 
 @Module({
@@ -33,6 +34,7 @@ import { RoomModule } from "./3-2.presentation/http/room/room.module";
     SettingModule, // 헬스 체크를 위한 모듈
     AuthModule, // 인증과 관련된 모듈
     RoomModule, // 회의방 생성과 관련된 모듈
+    SignalingWebsocketModule , // 사실상 시그널링 서버의 역할을 하는 모듈 
 
   ],
   controllers: [],
