@@ -23,3 +23,4 @@ export { default as VideoIcon } from './videoIcon.svg';
 export { default as YoutubeIcon } from './youtubeIcon.svg';
 export { default as ZoomInIcon } from './zoomInIcon.svg';
 export { default as ZoomOutIcon } from './zoomOutIcon.svg';
+export { default as HandIcon } from './handIcon.svg';
