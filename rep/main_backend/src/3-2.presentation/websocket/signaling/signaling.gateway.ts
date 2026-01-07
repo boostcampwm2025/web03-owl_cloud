@@ -3,7 +3,7 @@ import { Logger, UsePipes, ValidationPipe } from "@nestjs/common";
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io"
 import { SignalingWebsocketService } from "./signaling.service";
-import { Payload, TokenDto } from "@app/auth/commands/dto";
+import { TokenDto } from "@app/auth/commands/dto";
 import { PayloadRes } from "@app/auth/queries/dto";
 import { JwtWsGuard } from "../auth/guards/jwt.guard";
 import { WEBSOCKET_AUTH_CLIENT_EVENT_NAME, WEBSOCKET_NAMESPACE, WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME, WEBSOCKET_SIGNALING_EVENT_NAME } from "../websocket.constants";
@@ -94,7 +94,7 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
     const payload : SocketPayload = client.data.user;
     const dto : ConnectRoomDto = {
       ...inputs, 
-      socket_id : payload.socket_id, user_id : payload.user_id, nickname : payload.nickname ?? inputs.nickname, ip : payload.ip
+      socket_id : payload.socket_id, user_id : payload.user_id, nickname : payload.nickname !== "" ? payload.nickname : inputs.nickname ?? "", ip : payload.ip
     };
     try {
       // 여기서는 에러가 발생하면 바로 연결을 끊어야 한다. 

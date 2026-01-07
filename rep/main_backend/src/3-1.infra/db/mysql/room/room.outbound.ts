@@ -124,7 +124,7 @@ export class InsertRoomParticipantInfoDataToMysql extends InsertValueToDb<Pool> 
     );
     `;
 
-    const [ result ] = await db.execute<ResultSetHeader>(sql, [ entity.room_id, entity.user_id ]);
+    const [ result ] = await db.execute<ResultSetHeader>(sql, [ entity.room_id, entity.user_id, entity.room_id, entity.user_id ]);
 
     return result && result.affectedRows ? true : false;
   }

@@ -22,6 +22,13 @@ export class SignalingWebsocketService {
 
     // access_token 파싱
     let access_token : string | undefined;
+
+    // body에 있는 access_token을 우선적으로 확인
+    const tokenFromAuth = client.handshake.auth?.access_token;
+    if (typeof tokenFromAuth === "string" && tokenFromAuth.trim()) {
+      access_token = tokenFromAuth.trim();
+    }
+
     const authHeader = client.handshake.headers.authorization;
     if ( typeof authHeader === "string" && authHeader.startsWith("Bearer ") ) {
       access_token = authHeader.slice(7).trim(); // Bearer 제거

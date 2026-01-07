@@ -35,7 +35,7 @@ export class SelectRoomDataFromMysql extends SelectDataFromDb<Pool> {
     \`${DB_ROOMS_ATTRIBUTE_NAME.PASSWORD_HASH}\`,
     BIN_TO_UUID(\`${DB_ROOMS_ATTRIBUTE_NAME.OWNER_USER_ID}\`, true) AS ${DB_ROOMS_ATTRIBUTE_NAME.OWNER_USER_ID},
     \`${DB_ROOMS_ATTRIBUTE_NAME.MAX_PARTICIPANTS}\`,
-    \`${DB_ROOMS_ATTRIBUTE_NAME.STATUS}\`,  
+    \`${DB_ROOMS_ATTRIBUTE_NAME.STATUS}\`
     FROM
     \`${tableName}\`
     WHERE 

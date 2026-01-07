@@ -32,9 +32,10 @@ export class ConnectRoomUsecase<T, CT> {
   private readonly deleteRoomParticipantInfoDataToDb : ConnectRoomUsecaseProps<T, CT>["deleteRoomParticipantInfoDataToDb"];
 
   constructor({
-    selectRoomDataFromDb, selectRoomInfoDataFromCache, insertRoomParticipantInfoDataToDb, insertRoomDatasToCache, deleteRoomParticipantInfoDataToDb
+    selectRoomDataFromDb, compareRoomPasswordHash, selectRoomInfoDataFromCache, insertRoomParticipantInfoDataToDb, insertRoomDatasToCache, deleteRoomParticipantInfoDataToDb
   } : ConnectRoomUsecaseProps<T, CT>) {
     this.selectRoomDataFromDb = selectRoomDataFromDb;
+    this.compareRoomPasswordHash = compareRoomPasswordHash;
     this.selectRoomInfoDataFromCache = selectRoomInfoDataFromCache;
     this.insertRoomParticipantInfoDataToDb = insertRoomParticipantInfoDataToDb;
     this.insertRoomDatasToCache = insertRoomDatasToCache;
