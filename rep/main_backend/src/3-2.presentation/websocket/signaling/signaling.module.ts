@@ -12,7 +12,7 @@ import { SignalingWebsocketGateway } from "./signaling.gateway";
 
 @Module({
   imports : [
-    AuthWebsocketModule
+    AuthWebsocketModule,
   ],  
   providers : [
     // sfu 자체적인 모듈

@@ -115,4 +115,7 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
     };
   };
 
+  // 방에 가입 한 후 라우터 생성 
+  
+
 };
