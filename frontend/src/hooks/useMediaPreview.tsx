@@ -11,7 +11,7 @@ export interface MediaState {
   micPermission: MediaPermission;
 }
 
-export const useMediaPreview = () => {
+export const useMediaPreview = (micId?: string, cameraId?: string) => {
   const [media, setMedia] = useState<MediaState>({
     videoOn: false,
     audioOn: false,
@@ -28,12 +28,13 @@ export const useMediaPreview = () => {
     (async () => {
       try {
         const mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
+          audio: micId ? { deviceId: micId } : true,
+          video: cameraId ? { deviceId: cameraId } : true,
         });
 
         if (cancelled) return;
 
+        streamRef.current?.getTracks().forEach((t) => t.stop());
         streamRef.current = mediaStream;
         setStream(mediaStream);
 
@@ -59,14 +60,20 @@ export const useMediaPreview = () => {
       streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     };
-  }, []);
+  }, [micId, cameraId]);
 
   const toggleVideo = useCallback(() => {
-    // TODO
+    streamRef.current?.getVideoTracks().forEach((track) => {
+      track.enabled = !track.enabled;
+      setMedia((prev) => ({ ...prev, videoOn: track.enabled }));
+    });
   }, []);
 
   const toggleAudio = useCallback(() => {
-    // TODO
+    streamRef.current?.getAudioTracks().forEach((track) => {
+      track.enabled = !track.enabled;
+      setMedia((prev) => ({ ...prev, audioOn: track.enabled }));
+    });
   }, []);
 
   const canRenderVideo = useMemo(() => {
