@@ -58,17 +58,17 @@ export function MediaPreview() {
       <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-6">
         <button onClick={toggleVideo} className="group">
           {media.videoOn ? (
-            <CamOnIcon className="h-12 w-12 rounded-full bg-white p-4 text-neutral-700 shadow-lg transition-all group-active:scale-95" />
+            <CamOnIcon className="h-12 w-12 rounded-full bg-white p-3 text-neutral-700 shadow-lg transition-all group-active:scale-95" />
           ) : (
-            <CamOffIcon className="h-12 w-12 rounded-full bg-white p-4 shadow-lg transition-all group-active:scale-95" />
+            <CamOffIcon className="h-12 w-12 rounded-full bg-white p-3 shadow-lg transition-all group-active:scale-95" />
           )}
         </button>
 
         <button onClick={toggleAudio} className="group">
           {media.audioOn ? (
-            <MicOnIcon className="h-12 w-12 rounded-full bg-white p-4 text-neutral-700 shadow-lg transition-all group-active:scale-95" />
+            <MicOnIcon className="h-12 w-12 rounded-full bg-white p-3 text-neutral-700 shadow-lg transition-all group-active:scale-95" />
           ) : (
-            <MicOffIcon className="h-12 w-12 rounded-full bg-white p-4 shadow-lg transition-all group-active:scale-95" />
+            <MicOffIcon className="h-12 w-12 rounded-full bg-white p-3 shadow-lg transition-all group-active:scale-95" />
           )}
         </button>
       </div>

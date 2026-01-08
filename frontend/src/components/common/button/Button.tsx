@@ -11,7 +11,7 @@ const style: {
 } = {
   base: 'inline-flex items-center justify-center box-border select-none m-0 p-0 w-fit h-fit cursor-pointer disabled:cursor-default',
   size: {
-    sm: 'h-full h-auto px-3 py-[6px] text-sm font-bold',
+    sm: 'h-full h-auto px-3 px-1.5 text-sm font-bold',
     lg: 'w-full h-full max-h-[52px] py-4 px-2 text-base font-bold',
   },
   shape: {

@@ -1,3 +1,4 @@
+import { ArrowDownIcon } from '@/assets/icons/common';
 import { useState } from 'react';
 
 interface Props {
@@ -37,11 +38,11 @@ export function DeviceDropdown({
         <Icon className="h-4 w-4 shrink-0" />
         <span className="truncate">{selected?.label || `접근 권한 필요`}</span>
 
-        <span className="flex-1 text-right">▾</span>
+        <ArrowDownIcon className="h-4 w-4 shrink-0" />
       </button>
 
       {!isDisabled && isOpen && (
-        <ul className="absolute z-10 mt-1 w-full rounded-sm border border-neutral-400 bg-white shadow">
+        <ul className="absolute z-10 mt-1 max-h-30 w-full overflow-y-auto rounded-sm border border-neutral-200 bg-white shadow">
           {devices.map((device) => (
             <li
               key={device.deviceId}

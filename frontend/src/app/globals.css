@@ -22,9 +22,5 @@ body {
 }
 
 button {
-  cursor: pointer;
-}
-
-button:disabled {
-  cursor: not-allowed;
+  @apply cursor-pointer disabled:cursor-not-allowed;
 }
