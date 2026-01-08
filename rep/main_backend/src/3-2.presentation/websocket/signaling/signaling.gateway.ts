@@ -6,7 +6,7 @@ import { SignalingWebsocketService } from "./signaling.service";
 import { TokenDto } from "@app/auth/commands/dto";
 import { PayloadRes } from "@app/auth/queries/dto";
 import { JwtWsGuard } from "../auth/guards/jwt.guard";
-import { WEBSOCKET_AUTH_CLIENT_EVENT_NAME, WEBSOCKET_NAMESPACE, WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME, WEBSOCKET_SIGNALING_EVENT_NAME } from "../websocket.constants";
+import { WEBSOCKET_AUTH_CLIENT_EVENT_NAME, WEBSOCKET_NAMESPACE, WEBSOCKET_PATH, WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME, WEBSOCKET_SIGNALING_EVENT_NAME } from "../websocket.constants";
 import { JoinRoomValidate, SocketPayload } from "./signaling.validate";
 import { ConnectResult, ConnectRoomDto } from "@app/room/commands/dto";
 import { CHANNEL_NAMESPACE } from "@infra/channel/channel.constants";
@@ -14,12 +14,13 @@ import { CHANNEL_NAMESPACE } from "@infra/channel/channel.constants";
 
 @WebSocketGateway({
   namespace : WEBSOCKET_NAMESPACE.SIGNALING,
+  path : WEBSOCKET_PATH, // http 핸드세이킹이 있을때 붙게 되는 
   cors : {
     origin : process.env.NODE_ALLOWED_ORIGIN?.split(",").map((origin) => origin.trim()),
     credentials : process.env.NODE_ALLOWED_CREDENTIALS === "true"
   },
   transports : ["websocket"],
-  pingTimeout: 60 * 60 * 1000  // ping pong 허용 시간
+  pingTimeout: 20 * 1000  // ping pong 허용 시간 ( 20초 )
 })
 export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   
@@ -115,7 +116,16 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
     };
   };
 
-  // 방에 가입 한 후 라우터 생성 
+  // 방에 가입 한 후 라우터 생성 -> 방에 가입 시킨 다음에 본격적으로 라우터를 생성하는 이벤트를 주어야 한다.
+  // 따로 분리해놓은 이유는 -> 정확히 방에 가입한 사람들만 이것을 이용하게 하고 싶기 때문이다.
+  @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.CONNECT_ROUTER)
+  async connectRouterGateway(
+    @ConnectedSocket() client : Socket
+  ) {
+    // 1. sfu 서버에 router 생성 요청
+
+  };
+
   
 
 };

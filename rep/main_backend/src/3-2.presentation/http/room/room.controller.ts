@@ -33,4 +33,7 @@ export class RoomController {
     return this.roomService.createRoomService(dto);
   };
 
+  // 어디 웹소켓에 매핑할때 사용되는 api
+  
+
 };
