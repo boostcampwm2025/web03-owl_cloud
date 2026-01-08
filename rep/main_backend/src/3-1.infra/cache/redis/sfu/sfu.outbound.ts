@@ -2,7 +2,7 @@ import { DeleteDataToCache, InsertDataToCache } from "@app/ports/cache/cache.out
 import { Inject, Injectable } from "@nestjs/common";
 import { type RedisClientType } from "redis";
 import { CACHE_SFU_NAMESPACE_NAME, CACHE_SFU_TRANSPORTS_KEY_NAME, REDIS_SERVER } from "../../cache.constants";
-import { CreateRoomTransportDto } from "@app/room/commands/dto/create-room-transport.dto";
+import { CreateRoomTransportDto } from "@app/room/commands/dto";
 
 
 

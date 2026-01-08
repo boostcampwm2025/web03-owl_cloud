@@ -165,11 +165,12 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
     transform : true
   }))
   async dtlsHandshakeGateway(
+    @ConnectedSocket() client : Socket,
     @MessageBody() validate : DtlsHandshakeValidate
   ) {
     try {
       // 1. dtls 핸드세이크를 거칠것이다.
-      await this.signalingService.dtlsHandshake(validate);
+      await this.signalingService.dtlsHandshake(client, validate);
 
       return { ok : true };
     } catch (err){

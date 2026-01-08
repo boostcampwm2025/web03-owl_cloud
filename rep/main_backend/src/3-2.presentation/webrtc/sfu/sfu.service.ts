@@ -5,8 +5,10 @@ import { SfuError, SfuErrorMessage } from "@error/presentation/sfu/sfu.error";
 import { mediaSoupRouterConfig, listenIps } from "@infra/media/mediasoup/config";
 import { Router, Transport, WebRtcTransport } from "mediasoup/types";
 import { CreateSfuTransportInfoToRedis, DeleteSfuTransportInfoToRedis } from "@infra/cache/redis/sfu/sfu.outbound";
-import { CreateRoomTransportDto, CreateTransportDto } from "@app/room/commands/dto/create-room-transport.dto";
+import { CreateRoomTransportDto, CreateTransportDto } from "@app/room/commands/dto";
 import { CACHE_SFU_NAMESPACE_NAME } from "@infra/cache/cache.constants";
+import { SelectSfuTransportDataFromRedis } from "@infra/cache/redis/sfu/sfu.inbound";
+import { RoomTransportInfo } from "@/2.application/room/queries/dto";
 
 
 @Injectable()
@@ -25,7 +27,8 @@ export class SfuService {
   constructor(
     private readonly mediaSoupService : MediasoupService,
     private readonly insertTranportInfoToRedis : CreateSfuTransportInfoToRedis,
-    private readonly deleteTransportInfoToRedis : DeleteSfuTransportInfoToRedis
+    private readonly deleteTransportInfoToRedis : DeleteSfuTransportInfoToRedis,
+    private readonly selectSfuTransportInfoFromRedis : SelectSfuTransportDataFromRedis
   ) {}
 
   private async createRoomRouting(room_id : string) : Promise<RoomEntry> {
@@ -213,7 +216,11 @@ export class SfuService {
   // 3. transport connect 연결 ( 이때 부터는 이제 sfu와 webrtc 통신이 가능해졌다고 생각하면 된다. )
   async connectTransport(dto : ConnectTransportType) : Promise<void> {
     // 검증하기
-
+    const namespace : string = `${CACHE_SFU_NAMESPACE_NAME.TRANSPORT_INFO}:${dto.transport_id}`;
+    const transportInfo : RoomTransportInfo | undefined = await this.selectSfuTransportInfoFromRedis.select({ namespace, keyName : "" });
+    if ( !transportInfo ) throw new SfuErrorMessage("transport_id를 다시 확인해주세요. - 데이터 찾는데 문제 발생");
+    
+    if ( dto.room_id !== transportInfo.room_id || dto.socket_id !== transportInfo.socket_id || dto.type !== transportInfo.type || dto.user_id !== transportInfo.user_id ) throw new SfuErrorMessage("잘못된 transport_id에 연결하고자 합니다 다시 확인해주시길 발반디ㅏ.");
 
     // transport 가져오기
     const transport : Transport | undefined = this.transports.get(dto.transport_id);

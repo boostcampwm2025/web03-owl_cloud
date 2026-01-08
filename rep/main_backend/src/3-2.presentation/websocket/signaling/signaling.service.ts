@@ -12,6 +12,7 @@ import { SfuService } from "@present/webrtc/sfu/sfu.service";
 import { NotConnectSignalling } from "@error/presentation/signalling/signalling.error";
 import { CHANNEL_NAMESPACE } from "@infra/channel/channel.constants";
 import { CreateRoomTransportDto, CreateTransportDto } from "@/2.application/room/commands/dto/create-room-transport.dto";
+import { ConnectTransportType } from "@/3-2.presentation/webrtc/sfu/sfu.validate";
 
 
 @Injectable()
@@ -130,8 +131,16 @@ export class SignalingWebsocketService {
   };
 
   // dtls 핸드 세이크를 위한 
-  async dtlsHandshake( validate : DtlsHandshakeValidate) : Promise<void> {
-    await this.sfuServer.connectTransport(validate);
+  async dtlsHandshake( client: Socket, validate : DtlsHandshakeValidate) : Promise<void> {
+    const room_id : string = client.data.room_id;
+    const payload : SocketPayload = client.data.user;
+    const dto : ConnectTransportType = {
+      ...validate,
+      room_id,
+      socket_id : payload.socket_id,
+      user_id : payload.user_id,
+    }
+    await this.sfuServer.connectTransport(dto);
   }
 
 };
