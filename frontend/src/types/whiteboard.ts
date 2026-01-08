@@ -19,7 +19,7 @@ export interface TextItem extends BaseItem {
   wrap: TextWrap;
   rotation: number;
   width: number;
-  parentPolygonId?: string; 
+  parentPolygonId?: string;
 }
 
 // 화살표 아이템
@@ -30,6 +30,7 @@ export interface ArrowItem extends BaseItem {
   strokeWidth: number;
   pointerLength: number;
   pointerWidth: number;
+  tension: number;
 }
 
 // 통합 타입
