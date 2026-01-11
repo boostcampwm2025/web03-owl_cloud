@@ -1,7 +1,7 @@
 import { SelectDataFromCache } from "@app/ports/cache/cache.inbound";
 import { Inject, Injectable } from "@nestjs/common";
 import { type RedisClientType } from "redis";
-import { CACHE_SFU_NAMESPACE_NAME, CACHE_SFU_TRANSPORTS_KEY_NAME, REDIS_SERVER } from "../../cache.constants";
+import { CACHE_ROOM_INFO_KEY_NAME, CACHE_ROOM_NAMESPACE_NAME, CACHE_ROOM_SUB_NAMESPACE_NAME, CACHE_SFU_NAMESPACE_NAME, CACHE_SFU_TRANSPORTS_KEY_NAME, REDIS_SERVER } from "../../cache.constants";
 import { RoomTransportInfo } from "@app/sfu/queries/dto";
 
 
@@ -33,4 +33,48 @@ export class SelectSfuTransportDataFromRedis extends SelectDataFromCache<RedisCl
       type : data[CACHE_SFU_TRANSPORTS_KEY_NAME.TYPE]
     }
   }
+};
+
+
+// user 정보를 찾기 위한 infra 함수
+@Injectable()
+export class SelectUserProducerDataFromRedis extends SelectDataFromCache<RedisClientType<any, any>> {
+
+  constructor(
+    @Inject(REDIS_SERVER) cache : RedisClientType<any, any>,
+  ) { super(cache); };
+
+  // namespace는 room_id:user_id 이다.
+  async select({ namespace, keyName }: { namespace: string; keyName: "audio" | "video"; }): Promise<boolean> {
+
+    const userProducerNamespace : string = `${CACHE_SFU_NAMESPACE_NAME.PRODUCER_INFO}:${namespace}`;
+
+    const userProducerData = await this.cache.hGet(userProducerNamespace, keyName);
+
+    return userProducerData ? true : false;
+  };
+};
+
+// main에서 정보를 찾기 위하 infra 함수
+@Injectable()
+export class SelectMainProducerDataFromRedis extends SelectDataFromCache<RedisClientType<any, any>> {
+
+  constructor(
+    @Inject(REDIS_SERVER) cache : RedisClientType<any, any>
+  ) { super(cache); };
+
+  // 나중에 추가될 수 있으니 main에 추가되면 여기를 수정해주거나 추가해야 한다. namespace는 room_id이다. 
+  async select({ namespace, keyName }: { namespace: string; keyName: "screen_video" | "screen_audio"; }): Promise<boolean> {
+    
+    const roomNamespace : string = `${CACHE_ROOM_NAMESPACE_NAME.CACHE_ROOM}:${namespace}:${CACHE_ROOM_SUB_NAMESPACE_NAME.INFO}`;
+
+    // 아마도 거의 audio 말고는 모두 main으로 갈것 같기는 하다.
+    if ( keyName === "screen_audio" ) {
+      const subData = await this.cache.hGet(roomNamespace, CACHE_ROOM_INFO_KEY_NAME.SUB_PRODUCER);
+      return subData ? true : false;
+    } else {
+      const mainData = await this.cache.hGet(roomNamespace, CACHE_ROOM_INFO_KEY_NAME.MAIN_PRODUCER);
+      return mainData ? true : false;
+    };
+  };
 };
