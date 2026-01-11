@@ -192,10 +192,21 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
     @ConnectedSocket() client : Socket,
     @MessageBody() validate : OnProduceValidate
   ) {
-    // 1. producer 등록
+    try {
+      // 1. producer 등록
+      const producerInfo = await this.signalingService.onProduce(client, validate);
 
-    // 2. 알려야 함
+      // 2. ( 다른 유저들에게 ) 알려야 함 -> 지금 등록했다는 사실을
+      const room_id : string = client.data.room_id;
+      const namespace : string = `${CHANNEL_NAMESPACE.SIGNALING}:${room_id}`;
+      client.to(namespace).emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.NEW_PRODUCED, producerInfo);
 
+      // 3. 반환
+      return { producerInfo };
+    } catch (err) {
+      this.logger.error(err);
+      throw new WsException({ message : err.message ?? "에러 발생", status : err.status ?? 500 }); 
+    };
   };
 
   // 회의방에있는 produce를 구독하고 싶을때 사용
@@ -208,9 +219,16 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
     @ConnectedSocket() client : Socket,
     @MessageBody() validate : OnConsumeValidate
   ) {
-    // 1. consumer 등록
+    try {
+      // 1. consumer 등록
+      const consumerInfo = await this.signalingService.onConsume(client, validate);
 
-    // 2. 받아와야 한다. ( 아직 packet받는거 허용은 안함 )
+      // 2. 받아와야 한다. ( 아직 packet받는거 허용은 안함 )
+      return { consumerInfo };
+    } catch (err) {
+      this.logger.error(err);
+      throw new WsException({ message : err.message ?? "에러 발생", status : err.status ?? 500 });      
+    };
   }
 
 };

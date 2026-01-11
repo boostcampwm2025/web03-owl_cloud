@@ -5,12 +5,12 @@ import * as cookie from "cookie";
 import { ConnectResult, ConnectRoomDto, DisconnectRoomDto } from "@app/room/commands/dto";
 import { ConnectRoomUsecase, DisconnectRoomUsecase } from "@app/room/commands/usecase";
 import { v7 as uuidV7 } from "uuid";
-import { DtlsHandshakeValidate, SocketPayload } from "./signaling.validate";
+import { DtlsHandshakeValidate, OnConsumeValidate, OnProduceValidate, SocketPayload } from "./signaling.validate";
 import { PayloadRes } from "@app/auth/queries/dto";
 import { SfuService } from "@present/webrtc/sfu/sfu.service";
 import { NotConnectSignalling } from "@error/presentation/signalling/signalling.error";
 import { CHANNEL_NAMESPACE } from "@infra/channel/channel.constants";
-import { CreateTransportDto } from "@app/sfu/commands/dto";
+import { CreateConsumerDto, CreateConsumerResult, CreateProduceResult, CreatePropduceDto, CreateTransportDto } from "@app/sfu/commands/dto";
 import { ConnectTransportType } from "@app/sfu/queries/dto";
 
 
@@ -143,6 +143,27 @@ export class SignalingWebsocketService {
   };
 
   // produce를 하기 위한 준비 
-  
+  async onProduce( client : Socket , validate : OnProduceValidate ) : Promise<CreateProduceResult> {
+    const room_id : string = client.data.room_id;
+    const payload : SocketPayload = client.data.user;
+    const dto : CreatePropduceDto = {
+      ...validate,
+      room_id,
+      ...payload
+    };
+    return this.sfuServer.createProducer(dto);
+  };
+
+  // consumer를 하기 위한 준비
+  async onConsume( client : Socket, validate : OnConsumeValidate ) : Promise<CreateConsumerResult> {
+    const room_id : string = client.data.room_id;
+    const payload : SocketPayload = client.data.user;
+    const dto : CreateConsumerDto = {
+      ...validate,
+      room_id,
+      ...payload
+    };
+    return this.sfuServer.createConsumer(dto);
+  };
 
 };
