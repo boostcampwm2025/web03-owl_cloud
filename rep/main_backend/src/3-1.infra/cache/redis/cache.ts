@@ -9,7 +9,7 @@ import { REDIS_SERVER } from '../cache.constants';
 import { SelectHsetDataFromRedis } from './user/user.inbound';
 import { DeleteRoomDatasToRedis, InsertRoomDatasToRedis, InsertRoomDataToRedis } from './room/room.outbound';
 import { SelectRoomInfoFromRedis } from './room/room.inbound';
-import { CreateSfuTransportInfoToRedis, DeleteSfuTransportInfoToRedis,  } from "./sfu/sfu.outbound"
+import { CreateSfuTransportInfoToRedis, DeleteSfuTransportInfoToRedis, InsertMainProducerDataToRedis, InsertUserProducerDataToRedis,  } from "./sfu/sfu.outbound"
 import { SelectMainProducerDataFromRedis, SelectSfuTransportDataFromRedis, SelectUserProducerDataFromRedis } from './sfu/sfu.inbound';
 
 
@@ -59,6 +59,8 @@ import { SelectMainProducerDataFromRedis, SelectSfuTransportDataFromRedis, Selec
     SelectSfuTransportDataFromRedis, // transport의 정보를 체크하기 위해서 필요한 로직
     SelectUserProducerDataFromRedis, // user에 producer 정보를 확인하기 위해 필요한 로직
     SelectMainProducerDataFromRedis, // main에 producer 정보를 확인하기 위해 필요한 로직
+    InsertUserProducerDataToRedis,  // user producer에 정보를 저장
+    InsertMainProducerDataToRedis, // main producer 정보를 저장한다.
   ],
   exports: [
     REDIS_SERVER,
@@ -74,6 +76,8 @@ import { SelectMainProducerDataFromRedis, SelectSfuTransportDataFromRedis, Selec
     SelectSfuTransportDataFromRedis,
     SelectUserProducerDataFromRedis, 
     SelectMainProducerDataFromRedis,
+    InsertUserProducerDataToRedis,
+    InsertMainProducerDataToRedis
   ],
 })
 export class RedisModule {}
