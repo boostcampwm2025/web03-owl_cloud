@@ -7,7 +7,7 @@ import { TokenDto } from "@app/auth/commands/dto";
 import { PayloadRes } from "@app/auth/queries/dto";
 import { JwtWsGuard } from "../auth/guards/jwt.guard";
 import { WEBSOCKET_AUTH_CLIENT_EVENT_NAME, WEBSOCKET_NAMESPACE, WEBSOCKET_PATH, WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME, WEBSOCKET_SIGNALING_EVENT_NAME } from "../websocket.constants";
-import { DtlsHandshakeValidate, JoinRoomValidate, NegotiateIceValidate, OnProduceValidate, SocketPayload } from "./signaling.validate";
+import { DtlsHandshakeValidate, JoinRoomValidate, NegotiateIceValidate, OnConsumeValidate, OnProduceValidate, SocketPayload } from "./signaling.validate";
 import { ConnectResult, ConnectRoomDto } from "@app/room/commands/dto";
 import { CHANNEL_NAMESPACE } from "@infra/channel/channel.constants";
 
@@ -196,6 +196,21 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
 
     // 2. 알려야 함
 
+  };
+
+  // 회의방에있는 produce를 구독하고 싶을때 사용
+  @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.CONSUME)
+  @UsePipes(new ValidationPipe({
+    whitelist : true,
+    transform : true
+  }))
+  async onConsumeGateway(
+    @ConnectedSocket() client : Socket,
+    @MessageBody() validate : OnConsumeValidate
+  ) {
+    // 1. consumer 등록
+
+    // 2. 받아와야 한다. ( 아직 packet받는거 허용은 안함 )
   }
 
 };

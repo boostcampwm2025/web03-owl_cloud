@@ -18,7 +18,8 @@ export const WEBSOCKET_SIGNALING_EVENT_NAME = Object.freeze({
   NEGOTIATE_SDP : "signaling:ws:negotiate_sdp",
   NEGOTIATE_ICE : "signaling:ws:negotiate_ice",
   DTLS_HANDSHAKE : "signaling:ws:dtls_handshake",
-  PRODUCE : "signaling:ws:produce"
+  PRODUCE : "signaling:ws:produce",
+  CONSUME : "signaling:ws:consume"
 } as const);
 
 export const WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME = Object.freeze({

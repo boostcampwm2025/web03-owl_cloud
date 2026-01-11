@@ -5,7 +5,7 @@ import { SelectDataFromCache } from "@app/ports/cache/cache.inbound";
 import { DeleteDataToCache, InsertDataToCache } from "@app/ports/cache/cache.outbound";
 import type { ProducerRepositoryPort, TransportRepositoryPort } from "../../ports";
 import { RoomTransportInfo } from "../../queries/dto";
-import { SfuErrorMessage } from "@error/application/sfu/sfu.error";
+import { SfuError, SfuErrorMessage } from "@error/application/sfu/sfu.error";
 import { Producer, Transport } from "mediasoup/types"; // domain으로 뺴야함
 
 
@@ -71,11 +71,10 @@ export class CreateProduceUsecase<T> {
       rtpParameters : dto.rtpParameters
     });
 
-    // 3. produce를 메모리에 저장
+    // 
     const producer_id : string = producer.id;
-    this.produceRepo.set(producer_id, producer);
 
-    // 4. produce가 닫히면 관련 정보가 다 삭제 되어야 한다. ( 메모리 + cache )
+    // 3. produce가 닫히면 관련 정보가 다 삭제 되어야 한다. ( 메모리 + cache )
     // -> cam, mic 이면 개인에 정보 삭제, main이면 main에 정보 삭제 
     // -> 메모리에 produce 정보 삭제 
     let cleaned = false;
@@ -114,7 +113,7 @@ export class CreateProduceUsecase<T> {
       }
     };
 
-    // 4. produce가 닫히면 관련 정보가 다 삭제 되어야 한다. ( 메모리 + cache )
+    // produce가 닫히면 관련 정보가 다 삭제 되어야 한다. ( 메모리 + cache )
     producer.on("transportclose", () => {
       void cleanup();
     });
@@ -122,32 +121,40 @@ export class CreateProduceUsecase<T> {
       void cleanup();
     });
 
-    // 5. cache에 관련 정보를 저장
-    // -> cam, mic 정보에 대해서 저장, main이라면 main에다 저장 ( 개인 또는 main에 저장 )
-    const insertDto : InsertProducerDto = {
-      room_id : dto.room_id,
-      user_id : dto.user_id,
-      producer_id,
-      type : dto.type,
-      kind : dto.kind
-    };
-    let inserted : boolean;
-    if ( dto.type === "cam" || dto.type === "mic" ) {
-      inserted = await this.insertUserProducerDataToCache.insert(insertDto);
-    } else {
-      inserted = await this.insertMainProducerDataToCache.insert(insertDto);
-    };
-    if ( !inserted ) {
-      // 에러 뜨면 안됨으로 produce 닫아야 함
-      producer.close(); 
-      throw new SfuErrorMessage("cache에 정보를 저장하는데 에러가 발생했습니다.");
-    };
+    try {
+      // 4. produce를 메모리에 저장
+      this.produceRepo.set(producer_id, producer);
 
-    // 6. produce_id 정보 전달, kind, type, user_id 정보 전달
-    return {
-      producer_id,
-      kind : dto.kind, user_id : dto.user_id, type : dto.type, status : (dto.type === "cam" || dto.type === "mic") ? "user" : "main"
-    };
+      // 5. cache에 관련 정보를 저장
+      // -> cam, mic 정보에 대해서 저장, main이라면 main에다 저장 ( 개인 또는 main에 저장 )
+      const insertDto : InsertProducerDto = {
+        room_id : dto.room_id,
+        user_id : dto.user_id,
+        producer_id,
+        type : dto.type,
+        kind : dto.kind
+      };
+      let inserted : boolean;
+      if ( dto.type === "cam" || dto.type === "mic" ) {
+        inserted = await this.insertUserProducerDataToCache.insert(insertDto);
+      } else {
+        inserted = await this.insertMainProducerDataToCache.insert(insertDto);
+      };
+      if ( !inserted ) {
+        // 에러 뜨면 안됨으로 produce 닫아야 함
+        producer.close(); 
+        throw new SfuErrorMessage("cache에 정보를 저장하는데 에러가 발생했습니다.");
+      };
+
+      // 6. produce_id 정보 전달, kind, type, user_id 정보 전달
+      return {
+        producer_id,
+        kind : dto.kind, user_id : dto.user_id, type : dto.type, status : (dto.type === "cam" || dto.type === "mic") ? "user" : "main"
+      };
+    } catch (err) {
+      producer.close();
+      throw new SfuError(err);
+    };  
   };
 
 };
