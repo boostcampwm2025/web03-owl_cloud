@@ -31,13 +31,13 @@ export const CACHE_ROOM_INFO_KEY_NAME = Object.freeze({
   MAX_PARTICIANTS : "max_particiants",
   CURRENT_PARTICIANTS : "current_particiants",
   PASSWORD_HASH : "password_hash",
-  MAIN_PRODUCE : "main_produce", // 현재 방에서 가장 메인이 되는 produce가 뭔지
-  SUB_PRODUCE : "sub_produce" // main_produce를 도와주는 sub_produce가 뭔지
+  MAIN_PRODUCER : "main_producer", // 현재 방에서 가장 메인이 되는 produce가 뭔지
+  SUB_PRODUCER : "sub_producer" // main_produce를 도와주는 sub_produce가 뭔지
 } as const);
 
 // produce에 저장되는 정보들 
 export const CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME = Object.freeze({
-  PRODUCE_ID : "produce_id",
+  PRODUCER_ID : "producer_id",
   TYPE : "type",
   KIND : "kind",
   USER_ID : "user_id"
@@ -61,7 +61,7 @@ export const CACHE_ROOM_SOCKETS_KEY_PROPS_NAME = Object.freeze({
 // sfu와 관련된 cache 정보
 export const CACHE_SFU_NAMESPACE_NAME = Object.freeze({
   TRANSPORT_INFO : "cache:sfu:transports",
-  PRODUCE_INFO : "cache:sfu:produces"
+  PRODUCER_INFO : "cache:sfu:producers"
 } as const);
 
 export const CACHE_SFU_TRANSPORTS_KEY_NAME = Object.freeze({
@@ -75,6 +75,11 @@ export const CACHE_SFU_TRANSPORTS_KEY_NAME = Object.freeze({
 export const CACHE_SFU_PRODUCES_KEY_NAME = Object.freeze({
   AUDIO : "audio",
   VIDEO : "video"
-});
+} as const);
 
-// 
+// produce에 key에 저장되는 정보
+export const CACHE_SFU_PRODUCES_KEY_PROPS_NAME = Object.freeze({
+  PRODUCER_ID : "producer_id",
+  TYPE : "type",
+  KIND : "kind"
+} as const);
