@@ -1,8 +1,9 @@
 import { SelectDataFromCache } from "@app/ports/cache/cache.inbound";
 import { Inject, Injectable } from "@nestjs/common";
 import { type RedisClientType } from "redis";
-import { CACHE_ROOM_INFO_KEY_NAME, CACHE_ROOM_NAMESPACE_NAME, CACHE_ROOM_SUB_NAMESPACE_NAME, CACHE_SFU_NAMESPACE_NAME, CACHE_SFU_TRANSPORTS_KEY_NAME, REDIS_SERVER } from "../../cache.constants";
+import { CACHE_ROOM_INFO_KEY_NAME, CACHE_ROOM_NAMESPACE_NAME, CACHE_ROOM_SUB_NAMESPACE_NAME, CACHE_SFU_NAMESPACE_NAME, CACHE_SFU_TRANSPORTS_KEY_NAME, CACHE_SFU_USER_KEY_NAME, REDIS_SERVER } from "../../cache.constants";
 import { RoomTransportInfo } from "@app/sfu/queries/dto";
+import { DisconnectUserTransportInfos } from "@/2.application/sfu/commands/dto";
 
 
 @Injectable()
@@ -35,6 +36,8 @@ export class SelectSfuTransportDataFromRedis extends SelectDataFromCache<RedisCl
   }
 };
 
+
+// user_id에 따라서 transport_id 알려주기
 
 // user 정보를 찾기 위한 infra 함수
 @Injectable()
@@ -77,4 +80,30 @@ export class SelectMainProducerDataFromRedis extends SelectDataFromCache<RedisCl
       return mainData ? true : false;
     };
   };
+};
+
+// 유저가 sfu에 transport 정보를 찾고 싶을때 
+@Injectable()
+export class SelectUserTransportFromRedis extends SelectDataFromCache<RedisClientType<any, any>> {
+
+  constructor(
+    @Inject(REDIS_SERVER) cache : RedisClientType<any, any>
+  ) { super(cache); };
+
+  // user_id
+  async select({ namespace, keyName }: { namespace: string; keyName: string; }): Promise<DisconnectUserTransportInfos | undefined >  {
+    
+    const userKey = `${CACHE_SFU_NAMESPACE_NAME.USER_INFO}:${namespace}`;
+
+    const res = await this.cache.hGetAll(userKey);
+    if (!res || Object.keys(res).length === 0) return undefined;
+
+    const send = (res[CACHE_SFU_USER_KEY_NAME.SEND_TRANSPORT_ID] ?? "").trim();
+    const recv = (res[CACHE_SFU_USER_KEY_NAME.RECV_TRANSPORT_ID] ?? "").trim();
+
+    return {
+      send_transport_id: send.length ? send : null,
+      recv_transport_id: recv.length ? recv : null,
+    };
+  }
 };

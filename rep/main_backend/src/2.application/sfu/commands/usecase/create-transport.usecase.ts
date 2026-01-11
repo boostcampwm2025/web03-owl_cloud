@@ -42,17 +42,7 @@ export class CreateTransportUsecase<T> {
       this.transportFactory.attachDebugHooks(dto.room_id, transport);
       const transportId = transport.id;
 
-      // 3. 메모리 저장
-      this.transportRepo.set(transportId, transport);
-
-      // 4. router 갱신
-      this.roomRepo.patch(dto.room_id, (e) => e.transport_ids.add(transportId));
-
-      // 5. cache에 transport info 정보 저장
-      const validate: CreateRoomTransportDto = { ...dto, transport_id: transportId };
-      await this.insertTranportInfoToRedis.insert(validate); 
-
-      // 6. transport 없어졌을때 이벤트 생성
+      // transport 없어졌을때 이벤트 생성
       transport.observer.on("close", () => {
         this.transportRepo.delete(transportId);
 
@@ -62,6 +52,17 @@ export class CreateTransportUsecase<T> {
         // cache에 삭제 - transport_id를 전달하고 namespace를 잘 정리해야 한다.
         this.deleteTransportInfoToRedis.deleteKey({ namespace : transportId, keyName : `${dto.user_id}:${dto.type}`});
       });
+
+      // 3. 메모리 저장
+      this.transportRepo.set(transportId, transport);
+
+      // 4. router 갱신
+      this.roomRepo.patch(dto.room_id, (e) => e.transport_ids.add(transportId));
+
+      // 5. cache에 transport info 정보 저장
+      const validate: CreateRoomTransportDto = { ...dto, transport_id: transportId };
+      const inserted : boolean = await this.insertTranportInfoToRedis.insert(validate); 
+      if ( !inserted ) throw new SfuErrorMessage("cache 데이터에 transport정보가 저장되지 않았습니다.");
 
       return {
         transportId,

@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { CreateConsumerDto, CreateConsumerResult, CreateProduceResult, CreatePropduceDto, CreateTransportDto, RoomEntry, TransportEntry } from "@app/sfu/commands/dto";
-import { CreateConsumerUsecase, CreateProduceUsecase, CreateRouterUsecase, CreateTransportUsecase } from "@app/sfu/commands/usecase";
+import { CreateConsumerUsecase, CreateProduceUsecase, CreateRouterUsecase, CreateTransportUsecase, DisconnectUserUsecase } from "@app/sfu/commands/usecase";
 import { ConsumerRepository, ProducerRepository, RoomRouterRepository, TransportRepository } from "@infra/memory/sfu";
 import { ConnectTransportUsecase } from "@app/sfu/queries/usecase";
 import { ConnectTransportType } from "@app/sfu/queries/dto";
@@ -14,6 +14,7 @@ export class SfuService {
     private readonly createRouterUsecase : CreateRouterUsecase,
     private readonly createTransportUsecase : CreateTransportUsecase<any>,
     private readonly connectTransportUsecase : ConnectTransportUsecase<any>,
+    private readonly disconnectUsertUsecase : DisconnectUserUsecase<any>,
     private readonly createProducerUsecase : CreateProduceUsecase<any>,
     private readonly createConsumerUsecase : CreateConsumerUsecase<any>,
     // infra
@@ -51,10 +52,8 @@ export class SfuService {
   };  
 
   // 유저가 나갈때 로직을 구현한다. 
-  disconnectUser({ room_id, user_id } : { room_id : string, user_id : string }) {
-
-    // 1. 유저의 transport 정보를 가져온다.
-
+  async disconnectUser(user_id : string) : Promise<void> {
+    await this.disconnectUsertUsecase.execute(user_id);
   }
 
   // 2. transport 부분 생성 ( 나중에 전체적인 부분 usecase로 빼자고 )
