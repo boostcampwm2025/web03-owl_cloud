@@ -1,13 +1,19 @@
 'use client';
 
-import { useRef, useEffect, useState, useMemo } from 'react';
+import { useRef, useState, useMemo } from 'react';
+
 import Konva from 'konva';
 import { Stage, Layer, Rect } from 'react-konva';
-import { useCanvasStore } from '@/store/useCanvasStore';
+
 import type { WhiteboardItem, TextItem, ArrowItem } from '@/types/whiteboard';
+
+import { useCanvasStore } from '@/store/useCanvasStore';
+
 import { useWindowSize } from '@/hooks/useWindowSize';
 import { useCanvasInteraction } from '@/hooks/useCanvasInteraction';
+import { useCanvasShortcuts } from '@/hooks/useCanvasShortcuts';
 import { useArrowHandles } from '@/hooks/useArrowHandles';
+
 import RenderItem from '@/components/whiteboard/items/RenderItem';
 import TextArea from '@/components/whiteboard/items/text/TextArea';
 import ItemTransformer from '@/components/whiteboard/controls/ItemTransformer';
@@ -23,7 +29,6 @@ export default function Canvas() {
   const editingTextId = useCanvasStore((state) => state.editingTextId);
   const selectItem = useCanvasStore((state) => state.selectItem);
   const updateItem = useCanvasStore((state) => state.updateItem);
-  const deleteItem = useCanvasStore((state) => state.deleteItem);
   const setEditingTextId = useCanvasStore((state) => state.setEditingTextId);
 
   const stageRef = useRef<Konva.Stage | null>(null);
@@ -63,37 +68,12 @@ export default function Canvas() {
     updateItem,
   });
 
-  // 키보드 삭제
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!selectedId || editingTextId) return;
-
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        e.preventDefault();
-
-        // 화살표 중간점 삭제 시도
-        if (isArrowSelected && selectedHandleIndex !== null) {
-          const deleted = deleteControlPoint();
-          if (deleted) return;
-        }
-
-        // 아이템 삭제
-        deleteItem(selectedId);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [
-    selectedId,
-    editingTextId,
-    deleteItem,
+  useCanvasShortcuts({
     isArrowSelected,
     selectedHandleIndex,
     deleteControlPoint,
-  ]);
+  });
 
-  // 선택 해제
   const handleCheckDeselect = (
     e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
   ) => {
@@ -108,7 +88,6 @@ export default function Canvas() {
     }
   };
 
-  // 아이템 업데이트
   const handleItemChange = (
     id: string,
     newAttributes: Partial<WhiteboardItem>,
@@ -141,7 +120,6 @@ export default function Canvas() {
           clipWidth={canvasWidth}
           clipHeight={canvasHeight}
         >
-          {/* Canvas 경계 */}
           <Rect
             name="bg-rect"
             x={0}
@@ -154,7 +132,6 @@ export default function Canvas() {
             listening={true}
           />
 
-          {/* 아이템 렌더링 */}
           {items.map((item) => (
             <RenderItem
               key={item.id}
@@ -178,7 +155,6 @@ export default function Canvas() {
             />
           ))}
 
-          {/* 화살표 핸들 (드래그 중이 아닐 때만) */}
           {isArrowSelected && selectedItem && !isDraggingArrow && (
             <ArrowHandles
               arrow={selectedItem as ArrowItem}
@@ -190,7 +166,6 @@ export default function Canvas() {
             />
           )}
 
-          {/* Transformer */}
           <ItemTransformer
             selectedId={selectedId}
             items={items}
@@ -199,7 +174,6 @@ export default function Canvas() {
         </Layer>
       </Stage>
 
-      {/* 텍스트 편집 모드 */}
       {editingTextId && editingItem && (
         <TextArea
           textId={editingTextId}
