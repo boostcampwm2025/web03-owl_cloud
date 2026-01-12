@@ -82,6 +82,8 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
     });
 
     // 다른 방에 현재 client가 나갔다는 것을 알리는 무언가가 필요
+    const namespace : string = `${CHANNEL_NAMESPACE.SIGNALING}:${room_id}`;
+    client.to(namespace).emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.USER_CLOSED, user.user_id); // 어떤 식으로 보내야 협업이 편할지 하나식 맞춰야 한다.
   };
 
   // 맨처음 시그널링 서버에 방가입 연결을 요청할때
@@ -179,7 +181,8 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
       const room_id : string = client.data.room_id;
       const namespace : string = `${CHANNEL_NAMESPACE.SIGNALING}:${room_id}`;
       client.to(namespace).emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.NEW_USER, this.signalingService.makeUserInfo(client));
-
+      
+      // 3. 애초에 여기서 방의 정보를 받아오는 방법도 있을것 같다. 
       return { ok : true };
     } catch (err){
       this.logger.error(err);
@@ -254,7 +257,7 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
     };
   };
 
-  // 현재 회의방 유저들의 정보를 얻고 싶을때 사용하는 로직 -> 시그널링에서 처리할 수 있는 로직 
+  // 현재 회의방 유저들의 정보를 얻고 싶을때 사용하는 로직 -> 시그널링에서 처리할 수 있는 로직 -> 이거대신 입장이 되었을때 보내는건 어떨까? 
   @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.ROOM_MEMBERS)
   async getRoomMembersGateway(
     @ConnectedSocket() client : Socket

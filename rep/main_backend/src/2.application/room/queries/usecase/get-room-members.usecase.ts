@@ -13,8 +13,10 @@ export class GetRoomMembersUsecase<T> {
   private readonly selectRoomMemberInfosFromCache : GetRoomMembersUsecaseProps<T>["selectRoomMemberInfosFromCache"];
 
   constructor({
-
-  } : GetRoomMembersUsecaseProps<T>) {}
+    selectRoomMemberInfosFromCache 
+  } : GetRoomMembersUsecaseProps<T>) {
+    this.selectRoomMemberInfosFromCache  = selectRoomMemberInfosFromCache;
+  }
 
   async execute(dto : GetRoomMembersDto) : Promise<GetRoomMembersResult> {
 
