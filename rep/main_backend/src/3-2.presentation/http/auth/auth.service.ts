@@ -158,7 +158,7 @@ export class AuthService {
       'NODE_BACKEND_SERVER',
       'redirctUrl',
     );
-    const redirect_url: string = `${backend_url}/api/auth/signup/kakao/redirect`;
+    const redirect_url: string = `${backend_url}/api/auth/kakao/redirect`;
     const token = await this.getAccessTokenKakaoUrl(code, redirect_url);
 
     // 데이터

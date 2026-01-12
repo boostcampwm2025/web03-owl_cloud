@@ -183,9 +183,9 @@ export class AuthController {
       // access_token은 body로
       res.redirect(`${frontend}/auth#access_token=${encodeURIComponent(tokens.access_token)}`);
     } catch (err) {
-      const code = err?.name ?? 'OAuthError';
+      const status = err?.status ?? 500;
       const message = encodeURIComponent(err?.message ?? 'oauth failed');
-      return void res.redirect(`${frontend}/auth/error?code=${code}&message=${message}`)
+      return void res.redirect(`${frontend}/auth/error?status=${status}&message=${message}`)
     };
   };
 
