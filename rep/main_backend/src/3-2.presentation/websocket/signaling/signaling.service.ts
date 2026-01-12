@@ -178,4 +178,7 @@ export class SignalingWebsocketService {
     await this.sfuServer.resumeConsumer(dto);
   };
 
+  // 회의방에 모든 유저를 가져오고 싶을때 사용하는 로직 
+  
+
 };

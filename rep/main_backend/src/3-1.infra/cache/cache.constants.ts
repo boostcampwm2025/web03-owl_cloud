@@ -79,6 +79,12 @@ export const CACHE_SFU_TRANSPORTS_KEY_NAME = Object.freeze({
   ROOM_ID : "room_id"
 } as const);
 
+// producer에 사실상 key_name
+export const CACHE_SFU_PRODUCERS_KEY_NAME = Object.freeze({
+  AUDIO : "audio",
+  VIDEO : "video"
+});
+
 // produce에 key(audio, video)에 저장되는 정보 -> room_id:user_id 필요 ( 이유 -> 해당 room에 user 정보가 같이 들어감으로 -> 모든 데이터를 가져와야 한다. )
 export const CACHE_SFU_PRODUCES_KEY_PROPS_NAME = Object.freeze({
   PRODUCER_ID : "producer_id",

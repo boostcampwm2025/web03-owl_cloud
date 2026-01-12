@@ -174,6 +174,8 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
       // 1. dtls 핸드세이크를 거칠것이다.
       await this.signalingService.dtlsHandshake(client, validate);
 
+      // 2. 방에 알릴 것이다 현재 접속을 했다고
+
       return { ok : true };
     } catch (err){
       this.logger.error(err);
@@ -248,6 +250,22 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
     };
   };
 
+  // 현재 회의방 유저들의 정보를 얻고 싶을때 사용하는 로직 -> 시그널링에서 처리할 수 있는 로직 
+  @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.ROOM_MEMBERS)
+  async getRoomMembersGateway(
+    @ConnectedSocket() client : Socket
+  ) {
+    try { 
+      
+
+    } catch (err) {
+      this.logger.error(err);
+      throw new WsException({ message : err.message ?? "에러 발생", status : err.status ?? 500 });            
+    }
+  };
+
+
   // producer가 이제 더이상 데이터를 보내지 않겠다고 이야기하는 이벤트
+  
 
 };
