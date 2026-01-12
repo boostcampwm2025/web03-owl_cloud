@@ -7,7 +7,7 @@ import { TokenDto } from "@app/auth/commands/dto";
 import { PayloadRes } from "@app/auth/queries/dto";
 import { JwtWsGuard } from "../auth/guards/jwt.guard";
 import { WEBSOCKET_AUTH_CLIENT_EVENT_NAME, WEBSOCKET_NAMESPACE, WEBSOCKET_PATH, WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME, WEBSOCKET_SIGNALING_EVENT_NAME } from "../websocket.constants";
-import { DtlsHandshakeValidate, JoinRoomValidate, NegotiateIceValidate, SocketPayload } from "./signaling.validate";
+import { DtlsHandshakeValidate, JoinRoomValidate, NegotiateIceValidate, OnConsumeValidate, OnProduceValidate, ResumeConsumersValidate, SocketPayload } from "./signaling.validate";
 import { ConnectResult, ConnectRoomDto } from "@app/room/commands/dto";
 import { CHANNEL_NAMESPACE } from "@infra/channel/channel.constants";
 
@@ -67,7 +67,7 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
     if (access_token) client.emit(WEBSOCKET_AUTH_CLIENT_EVENT_NAME.ACCESS_TOKEN, {access_token});
   }
 
-  // 연결이 끊긴다면
+  // 연결이 끊긴다면 -> 이때 방에 전달하는 무언가가 필요하다. 
   async handleDisconnect(client: Socket) {
     const user = client.data.user;
     const room_id = client.data.room_id;
@@ -79,6 +79,8 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
       socket_id: user.socket_id,
       room_id,
     });
+
+    // 다른 방에 현재 client가 나갔다는 것을 알리는 무언가가 필요
   };
 
   // 맨처음 시그널링 서버에 방가입 연결을 요청할때
@@ -179,5 +181,67 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
     }
   };
 
+
+  // 본격적으로 프론트엔드에서 회의방에 배포하고 싶을때 사용
+  @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.PRODUCE)
+  @UsePipes(new ValidationPipe({
+    whitelist : true,
+    transform : true    
+  }))
+  async onProduceGateway(
+    @ConnectedSocket() client : Socket,
+    @MessageBody() validate : OnProduceValidate
+  ) {
+    try {
+      // 1. producer 등록
+      const producerInfo = await this.signalingService.onProduce(client, validate);
+
+      // 2. ( 다른 유저들에게 ) 알려야 함 -> 지금 등록했다는 사실을
+      const room_id : string = client.data.room_id;
+      const namespace : string = `${CHANNEL_NAMESPACE.SIGNALING}:${room_id}`;
+      client.to(namespace).emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.NEW_PRODUCED, producerInfo);
+
+      // 3. 반환
+      return { producerInfo };
+    } catch (err) {
+      this.logger.error(err);
+      throw new WsException({ message : err.message ?? "에러 발생", status : err.status ?? 500 }); 
+    };
+  };
+
+  // 회의방에있는 produce를 구독하고 싶을때 사용
+  @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.CONSUME)
+  @UsePipes(new ValidationPipe({
+    whitelist : true,
+    transform : true
+  }))
+  async onConsumeGateway(
+    @ConnectedSocket() client : Socket,
+    @MessageBody() validate : OnConsumeValidate
+  ) {
+    try {
+      // 1. consumer 등록
+      const consumerInfo = await this.signalingService.onConsume(client, validate);
+
+      // 2. 받아와야 한다. ( 아직 packet받는거 허용은 안함 )
+      return { consumerInfo };
+    } catch (err) {
+      this.logger.error(err);
+      throw new WsException({ message : err.message ?? "에러 발생", status : err.status ?? 500 });      
+    };
+  };
+
+  // consumer가 준비가 되었고 이제 데이터를 내려줘도 괜찮다는 이벤트
+  @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.RESUME)
+  async resumeConsumerGateway(
+    @ConnectedSocket() client : Socket,
+    @MessageBody() validate : ResumeConsumersValidate   
+  ) {
+    // 1. consumer 재개
+    
+
+  };
+
+  // producer가 이제 더이상 데이터를 보내지 않겠다고 이야기하는 이벤트
 
 };

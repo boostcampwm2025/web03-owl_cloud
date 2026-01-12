@@ -19,7 +19,7 @@ export class ConnectTransportUsecase<T> {
     const transportInfo : RoomTransportInfo | undefined = await this.selectSfuTransportInfoFromRedis.select({ namespace : dto.transport_id, keyName : "" });
     if ( !transportInfo ) throw new SfuErrorMessage("transport_id를 다시 확인해주세요. - 데이터 찾는데 문제 발생");
     
-    if ( dto.room_id !== transportInfo.room_id || dto.socket_id !== transportInfo.socket_id || dto.type !== transportInfo.type || dto.user_id !== transportInfo.user_id ) throw new SfuErrorMessage("잘못된 transport_id에 연결하고자 합니다 다시 확인해주시길 발반디ㅏ.");
+    if ( dto.room_id !== transportInfo.room_id || dto.socket_id !== transportInfo.socket_id || dto.type !== transportInfo.type || dto.user_id !== transportInfo.user_id ) throw new SfuErrorMessage("잘못된 transport_id에 연결하고자 합니다 다시 확인해주시길 바랍니다.");
 
     // 2. transport 가져온 후 연결
     const transport = this.transportRepo.get(dto.transport_id);

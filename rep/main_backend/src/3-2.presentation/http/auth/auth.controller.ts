@@ -20,6 +20,7 @@ import {
   LoginOauthUserDto,
   Payload,
   TokenDto,
+  UserOauthDto,
 } from '@app/auth/commands/dto';
 import { JwtGuard } from './guards';
 import { LoginValidate, SignUpValidate } from './auth.validate';
@@ -44,7 +45,7 @@ export class AuthController {
   ): Promise<Record<string, string>> {
     await this.authService.signUpService(dto);
     return { status: 'ok' };
-  }
+  };
 
   // kakao 회원가입
   @Post('signup/kakao')
@@ -58,21 +59,24 @@ export class AuthController {
     const redirect_url: string = `${backend_url}/api/auth/signup/kakao/redirect`;
     const url: string = this.authService.getAuthTokenKakaoUrl(redirect_url);
     res.redirect(url);
-  }
+  };
 
   // kakao 회원가입 리다이렉트
   @Get('signup/kakao/redirect')
   @HttpCode(201)
   public async signUpForKakaoRedirectController(
     @Req() req: Request,
-  ): Promise<Record<string, string>> {
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
     const code = (req as any).query?.code; // code 읽어오기
     if (!code) throw new EmptyAuthCode();
     const signUpData: CreateUserOauthDto =
       await this.authService.getDataKakaoLogicVerSignUp(code);
     await this.authService.signUpVerOauthService(signUpData); // 실제 로그인
-    return { status: 'ok' };
-  }
+    
+    const frontend = this.config.get<string>('NODE_FRONTEND_SERVER', 'http://localhost:3000');
+    res.redirect(`${frontend}`);
+  };
 
   // 로그인 관련 - local
   @Post('login')
@@ -99,7 +103,7 @@ export class AuthController {
 
     // access_token은 body로
     return { access_token: tokens.access_token };
-  }
+  };
 
   // 로그인 관련 - kakao
   @Post('login/kakao')
@@ -113,13 +117,13 @@ export class AuthController {
     const redirect_url: string = `${backend_url}/api/auth/login/kakao/redirect`;
     const url: string = this.authService.getAuthTokenKakaoUrl(redirect_url);
     res.redirect(url);
-  }
+  };
 
   @Get('login/kakao/redirect')
   public async loginForKakaoRedirectController(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<Record<string, string>> {
+  ): Promise<void> {
     const code = (req as any).query?.code; // 코드확인
     if (!code) throw new EmptyAuthCode();
     const loginData: LoginOauthUserDto =
@@ -136,8 +140,54 @@ export class AuthController {
     });
 
     // access_token은 body로
-    return { access_token: tokens.access_token };
+    const frontend = this.config.get<string>('NODE_FRONTEND_SERVER', 'http://localhost:3000');
+    res.redirect(`${frontend}?access_token=${encodeURIComponent(tokens.access_token)}`); // 여기서 frontend 뒤에 원하는 부분으로 리다이렉트 시켜주면 될겁니다. 
+  };
+
+  // BFF 방식 oauth2 인증
+  @Get('kakao/url')
+  public authKakaoController() {
+    const backend_url: string = this.config.get<string>(
+      'NODE_BACKEND_SERVER',
+      'redirctUrl',
+    );
+    const redirect_url: string = `${backend_url}/api/auth/kakao/redirect`;
+
+    // 프론트엔드는 지금 카카오에게 집적 이야기 하기 위해서 url을 요청한다. 
+    const url : string = this.authService.getAuthTokenKakaoUrl(redirect_url);
+    return { url };
   }
+
+  // 로그인 + 회원가입 동시 인증
+  @Get("kakao/redirect")
+  async authKakaoRedirectController(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+
+    const frontend = this.config.get<string>('NODE_FRONTEND_SERVER', 'http://localhost:3000');
+    try {
+      const code = (req as any).query?.code; 
+      if (!code) throw new EmptyAuthCode();
+      const oauthData: UserOauthDto = await this.authService.getDataKakaoLogic(code);
+      
+      const tokens: TokenDto = await this.authService.authKakaoService(oauthData);
+
+      res.cookie('refresh_token', tokens.refresh_token, {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 밀리초
+        path: '/',
+        sameSite: 'lax',
+      });
+
+      // access_token은 body로
+      res.redirect(`${frontend}/auth#access_token=${encodeURIComponent(tokens.access_token)}`);
+    } catch (err) {
+      const status = err?.status ?? 500;
+      const message = encodeURIComponent(err?.message ?? 'oauth failed');
+      return void res.redirect(`${frontend}/auth/error?status=${status}&message=${message}`)
+    };
+  };
 
   // 로그아웃과 관련
   @UseGuards(JwtGuard)

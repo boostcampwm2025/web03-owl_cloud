@@ -1,5 +1,5 @@
 import { Global, Module } from "@nestjs/common";
-import { RoomCreateLockRepo, RoomRouterRepository } from "./sfu";
+import { ConsumerRepository, ProducerRepository, RoomCreateLockRepo, RoomRouterRepository } from "./sfu";
 import { TransportRepository } from "./sfu/transport-repo";
 
 
@@ -8,12 +8,16 @@ import { TransportRepository } from "./sfu/transport-repo";
   providers : [
     RoomRouterRepository,
     RoomCreateLockRepo,
-    TransportRepository
+    TransportRepository,
+    ProducerRepository,
+    ConsumerRepository,
   ],
   exports : [
     RoomRouterRepository,
     RoomCreateLockRepo,
-    TransportRepository
+    TransportRepository,
+    ProducerRepository,
+    ConsumerRepository,
   ]
 })
 export class MemoryModule {};

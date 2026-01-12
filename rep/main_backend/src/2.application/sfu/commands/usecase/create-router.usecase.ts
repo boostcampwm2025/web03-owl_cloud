@@ -64,8 +64,6 @@ export class CreateRouterUsecase {
         };
       });
 
-      // 여기에서 대표 producer transport도 나중에 등록 예정
-
       return roomEntry;
     } catch (err) {
       this.logger.error(err); // error가 발생한다면 

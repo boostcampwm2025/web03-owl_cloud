@@ -2,6 +2,7 @@ import {
   LoginOauthUsecase,
   LoginUsecase,
   LogoutUseCase,
+  OauthUsecase,
   SignUpOauthUsecase,
   SignUpUsecase,
 } from '@app/auth/commands/usecase';
@@ -12,6 +13,7 @@ import {
   LoginOauthUserDto,
   Payload,
   TokenDto,
+  UserOauthDto
 } from '@app/auth/commands/dto';
 import { HttpService } from '@nestjs/axios';
 import { HttpException, Injectable } from '@nestjs/common';
@@ -19,6 +21,8 @@ import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { NotGenerateUser } from '@error/presentation/user/user.error';
 import { LoginValidate, SignUpValidate } from './auth.validate';
+import { Response } from 'express';
+
 
 type KakaoTokenResponse = {
   token_type: string;
@@ -38,6 +42,7 @@ export class AuthService {
     private readonly signUpOauthUsecase: SignUpOauthUsecase<any>,
     private readonly loginUsecase: LoginUsecase<any, any>,
     private readonly loginOauthUsecase: LoginOauthUsecase<any, any>,
+    private readonly oauthUsecase : OauthUsecase<any, any>,
     private readonly logoutUsecase: LogoutUseCase<any>,
   ) {}
 
@@ -143,6 +148,29 @@ export class AuthService {
     };
 
     return loginData;
+  };
+
+  public async getDataKakaoLogic(
+    code : string
+  ) : Promise<UserOauthDto> {
+    // access_token 받기
+    const backend_url: string = this.config.get<string>(
+      'NODE_BACKEND_SERVER',
+      'redirctUrl',
+    );
+    const redirect_url: string = `${backend_url}/api/auth/kakao/redirect`;
+    const token = await this.getAccessTokenKakaoUrl(code, redirect_url);
+
+    // 데이터
+    const kakaoData = await this.getDataKakaoUrl(token.access_token);
+    const oauthData: UserOauthDto = {
+      provider: 'kakao',
+      provider_id: String(kakaoData.id),
+      email: String(kakaoData.kakao_account.email),
+      nickname: String(kakaoData.properties.nickname),
+    };
+
+    return oauthData
   }
 
   // 실제 회원 가입이 이루어지는 로직 - local
@@ -240,6 +268,10 @@ export class AuthService {
       );
     }
   }
+
+  public async authKakaoService( oauthData: UserOauthDto) : Promise<TokenDto> {
+    return this.oauthUsecase.execute(oauthData);
+  };
 
   // 실제 로그아웃이 이루어지는 로직
   public async logoutService(payload: Payload): Promise<void> {

@@ -29,7 +29,8 @@ CREATE TABLE `Oauth_users` (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
   CONSTRAINT fk_user_oauth_user FOREIGN KEY (`user_id`) REFERENCES `Users`(`user_id`) ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT check_oauth_user_provider CHECK(`provider` IN ('kakao', 'google'))
+  CONSTRAINT check_oauth_user_provider CHECK(`provider` IN ('kakao', 'google')),
+  UNIQUE KEY uq_oauth_provider_providerid (`provider`, `provider_id`)
 );
 ```
 

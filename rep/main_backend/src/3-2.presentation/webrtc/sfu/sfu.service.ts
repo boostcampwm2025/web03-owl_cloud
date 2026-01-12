@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import { CreateTransportDto, RoomEntry, TransportEntry } from "@app/sfu/commands/dto";
-import { CreateRouterUsecase, CreateTransportUsecase } from "@app/sfu/commands/usecase";
-import { RoomRouterRepository, TransportRepository } from "@infra/memory/sfu";
+import { CreateConsumerDto, CreateConsumerResult, CreateProduceResult, CreatePropduceDto, CreateTransportDto, RoomEntry, TransportEntry } from "@app/sfu/commands/dto";
+import { CreateConsumerUsecase, CreateProduceUsecase, CreateRouterUsecase, CreateTransportUsecase, DisconnectUserUsecase } from "@app/sfu/commands/usecase";
+import { ConsumerRepository, ProducerRepository, RoomRouterRepository, TransportRepository } from "@infra/memory/sfu";
 import { ConnectTransportUsecase } from "@app/sfu/queries/usecase";
 import { ConnectTransportType } from "@app/sfu/queries/dto";
 
@@ -14,9 +14,14 @@ export class SfuService {
     private readonly createRouterUsecase : CreateRouterUsecase,
     private readonly createTransportUsecase : CreateTransportUsecase<any>,
     private readonly connectTransportUsecase : ConnectTransportUsecase<any>,
+    private readonly disconnectUsertUsecase : DisconnectUserUsecase<any>,
+    private readonly createProducerUsecase : CreateProduceUsecase<any>,
+    private readonly createConsumerUsecase : CreateConsumerUsecase<any>,
     // infra
     private readonly roomRouters : RoomRouterRepository,
     private readonly transports : TransportRepository,
+    private readonly producers : ProducerRepository,
+    private readonly consuers : ConsumerRepository
   ) {}
 
   // 1. router 생성 관련 함수 -> 생성 혹은 얻는 이유는 방을 만들었다고 무조건 router를 부여하면 비어있는 방에 낭비가 심할 수 있기에 들어와야 활성화가 된다. 
@@ -38,6 +43,7 @@ export class SfuService {
       this.transports.delete(transport_id);
     };
 
+    // 이 부분을 한번 봐바야 겠다. 여기서 마지막 유저가 나갔다면 모를까
     try {
       if (!entry.router.closed) entry.router.close();
     } finally {
@@ -45,14 +51,29 @@ export class SfuService {
     };
   };  
 
+  // 유저가 나갈때 로직을 구현한다. 
+  async disconnectUser(user_id : string) : Promise<void> {
+    await this.disconnectUsertUsecase.execute(user_id);
+  }
+
   // 2. transport 부분 생성 ( 나중에 전체적인 부분 usecase로 빼자고 )
-  async createTransPort(dto : CreateTransportDto) : Promise<TransportEntry> {
+  async createTransPort(dto: CreateTransportDto): Promise<TransportEntry> {
     return this.createTransportUsecase.execute(dto);
-  };
+  }
 
   // 3. transport connect 연결 ( 이때 부터는 이제 sfu와 webrtc 통신이 가능해졌다고 생각하면 된다. )
   async connectTransport(dto : ConnectTransportType) : Promise<void> {
     await this.connectTransportUsecase.execute(dto);
   };
+
+  // 4. produce 생성 
+  async createProducer(dto : CreatePropduceDto) : Promise<CreateProduceResult> {
+    return this.createProducerUsecase.execute(dto);
+  };
+
+  // 5. consumer 생성
+  async createConsumer(dto : CreateConsumerDto) : Promise<CreateConsumerResult> {
+    return this.createConsumerUsecase.execute(dto);
+  }
 
 };
