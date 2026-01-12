@@ -9,6 +9,7 @@ import {
   MYSQL_DB,
 } from '@infra/db/db.constants';
 import { CheckOauthDataType } from '@app/auth/commands/usecase';
+import { UserOauthDto } from '@app/auth/commands/dto';
 
 // user 데이터 기본 설정
 interface UserRowPacket extends RowDataPacket {
@@ -123,8 +124,8 @@ export class SelectUserAndOauthWhereEmailFromMysql extends SelectDataFromDb<Pool
 
     const whereClause: string =
       attributeName === DB_USERS_ATTRIBUTE_NAME.USER_ID
-        ? `WHERE \`${attributeName}\` = UUID_TO_BIN(?, true)`
-        : `WHERE \`${attributeName}\` = ?`;
+        ? `WHERE \`${userTableNameSpace}\`.\`${attributeName}\` = UUID_TO_BIN(?, true)`
+        : `WHERE \`${userTableNameSpace}\`.\`${attributeName}\` = ?`;
 
     const sql: string = `
     SELECT 
@@ -133,7 +134,7 @@ export class SelectUserAndOauthWhereEmailFromMysql extends SelectDataFromDb<Pool
     ${userTableNameSpace}.\`${DB_USERS_ATTRIBUTE_NAME.NICKNAME}\`,
     ${oauthTableNameSpace}.\`${DB_OAUTH_USERS_ATTRIBUTE_NAME.PROVIDER}\`,
     ${oauthTableNameSpace}.\`${DB_OAUTH_USERS_ATTRIBUTE_NAME.PROVIDER_ID}\`
-    FROM ${userTableName} ${userTableNameSpace} INNER JOIN ${oauthTableName} ${oauthTableNameSpace} 
+    FROM ${userTableName} ${userTableNameSpace} LEFT JOIN ${oauthTableName} ${oauthTableNameSpace} 
     ON ${userTableNameSpace}.\`${DB_USERS_ATTRIBUTE_NAME.USER_ID}\` = ${oauthTableNameSpace}.\`${DB_OAUTH_USERS_ATTRIBUTE_NAME.USER_ID}\`
     ${whereClause}
     LIMIT 1
@@ -153,6 +154,73 @@ export class SelectUserAndOauthWhereEmailFromMysql extends SelectDataFromDb<Pool
   }: {
     attributeName: string;
     attributeValue: string;
+  }): Promise<CheckOauthDataType | undefined> {
+    const db: Pool = this.db;
+
+    const oauthAndUser: UserAndOauthUserRowPacket | undefined =
+      await this.selectUserAndOauthData({ db, attributeName, attributeValue });
+    if (!oauthAndUser) return undefined;
+
+    return {
+      user_id: oauthAndUser[DB_USERS_ATTRIBUTE_NAME.USER_ID],
+      email: oauthAndUser[DB_USERS_ATTRIBUTE_NAME.EMAIL],
+      nickname: oauthAndUser[DB_USERS_ATTRIBUTE_NAME.NICKNAME],
+      provider: oauthAndUser[DB_OAUTH_USERS_ATTRIBUTE_NAME.PROVIDER],
+      provider_id: oauthAndUser[DB_OAUTH_USERS_ATTRIBUTE_NAME.PROVIDER_ID],
+    };
+  }
+}
+
+// 새로운 oauth에서 데이터 정보를 파싱하는 객체
+@Injectable()
+export class SelectUserAndOauthFromMysql extends SelectDataFromDb<Pool> {
+  constructor(@Inject(MYSQL_DB) db: Pool) {
+    super(db);
+  }
+
+  // 읽는 부분은 성능적인 부분을 신경쓰는 것이 좋다. - 로그인 이기 때문에 여기서는 caching은 하지 않을거다.
+  private async selectUserAndOauthData({
+    db,
+    attributeName,
+    attributeValue,
+  }: {
+    db: Pool;
+    attributeName: string;
+    attributeValue: UserOauthDto;
+  }): Promise<UserAndOauthUserRowPacket | undefined> {
+    const userTableName: string = DB_TABLE_NAME.USERS;
+    const oauthTableName: string = DB_TABLE_NAME.OAUTH_USERS;
+    const userTableNameSpace: string = 'u';
+    const oauthTableNameSpace: string = 'o';
+
+    const sql: string = `
+      SELECT 
+        BIN_TO_UUID(${userTableNameSpace}.\`${DB_USERS_ATTRIBUTE_NAME.USER_ID}\`, true) AS \`${DB_USERS_ATTRIBUTE_NAME.USER_ID}\`,
+        ${userTableNameSpace}.\`${DB_USERS_ATTRIBUTE_NAME.EMAIL}\` AS \`${DB_USERS_ATTRIBUTE_NAME.EMAIL}\`,
+        ${userTableNameSpace}.\`${DB_USERS_ATTRIBUTE_NAME.NICKNAME}\` AS \`${DB_USERS_ATTRIBUTE_NAME.NICKNAME}\`,
+        ${oauthTableNameSpace}.\`${DB_OAUTH_USERS_ATTRIBUTE_NAME.PROVIDER}\` AS \`${DB_OAUTH_USERS_ATTRIBUTE_NAME.PROVIDER}\`,
+        ${oauthTableNameSpace}.\`${DB_OAUTH_USERS_ATTRIBUTE_NAME.PROVIDER_ID}\` AS \`${DB_OAUTH_USERS_ATTRIBUTE_NAME.PROVIDER_ID}\`
+      FROM ${oauthTableName} ${oauthTableNameSpace}
+      JOIN ${userTableName} ${userTableNameSpace}
+        ON ${userTableNameSpace}.\`${DB_USERS_ATTRIBUTE_NAME.USER_ID}\` = ${oauthTableNameSpace}.\`${DB_OAUTH_USERS_ATTRIBUTE_NAME.USER_ID}\`
+      WHERE ${userTableNameSpace}.\`${attributeName}\` = ?
+        AND ${oauthTableNameSpace}.\`${DB_OAUTH_USERS_ATTRIBUTE_NAME.PROVIDER}\` = ?
+        AND ${oauthTableNameSpace}.\`${DB_OAUTH_USERS_ATTRIBUTE_NAME.PROVIDER_ID}\` = ?
+      LIMIT 1
+    `;
+
+    const params = [attributeValue.email, attributeValue.provider, attributeValue.provider_id];
+
+    const [rows] = await db.query<Array<UserAndOauthUserRowPacket>>(sql, params);
+    return rows[0];
+  }
+
+  public async select({
+    attributeName,
+    attributeValue,
+  }: {
+    attributeName: string;
+    attributeValue: UserOauthDto;
   }): Promise<CheckOauthDataType | undefined> {
     const db: Pool = this.db;
 

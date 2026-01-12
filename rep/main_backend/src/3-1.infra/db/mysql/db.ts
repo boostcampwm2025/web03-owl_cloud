@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Pool, createPool } from 'mysql2/promise';
 import { MYSQL_DB } from '../db.constants';
 import {
+  SelectUserAndOauthFromMysql,
   SelectUserAndOauthWhereEmailFromMysql,
   SelectUserDataFromMysql,
 } from './user/user.inbound';
@@ -67,6 +68,7 @@ import { SelectRoomDataFromMysql } from './room/room.inbound';
     InsertRoomParticipantInfoDataToMysql,
     DeleteHardRoomParticipantInfoDataToMysql, // 에러가 발생했을때 그 방문기록을 하드 삭제하기 위한 객체
     UpdateRoomParticipantInfoToMysql, // 회의방에 참가자 떠났다는 정보 기입 
+    SelectUserAndOauthFromMysql // oauth에서 유저의 정보를 찾아주는 
   ],
   exports: [
     MYSQL_DB,
@@ -79,7 +81,8 @@ import { SelectRoomDataFromMysql } from './room/room.inbound';
     SelectRoomDataFromMysql,
     InsertRoomParticipantInfoDataToMysql,
     DeleteHardRoomParticipantInfoDataToMysql,
-    UpdateRoomParticipantInfoToMysql
+    UpdateRoomParticipantInfoToMysql,
+    SelectUserAndOauthFromMysql
   ],
 })
 export class MysqlModule {}
