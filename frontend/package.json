@@ -15,9 +15,11 @@
     "cz": "cz"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
     "konva": "^10.0.12",
+    "monaco-editor": "^0.55.1",
     "next": "16.0.10",
     "react": "19.2.1",
     "react-dom": "19.2.1",
@@ -25,6 +27,9 @@
     "tailwind-merge": "^3.4.0",
     "use-image": "^1.1.4",
     "uuid": "^13.0.0",
+    "y-monaco": "^0.1.6",
+    "y-websocket": "^3.0.0",
+    "yjs": "^13.6.29",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
