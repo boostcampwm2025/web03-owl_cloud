@@ -5,12 +5,12 @@ import * as cookie from "cookie";
 import { ConnectResult, ConnectRoomDto, DisconnectRoomDto } from "@app/room/commands/dto";
 import { ConnectRoomUsecase, DisconnectRoomUsecase } from "@app/room/commands/usecase";
 import { v7 as uuidV7 } from "uuid";
-import { DtlsHandshakeValidate, OnConsumeValidate, OnProduceValidate, SocketPayload } from "./signaling.validate";
+import { DtlsHandshakeValidate, OnConsumeValidate, OnProduceValidate, ResumeConsumersValidate, SocketPayload } from "./signaling.validate";
 import { PayloadRes } from "@app/auth/queries/dto";
 import { SfuService } from "@present/webrtc/sfu/sfu.service";
 import { NotConnectSignalling } from "@error/presentation/signalling/signalling.error";
 import { CHANNEL_NAMESPACE } from "@infra/channel/channel.constants";
-import { CreateConsumerDto, CreateConsumerResult, CreateProduceResult, CreatePropduceDto, CreateTransportDto } from "@app/sfu/commands/dto";
+import { CreateConsumerDto, CreateConsumerResult, CreateProduceResult, CreatePropduceDto, CreateTransportDto, ResumeConsumerDto } from "@app/sfu/commands/dto";
 import { ConnectTransportType } from "@app/sfu/queries/dto";
 
 
@@ -164,6 +164,18 @@ export class SignalingWebsocketService {
       ...payload
     };
     return this.sfuServer.createConsumer(dto);
+  };
+
+  // consumer가 resume하게 하는 로직
+  async resumeConsumer( client : Socket, validate : ResumeConsumersValidate ) : Promise<void> {
+    const room_id : string = client.data.room_id;
+    const payload : SocketPayload = client.data.user;
+    const dto : ResumeConsumerDto = {
+      ...payload,
+      room_id,
+      ...validate
+    };
+    await this.sfuServer.resumeConsumer(dto);
   };
 
 };

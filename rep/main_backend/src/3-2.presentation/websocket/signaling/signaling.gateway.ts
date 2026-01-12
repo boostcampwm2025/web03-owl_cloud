@@ -237,9 +237,15 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
     @ConnectedSocket() client : Socket,
     @MessageBody() validate : ResumeConsumersValidate   
   ) {
-    // 1. consumer 재개
-    
+    try {
+      // 1. consumer 재개
+      await this.signalingService.resumeConsumer(client, validate);
 
+      return { ok : true };
+    } catch (err) {
+      this.logger.error(err);
+      throw new WsException({ message : err.message ?? "에러 발생", status : err.status ?? 500 });      
+    };
   };
 
   // producer가 이제 더이상 데이터를 보내지 않겠다고 이야기하는 이벤트
