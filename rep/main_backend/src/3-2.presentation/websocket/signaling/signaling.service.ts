@@ -5,9 +5,13 @@ import * as cookie from "cookie";
 import { ConnectResult, ConnectRoomDto, DisconnectRoomDto } from "@app/room/commands/dto";
 import { ConnectRoomUsecase, DisconnectRoomUsecase } from "@app/room/commands/usecase";
 import { v7 as uuidV7 } from "uuid";
-import { SocketPayload } from "./signaling.validate";
+import { DtlsHandshakeValidate, SocketPayload } from "./signaling.validate";
 import { PayloadRes } from "@app/auth/queries/dto";
-import { UnthorizedError } from "@error/application/user/user.error";
+import { SfuService } from "@present/webrtc/sfu/sfu.service";
+import { NotConnectSignalling } from "@error/presentation/signalling/signalling.error";
+import { CHANNEL_NAMESPACE } from "@infra/channel/channel.constants";
+import { CreateTransportDto } from "@app/sfu/commands/dto";
+import { ConnectTransportType } from "@app/sfu/queries/dto";
 
 
 @Injectable()
@@ -15,7 +19,8 @@ export class SignalingWebsocketService {
 
   constructor(
     private readonly disconnectRoomUsecase : DisconnectRoomUsecase<any, any>,
-    private readonly connectRoomUsecase : ConnectRoomUsecase<any, any>
+    private readonly connectRoomUsecase : ConnectRoomUsecase<any, any>,
+    private readonly sfuServer : SfuService,
   ) {}
 
   parseJwtToken( client : Socket ) : TokenDto | undefined {
@@ -42,8 +47,7 @@ export class SignalingWebsocketService {
       refresh_token = cookies["refresh_token"];
     };  
 
-    if ( !access_token && !refresh_token ) return undefined;
-    if ( !access_token || !refresh_token ) throw new UnthorizedError("토큰이 존재하지 않습니다.");
+    if ( !access_token || !refresh_token ) return undefined;
 
     return {
       access_token, refresh_token
@@ -56,6 +60,13 @@ export class SignalingWebsocketService {
 
   // ip를 파싱할때 사용하는 함수
   private extractClientIp(client : Socket) : string {
+    
+    // 아래에서 위조 될수 있으니 최우선은 이 ip를 기준으로 한다. 
+    const realIp = client.handshake.headers['x-real-ip'];
+    if (typeof realIp === 'string') {
+      return realIp;
+    }
+
     // nginx가 클라이언트의 원 IP를 전달하기 위해서 만든 헤더이다. ( 즉 Nginx가 집적 걸어줌 )
     const forwarded = client.handshake.headers['x-forwarded-for'];
 
@@ -67,6 +78,10 @@ export class SignalingWebsocketService {
     // 그렇지 않은경우 그냥 ip주소 사용
     return client.handshake.address;
   };
+
+  makeRoomNamespace(room_id : string) : string {
+    return `${CHANNEL_NAMESPACE.SIGNALING}:${room_id}`
+  }
 
   makeSocketData({ payload, socket } : { payload : PayloadRes | undefined, socket : Socket }) : SocketPayload {
     if ( payload ) return {
@@ -80,6 +95,7 @@ export class SignalingWebsocketService {
   // 방에 나갈때 사용하는 함수
   async disconnectRoomService(dto : DisconnectRoomDto) : Promise<void> {
     await this.disconnectRoomUsecase.execute(dto);
+    this.sfuServer.closeRoomRouter(dto.room_id); // sfu 서버에 내용도 정리
   };
 
   // 방에 가입할때 사용하는 함수
@@ -91,5 +107,39 @@ export class SignalingWebsocketService {
       throw err;
     };
   };
+
+  // sdp 협상에 필요한 함수 
+  async sdpNegotiate( room_id : string ) {
+    if ( !room_id || room_id === "" ) throw new NotConnectSignalling();
+    const entry = await this.sfuServer.getOrCreateRoomRouter(room_id);
+    return entry.router.rtpCapabilities; // sfu 서버에 codex 정보들 ( 나중에 변경 가능성 농후하다. )
+  };
+
+  // ice 협상을 위해 sfu서버에 ice parameter와 후보들을 알려준다 그리고 dtls 핸드세이킹을 위한 파라미터도 전달
+  async iceNegotiate( client : Socket, type : "send" | "recv" ) {
+    const room_id : string = client.data.room_id;
+    const payload : SocketPayload = client.data.user;
+    const dto : CreateTransportDto = {
+      room_id,
+      socket_id : payload.socket_id,
+      user_id : payload.user_id,
+      type,};
+    if ( !room_id || room_id === "" ) throw new NotConnectSignalling();
+    const transportOptions = await this.sfuServer.createTransPort(dto);
+    return transportOptions;
+  };
+
+  // dtls 핸드 세이크를 위한 
+  async dtlsHandshake( client: Socket, validate : DtlsHandshakeValidate) : Promise<void> {
+    const room_id : string = client.data.room_id;
+    const payload : SocketPayload = client.data.user;
+    const dto : ConnectTransportType = {
+      ...validate,
+      room_id,
+      socket_id : payload.socket_id,
+      user_id : payload.user_id,
+    }
+    await this.sfuServer.connectTransport(dto);
+  }
 
 };

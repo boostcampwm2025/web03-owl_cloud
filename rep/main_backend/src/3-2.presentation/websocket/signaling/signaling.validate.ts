@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
+import { IsIn, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
+import { type DtlsParameters } from "mediasoup/types";
 
 
 // socket에서 사용할 
@@ -30,3 +31,24 @@ export class JoinRoomValidate {
   @MaxLength(16) // 16글자? 
   nickname? : string;
 }
+
+export class NegotiateIceValidate {
+  @IsNotEmpty()
+  @IsIn([ "send", "recv" ])
+  type : "send" | "recv"
+};  
+
+export class DtlsHandshakeValidate {
+
+  @IsNotEmpty()
+  @IsString()
+  transport_id : string;
+
+  @IsNotEmpty()
+  @IsObject()
+  dtlsParameters: DtlsParameters;
+
+  @IsNotEmpty()
+  @IsIn([ "send", "recv" ])
+  type : "send" | "recv";
+};

@@ -1,4 +1,4 @@
-import { DeleteDatasToCache, InsertDataToCache } from "@app/ports/cache/cache.outbound";
+import { DeleteDatasToCache, DeleteDataToCache, InsertDataToCache } from "@app/ports/cache/cache.outbound";
 import { Inject, Injectable } from "@nestjs/common";
 import { type RedisClientType } from "redis";
 import { CACHE_ROOM_INFO_KEY_NAME, CACHE_ROOM_MEMBERS_KEY_PROPS_NAME, CACHE_ROOM_NAMESPACE_NAME, CACHE_ROOM_SOCKETS_KEY_PROPS_NAME, CACHE_ROOM_SUB_NAMESPACE_NAME, REDIS_SERVER } from "../../cache.constants";

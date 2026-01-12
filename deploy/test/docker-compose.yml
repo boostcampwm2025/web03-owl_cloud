@@ -39,6 +39,19 @@ services:
       - clobby-network
     restart: unless-stopped
 
+  # sfu 서버 -> 현재 sfu는 이걸로 가고 위에 로드밸런싱을 갖춘 아키텍처는 나중에 저장 로직으로 사용하면 된다. ( 배포는 또 다 분리할거니까 괜찮을 거다. )
+  sfu:
+    container_name: sfu
+    image: "${MAIN_BACKEND_IMG}:latest"
+    env_file:
+      - ./.env.backend
+    networks:
+      - clobby-network
+    # 보안 주의
+    ports:
+      - "40000-41999:40000-41999/udp"
+      - "40000-41999:40000-41999/tcp"
+
   # frontend 빌드 
   frontend:
     container_name: frontend

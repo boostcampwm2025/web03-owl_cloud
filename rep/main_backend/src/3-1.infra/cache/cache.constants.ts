@@ -47,3 +47,15 @@ export const CACHE_ROOM_SOCKETS_KEY_PROPS_NAME = Object.freeze({
   ROOM_ID : "room_id",
   IP : "ip"
 } as const);
+
+// sfu와 관련된 cache 정보
+export const CACHE_SFU_NAMESPACE_NAME = Object.freeze({
+  TRANSPORT_INFO : "cache:sfu:transports"
+} as const);
+
+export const CACHE_SFU_TRANSPORTS_KEY_NAME = Object.freeze({
+  SOCKET_ID : "socket_id",
+  USER_ID : "user_id",
+  TYPE : "type",
+  ROOM_ID : "room_id"
+} as const);
