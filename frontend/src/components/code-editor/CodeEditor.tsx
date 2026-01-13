@@ -53,7 +53,7 @@ export default function CodeEditor({
     );
     providerRef.current = provider;
 
-    // 사용자 정보 동적 설정
+    // 사용자 정보 동적 설정 > TODO: 실제 사용자 닉네임 가져오기
     const userName = `User-${Math.floor(Math.random() * 100)}`;
 
     provider.awareness.setLocalState({
@@ -103,9 +103,10 @@ export default function CodeEditor({
         if (!state.cursor) return;
 
         const { lineNumber, column } = state.cursor;
-
         const { cursor } = colorFromClientId(clientId);
-        injectCursorStyles(clientId, cursor);
+        const displayedUserName = state.user?.name ?? 'User';
+
+        injectCursorStyles(clientId, cursor, displayedUserName);
 
         decorations.push({
           range: new monaco.Range(lineNumber, column, lineNumber, column + 1),
