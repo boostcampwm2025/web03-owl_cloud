@@ -109,7 +109,6 @@ export default function RenderItem({
         draggable={isDraggable}
         listening={isListening}
         hitStrokeWidth={30}
-        tension={0.5}
         lineCap="round"
         lineJoin="round"
         onMouseDown={() => isInteractive && !isEraserMode && onSelect(item.id)}
