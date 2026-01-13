@@ -13,8 +13,8 @@ concurrency:
 jobs:
   # 추후 eslint, husky등 추가 테스트도 진행할 수 있습니다.
   # jest 활용 backend unit, intergration test 진행
-  backend-test:
-    name: 백엔드 테스트 진행
+  main-backend-test:
+    name: main_backend 테스트 진행
     runs-on: ubuntu-22.04
 
     steps:
@@ -43,7 +43,7 @@ jobs:
       # 백엔드 환경변수
       - name: backend 환경 변수 추가 
         working-directory: ./rep/main_backend
-        run: echo "${{ secrets.NODE_BACKEND_LOCAL_ENV }}" > .env
+        run: echo "${{ secrets.NODE_MAIN_BACKEND_LOCAL_ENV }}" > .env
 
       # backend 단위 테스트 실행 
       - name: backend unit test
@@ -52,11 +52,11 @@ jobs:
 
       # backend 통합 테스트 실행 - 추후 추가
   
-  # backend build 진행
-  backend-build:
-    name: Docker 백엔드 빌드
+  # main_backend build 진행
+  main-backend-build:
+    name: Docker main_backend 빌드
     runs-on: ubuntu-22.04
-    needs: backend-test
+    needs: main-backend-test
 
     # 진행은 buildidx를 사용할 것입니다. 기존의 docker 레거시가 아닌 buildkit을 이용할 예정이고 이로 인해서 cache 성능을 높일 예정입니다.
     steps:
@@ -96,7 +96,86 @@ jobs:
           # caching 작업 - 모든 빌드단계 레이어 캐싱 즉 max를 설정해서 용량은 많이 쓰지만 성능은 높인다. 
           cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_MAIN_BACKEND_TEST_SERVER_IMG }}:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_MAIN_BACKEND_TEST_SERVER_IMG }}:buildcache,mode=max
-          
+
+  # tool_backend 테스트 진행 ( main_backend와 거의 동일합니다. )
+  tool-backend-test:
+    name: tool-backend 테스트 진행
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout backend
+        uses: actions/checkout@v5
+
+      - name: pnpm 사용을 위한 세팅
+        uses: pnpm/action-setup@v4
+        with: 
+          version: 10
+      
+      - name: nodejs 설정
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: "pnpm"
+          cache-dependency-path: ./rep/tool_backend/pnpm-lock.yaml 
+
+      - name: backend package 설치
+        working-directory: ./rep/tool_backend
+        run: pnpm install --frozen-lockfile
+
+      # 백엔드 관련 환경변수 추가
+      - name: backend 환경변수 파일 추가 
+        working-directory: ./rep/tool_backend
+        run: echo "${{ secrets.NODE_TOOL_BACKEND_LOCAL_ENV }}" > .env
+      
+      # backend 단위 테스트 실행
+      - name: backend 단위테스트 실행
+        working-directory: ./rep/tool_backend
+        run: pnpm test:unit
+        
+  # tool_backend 빌드 진행
+  tool-backend-build:
+    name: Docker tool_backend 빌드
+    runs-on: ubuntu-22.04
+    needs: tool-backend-test
+
+    # 진행은 buildidx를 사용할 것입니다. 기존의 docker 레거시가 아닌 buildkit을 이용할 예정이고 이로 인해서 cache 성능을 높일 예정입니다. - main_backend와 동일
+    steps:
+      - name: Checkout docker backend
+        uses: actions/checkout@v5
+
+      # CPU 설정  
+      - name: QEMU 설정
+        uses: docker/setup-qemu-action@v3
+
+      # buildIdx 세팅
+      - name: BuildIdx 세팅
+        uses: docker/setup-buildx-action@v3
+
+      # dockerhub 로그인 - 비밀번호는 토큰을 사용할 예정입니다. 
+      - name: Dockerhub 로그인
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      # docker build 후 캐싱 
+      - name: Docker 빌드 후 push (with cache)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./rep/tool_backend
+          file: ./rep/tool_backend/Dockerfile
+          push: true
+          # amd64를 사용해서 위에 조사를 스킵할 예정이다.
+          platforms: linux/amd64
+
+          # docker image 관리
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_TOOL_BACKEND_TEST_SERVER_IMG }}:latest
+            ${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_TOOL_BACKEND_TEST_SERVER_IMG }}:${{github.sha}}
+
+          # caching 작업 - 모든 빌드단계 레이어 캐싱 즉 max를 설정해서 용량은 많이 쓰지만 성능은 높인다. 
+          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_TOOL_BACKEND_TEST_SERVER_IMG }}:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_TOOL_BACKEND_TEST_SERVER_IMG }}:buildcache,mode=max
   # frontend 테스트 진행
 
   # frontend 빌드
@@ -138,7 +217,8 @@ jobs:
     name: Test Server Docker 통합 테스트
     runs-on: ubuntu-22.04
     needs: 
-      - backend-build
+      - main-backend-build
+      - tool-backend-build # 추가
       - frontend-build
     
     steps:
@@ -150,15 +230,23 @@ jobs:
         run: |
           cat << "EOF" > compose.env
           MAIN_BACKEND_IMG=${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_MAIN_BACKEND_TEST_SERVER_IMG }}
+          TOOL_BACKEND_IMG=${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_TOOL_BACKEND_TEST_SERVER_IMG }}
           FRONTEND_IMG=${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_FRONTEND_TEST_SERVER_IMG }}
           EOF
       
-      # frontend는 추후 추가하시면 됩니다. -> backend 환경변수가 안먹는 오류가 발생 -> 일단 이렇게 수정
-      - name: Docker compose에 각 이미지가 사용할 환경변수 설정
-        working-directory: ./deploy/test
+      # 환경변수 설정 ( 프론트는 나중에 여기서 추가할수도 있고 vite처럼 빌드과정에서 추가할 수도 있습니다. NEXT는 어떨지 궁금하내요 )
+      - name: Docker compose에서 main_backend가 사용할 환경변수
+        working-directory: ./deploy/test/main_backend
         run: |
           cat << 'EOF' > .env.backend
-          ${{ secrets.NODE_BACKEND_LOCAL_ENV }}
+          ${{ secrets.NODE_MAIN_BACKEND_LOCAL_ENV }}
+          EOF
+
+      - name: Docker compose에서 tool_backend가 사용할 환경변수
+        working-directory: ./deploy/test/tool_backend
+        run: |
+          cat << 'EOF' > .env.backend
+          ${{ secrets.NODE_TOOL_BACKEND_LOCAL_ENV }}
           EOF
 
       # docker compose 빌드 후 실행
@@ -178,7 +266,7 @@ jobs:
       # 백엔드 통합테스트 진행
       - name: backend 통합 테스트 진행
         working-directory: ./test/intergration-build-test
-        run: ./backend-intergration-test.sh ${{ vars.TEST_URL }}
+        run: ./backend-intergration-test.sh ${{ vars.TEST_URL }} ${{ vars.TEST_URL }}
 
       # 프론트엔드 통합테스트 진행
       - name: frontend 통합 테스트 진행
@@ -195,13 +283,25 @@ jobs:
           # docker gateway 로그 확인
           docker logs gateway --tail=200 || true
 
-          # docker backend nginx 로그 확인 
+          # docker main_backend nginx 로그 확인 
           docker logs main-backend-nginx --tail=200 || true
 
-          # backend app 로그 확인
-          docker logs main-backend-app-1 --tail=200 || true
-          docker logs main-backend-app-2 --tail=200 || true
-          docker logs main-backend-app-3 --tail=200 || true
+          # main_backend 로그 확인
+          docker logs main-backend --tail=200 || true
+
+          # docker tool_backend nginx 로그 확인
+          docker logs tool-backend-nginx --tail=200 || true
+
+          # docker tool_backend 로그 확인
+          docker logs tool-backend-app-1 --tail=200 || true
+          docker logs tool-backend-app-2 --tail=200 || true
+          docker logs tool-backend-app-3 --tail=200 || true
+
+          # docker frontend nginx 로그 확인
+          docker logs frontend-nginx --tail=200 || true
+
+          # docker frontend 로그 확인
+          docker logs frontend --tail=200 || true
 
       # docker 내리기
       - name: docker 내림
@@ -243,9 +343,14 @@ jobs:
             mkdir -p /root/app
             cd /root/app
 
-            # env 파일
-            cat << 'EOF' > .env.backend
-            ${{ secrets.NODE_BACKEND_ENV_TEST_SERVER }}
+            # main_backend env 파일
+            cat << 'EOF' > ./main_backend/.env.backend
+            ${{ secrets.NODE_MAIN_BACKEND_ENV_TEST_SERVER }}
+            EOF
+
+            # tool_backend env 파일
+            cat << 'EOF' > ./tool_backend/.env.backend
+            ${{ secrets.NODE_TOOL_BACKEND_ENV_TEST_SERVER }}
             EOF
             
             # compose.env 파일 생성
@@ -264,6 +369,69 @@ jobs:
             # docker compose 작동 확인
             docker ps
             echo "테스트 서버 배포 완료"
+
+      # 테스트 실패시 에러 로깅 확인
+      - name: (실패 시) 테스트 서버 디버그 로그 수집
+        if: failure()
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.TEST_SERVER_HOST }}
+          username: ${{ secrets.TEST_SERVER_USER }}
+          key: ${{ secrets.TEST_SERVER_SSH_KEY }}
+          script: |
+            # 에러 나도 계속 스크립트 진행
+            set +e
+
+            cd /root/app || exit 0
+
+            echo "=============================="
+            echo "== docker compose ps"
+            echo "=============================="
+            docker compose --env-file compose.env -f docker-compose.yml ps || true
+
+            echo "=============================="
+            echo "== 최근 200줄 로그: gateway"
+            echo "=============================="
+            docker logs gateway --tail=200 || true
+
+            echo "=============================="
+            echo "== 최근 200줄 로그: main-backend-nginx"
+            echo "=============================="
+            docker logs main-backend-nginx --tail=200 || true
+
+            echo "=============================="
+            echo "== 최근 200줄 로그: main-backend"
+            echo "=============================="
+            docker logs main-backend --tail=200 || true
+
+            echo "=============================="
+            echo "== 최근 200줄 로그: tool-backend-nginx"
+            echo "=============================="
+            docker logs tool-backend-nginx --tail=200 || true        
+            
+            echo "=============================="
+            echo "== 최근 200줄 로그: tool-backend-app-1/2/3"
+            echo "=============================="
+            docker logs tool-backend-app-1 --tail=200 || true
+            docker logs tool-backend-app-2 --tail=200 || true
+            docker logs tool-backend-app-3 --tail=200 || true         
+            
+            echo "=============================="
+            echo "== 최근 200줄 로그: frontend-nginx"
+            echo "=============================="
+            docker logs frontend-nginx --tail=200 || true
+
+            echo "=============================="
+            echo "== 최근 200줄 로그: frontend"
+            echo "=============================="
+            docker logs frontend --tail=200 || true
+            
+            echo "=============================="
+            echo "== 디스크 사용량"
+            echo "=============================="
+            df -h || true
+            docker system df || true            
+            
 
   # e2e 테스트 진행
 

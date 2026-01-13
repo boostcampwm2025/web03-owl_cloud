@@ -1,6 +1,6 @@
 
 // websocket연결 path 
-export const WEBSOCKET_PATH = "/api/ws/"
+export const WEBSOCKET_PATH = process.env.NODE_BACKEND_WEBSOCKET_PREFIX;
 
 // websocket 연결할때 사용하는 namespace
 export const WEBSOCKET_NAMESPACE = Object.freeze({

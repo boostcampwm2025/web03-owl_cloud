@@ -18,8 +18,8 @@ concurrency:
 
 jobs:
   # 백엔드는 단위테스트 + 통합테스트 진행 후 -> docker build -> docker 백엔드 통합테스트를 진행합니다.
-  backend-test:
-    name: jest를 활용한 백엔드 테스트
+  main-backend-test:
+    name: jest를 활용한 main_backend 테스트
     runs-on: ubuntu-22.04
 
     steps:
@@ -50,7 +50,7 @@ jobs:
       # 백엔드 관련 환경변수 추가
       - name: backend 환경변수 파일 추가 
         working-directory: ./rep/main_backend
-        run: echo "${{ secrets.NODE_BACKEND_LOCAL_ENV }}" > .env
+        run: echo "${{ secrets.NODE_MAIN_BACKEND_LOCAL_ENV }}" > .env
       
       # backend 단위 테스트 실행
       - name: backend 단위테스트 실행
@@ -59,14 +59,50 @@ jobs:
       
       # backend 통합 테스트 실행 - 추후 추가
 
-  # 프론트엔드 테스트 진행
+  # tool backend test ( main_backend와 거의 동일한 로직 입니다. )
+  tool-backend-test:
+    name: jest를 활용한 tool_backend 테스트
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout backend
+        uses: actions/checkout@v5
+
+      - name: pnpm 사용을 위한 세팅
+        uses: pnpm/action-setup@v4
+        with: 
+          version: 10
+      
+      - name: nodejs 설정
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: "pnpm"
+          cache-dependency-path: ./rep/tool_backend/pnpm-lock.yaml 
+
+      - name: backend package 설치
+        working-directory: ./rep/tool_backend
+        run: pnpm install --frozen-lockfile
+
+      # 백엔드 관련 환경변수 추가
+      - name: backend 환경변수 파일 추가 
+        working-directory: ./rep/tool_backend
+        run: echo "${{ secrets.NODE_TOOL_BACKEND_LOCAL_ENV }}" > .env
+      
+      # backend 단위 테스트 실행
+      - name: backend 단위테스트 실행
+        working-directory: ./rep/tool_backend
+        run: pnpm test:unit
+
+  # 프론트엔드 테스트 진행 -> 추후 추가
 
   # 빌드 후 -> 빌드 된 컨테이너 테스트  
   docker-build-and-integration-test:
     name: Docker image 빌드 후 통합테스트
     runs-on: ubuntu-22.04
     needs: 
-      backend-test
+      - main-backend-test
+      - tool-backend-test
       # 나중에 프론트도 추가 - 테스트
     
     steps:
@@ -75,7 +111,8 @@ jobs:
 
       - name: docker 환경 변수 설정(backend)
         run: |
-          echo "${{ secrets.NODE_BACKEND_LOCAL_ENV }}" > .env.backend
+          echo "${{ secrets.NODE_MAIN_BACKEND_LOCAL_ENV }}" > .env.main.backend
+          echo "${{ secrets.NODE_TOOL_BACKEND_LOCAL_ENV }}" > .env.tool.backend
 
       # frontend도 필요하면 추가
 
@@ -95,9 +132,21 @@ jobs:
       # 백엔드 통합 테스트 진행
       - name: backend 통합 테스트 진행
         working-directory: ./test/intergration-build-test
-        run: ./backend-intergration-test.sh ${{ vars.BACKEND_LOCAL_URL }}
+        run: ./backend-intergration-test.sh ${{ vars.MAIN_BACKEND_LOCAL_URL }} ${{ vars.TOOL_BACKEND_LOCAL_URL }}
 
       # 프론트엔드 통합 테스트 진행
       - name: frontend 통합 테스트 진행
         working-directory: ./test/intergration-build-test
         run: ./frontend-intergration-test.sh ${{ vars.FRONTEND_LOCAL_URL }}
+
+      # 만약 에러가 발생하면 여기서 디버깅 해야 한다.
+      - name: docker 에러 로깅
+        if: failure()
+        run: |
+          docker ps -a
+          echo "==== tool-backend logs ===="
+          docker logs --tail=200 tool-backend-app || true
+          echo "==== main-backend logs ===="
+          docker logs --tail=200 main-backend-app || true
+          echo "==== frontend logs ===="
+          docker logs --tail=200 frontend || true
