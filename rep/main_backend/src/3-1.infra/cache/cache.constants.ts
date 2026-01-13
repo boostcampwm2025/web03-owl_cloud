@@ -48,6 +48,7 @@ export const CACHE_ROOM_MEMBERS_KEY_PROPS_NAME = Object.freeze({
   SOCKET_ID : "socket_id",
   IP : "ip",
   NICKNAME : "nickname",
+  IS_GUEST : "is_guest"
 } as const);
 
 // sockets은 해당 socket_id에 대해서 room_id, user_id, ip 등을 제공해줘서 빠르게 찾을 수 있게 도와준다. ( 예시 해당 socket에 대해서 정리 )
@@ -78,6 +79,12 @@ export const CACHE_SFU_TRANSPORTS_KEY_NAME = Object.freeze({
   TYPE : "type",
   ROOM_ID : "room_id"
 } as const);
+
+// producer에 사실상 key_name
+export const CACHE_SFU_PRODUCERS_KEY_NAME = Object.freeze({
+  AUDIO : "audio",
+  VIDEO : "video"
+});
 
 // produce에 key(audio, video)에 저장되는 정보 -> room_id:user_id 필요 ( 이유 -> 해당 room에 user 정보가 같이 들어감으로 -> 모든 데이터를 가져와야 한다. )
 export const CACHE_SFU_PRODUCES_KEY_PROPS_NAME = Object.freeze({

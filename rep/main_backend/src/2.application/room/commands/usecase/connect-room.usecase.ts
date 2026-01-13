@@ -61,16 +61,20 @@ export class ConnectRoomUsecase<T, CT> {
     if ( roomInfo.current_particiants + 1 > roomInfo.max_particiants ) throw new NotAcceptRoomMembers();
 
     // 3. db에 접속 정보를 저장한다.
-    const roomAggregate = new RoomAggregate({ 
-      room : new Room({ ...room }), 
-      participants : [new RoomParticipant({
-        id : 1,
-        room_id : room.room_id,
-        user_id : dto.user_id,
-        joined_at : new Date()
-      })] }); // 정합성 체크
-    const insertRoomPaticipantChecked : boolean = await this.insertRoomParticipantInfoDataToDb.insert(roomAggregate.getRoomParticipantData().at(-1));
-    if ( !insertRoomPaticipantChecked ) throw new NotAllowRoomParticipantData();
+    let dbSaved : boolean = false;
+    if ( !dto.is_guest ) { // guest는 저장을 하지 않는다. 
+      const roomAggregate = new RoomAggregate({ 
+        room : new Room({ ...room }), 
+        participants : [new RoomParticipant({
+          id : 1,
+          room_id : room.room_id,
+          user_id : dto.user_id,
+          joined_at : new Date()
+        })] }); // 정합성 체크
+      const insertRoomPaticipantChecked : boolean = await this.insertRoomParticipantInfoDataToDb.insert(roomAggregate.getRoomParticipantData().at(-1));
+      dbSaved = true;
+      if ( !insertRoomPaticipantChecked ) throw new NotAllowRoomParticipantData();
+    }
     
     try {
       // 4. redis에 해당 user에 대한 정보를 저장한다. ( 멤버 등록, 정보 수정, socket 관리 ) -> 한번에 저장해서 정합성 체크
@@ -85,7 +89,7 @@ export class ConnectRoomUsecase<T, CT> {
       return { room_id : room.room_id };
     } catch (err) {
       // 4-1. 에러가 나면 해당 db에 접속정보를 삭제해야 한다. ( room_id - user_id - lefted_at이 비어있는값 삭제 ) -> 방이아닌 접속 기록을 해야함
-      await this.deleteRoomParticipantInfoDataToDb.delete({ uniqueValue : room.room_id, addOption : dto.user_id });
+      if ( dbSaved ) await this.deleteRoomParticipantInfoDataToDb.delete({ uniqueValue : room.room_id, addOption : dto.user_id });
       throw err;
     } 
   };

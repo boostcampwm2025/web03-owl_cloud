@@ -107,3 +107,22 @@ export class SelectUserTransportFromRedis extends SelectDataFromCache<RedisClien
     };
   }
 };
+
+// consumer 정보를 가져오는 로직 구현
+@Injectable()
+export class SelectConsumerInfoFromRedis extends SelectDataFromCache<RedisClientType<any, any>> {
+
+  constructor(
+    @Inject(REDIS_SERVER) cache : RedisClientType<any, any>
+  ) { super(cache); };  
+
+  // namespace는 room_id:user_id이고 keyName은 consumer_id 이다. 
+  async select({ namespace, keyName, }: { namespace: string; keyName: string; }): Promise<boolean> {
+    
+    const consumerNamespace : string = `${CACHE_SFU_NAMESPACE_NAME.CONSUMER_INFO}:${namespace}`;
+
+    const data = await this.cache.hGet(consumerNamespace, keyName);
+    
+    return data ? true : false;
+  };
+};

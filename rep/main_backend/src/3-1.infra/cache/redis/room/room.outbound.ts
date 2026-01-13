@@ -71,7 +71,8 @@ export class InsertRoomDatasToRedis extends InsertDataToCache<RedisClientType<an
           .hSet(roomMemberNamespace, entity.user_id, JSON.stringify({
             [CACHE_ROOM_MEMBERS_KEY_PROPS_NAME.IP] : entity.ip,
             [CACHE_ROOM_MEMBERS_KEY_PROPS_NAME.NICKNAME] : entity.nickname,
-            [CACHE_ROOM_MEMBERS_KEY_PROPS_NAME.SOCKET_ID] : entity.socket_id
+            [CACHE_ROOM_MEMBERS_KEY_PROPS_NAME.SOCKET_ID] : entity.socket_id,
+            [CACHE_ROOM_MEMBERS_KEY_PROPS_NAME.IS_GUEST] : entity.is_guest ? "true" : "false"
           })) // member에 추가 
           .hSet(roomSocketNamespace, entity.socket_id, JSON.stringify({
             [CACHE_ROOM_SOCKETS_KEY_PROPS_NAME.IP] : entity.ip,
@@ -106,6 +107,7 @@ export class InsertRoomDatasToRedis extends InsertDataToCache<RedisClientType<an
             [CACHE_ROOM_MEMBERS_KEY_PROPS_NAME.IP]: entity.ip,
             [CACHE_ROOM_MEMBERS_KEY_PROPS_NAME.NICKNAME]: entity.nickname,
             [CACHE_ROOM_MEMBERS_KEY_PROPS_NAME.SOCKET_ID]: entity.socket_id,
+            [CACHE_ROOM_MEMBERS_KEY_PROPS_NAME.IS_GUEST] : entity.is_guest ? "true" : "false"
           }))
           .hIncrBy(roomInfoNamespace, CACHE_ROOM_INFO_KEY_NAME.CURRENT_PARTICIANTS, 1)
           .hSet(roomSocketNamespace, entity.socket_id, JSON.stringify({

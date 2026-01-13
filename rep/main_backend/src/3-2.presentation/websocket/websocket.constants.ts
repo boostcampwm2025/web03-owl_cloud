@@ -20,11 +20,14 @@ export const WEBSOCKET_SIGNALING_EVENT_NAME = Object.freeze({
   DTLS_HANDSHAKE : "signaling:ws:dtls_handshake",
   PRODUCE : "signaling:ws:produce",
   CONSUME : "signaling:ws:consume",
-  RESUME : "signaling:ws:resume" // 여러가지로 요긴하게 쓸수 있을것 같다. ( consume을 다시 재개 당연히 stop도 있으면 좋을것 같다. )
+  RESUME : "signaling:ws:resume", // 여러가지로 요긴하게 쓸수 있을것 같다. ( consume을 다시 재개 당연히 stop도 있으면 좋을것 같다. )
+  ROOM_MEMBERS : "signaling:ws:room_members"
 } as const);
 
 export const WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME = Object.freeze({
   JOINED : "room:joined",
   ADMISSION : "room:admission",
-  NEW_PRODUCED : "room:new_produced"
+  NEW_PRODUCED : "room:new_produced",
+  NEW_USER : "room:new_user",
+  USER_CLOSED : "room:user_closed",
 } as const);

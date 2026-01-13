@@ -2,13 +2,14 @@ import { ConnectRoomUsecase, DisconnectRoomUsecase } from "@app/room/commands/us
 import { Module } from "@nestjs/common";
 import { SelectRoomDataFromMysql } from "@infra/db/mysql/room/room.inbound";
 import { CompareRoomArgonHash } from "./signaling.interface";
-import { SelectRoomInfoFromRedis } from "@infra/cache/redis/room/room.inbound";
+import { SelectRoomInfoFromRedis, SelectRoomMemberInfosFromRedis } from "@infra/cache/redis/room/room.inbound";
 import { DeleteHardRoomParticipantInfoDataToMysql, InsertRoomParticipantInfoDataToMysql, UpdateRoomParticipantInfoToMysql } from "@infra/db/mysql/room/room.outbound";
 import { DeleteRoomDatasToRedis, InsertRoomDatasToRedis } from "@infra/cache/redis/room/room.outbound";
 import { SignalingWebsocketService } from "./signaling.service";
 import { AuthWebsocketModule } from "../auth/auth.module";
 import { SignalingWebsocketGateway } from "./signaling.gateway";
 import { SfuModule } from "@present/webrtc/sfu/sfu.module";
+import { GetRoomMembersUsecase } from "@/2.application/room/queries/usecase";
 
 
 @Module({
@@ -63,6 +64,19 @@ import { SfuModule } from "@present/webrtc/sfu/sfu.module";
       inject : [
         UpdateRoomParticipantInfoToMysql,
         DeleteRoomDatasToRedis
+      ]
+    },
+
+    // 방에 멤버들의 정보를 보내주기 위한 usecase
+    {
+      provide : GetRoomMembersUsecase,
+      useFactory : (
+        selectRoomMemberInfosFromCache : SelectRoomMemberInfosFromRedis
+      ) => {  
+        return new GetRoomMembersUsecase({ selectRoomMemberInfosFromCache });
+      },
+      inject : [
+        SelectRoomMemberInfosFromRedis
       ]
     }
   ]

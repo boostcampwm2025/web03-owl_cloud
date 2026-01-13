@@ -7,6 +7,7 @@ export type ConnectRoomDto = {
   nickname : string;
   ip : string;
   socket_id : string;
+  is_guest : boolean;
   password? : string;
 };
 
@@ -16,6 +17,7 @@ export type InsertRoomDataDto = {
   ip : string;
   user_id : string;
   nickname : string;
+  is_guest : boolean;
 };
 
 export type ConnectResult = {

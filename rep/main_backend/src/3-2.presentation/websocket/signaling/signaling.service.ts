@@ -5,13 +5,15 @@ import * as cookie from "cookie";
 import { ConnectResult, ConnectRoomDto, DisconnectRoomDto } from "@app/room/commands/dto";
 import { ConnectRoomUsecase, DisconnectRoomUsecase } from "@app/room/commands/usecase";
 import { v7 as uuidV7 } from "uuid";
-import { DtlsHandshakeValidate, OnConsumeValidate, OnProduceValidate, SocketPayload } from "./signaling.validate";
+import { DtlsHandshakeValidate, OnConsumeValidate, OnProduceValidate, ResumeConsumersValidate, SocketPayload } from "./signaling.validate";
 import { PayloadRes } from "@app/auth/queries/dto";
 import { SfuService } from "@present/webrtc/sfu/sfu.service";
 import { NotConnectSignalling } from "@error/presentation/signalling/signalling.error";
 import { CHANNEL_NAMESPACE } from "@infra/channel/channel.constants";
-import { CreateConsumerDto, CreateConsumerResult, CreateProduceResult, CreatePropduceDto, CreateTransportDto } from "@app/sfu/commands/dto";
+import { CreateConsumerDto, CreateConsumerResult, CreateProduceResult, CreatePropduceDto, CreateTransportDto, ResumeConsumerDto } from "@app/sfu/commands/dto";
 import { ConnectTransportType } from "@app/sfu/queries/dto";
+import { GetRoomMembersResult, MembersInfo } from "@app/room/queries/dto";
+import { GetRoomMembersUsecase } from "@app/room/queries/usecase";
 
 
 @Injectable()
@@ -20,6 +22,7 @@ export class SignalingWebsocketService {
   constructor(
     private readonly disconnectRoomUsecase : DisconnectRoomUsecase<any, any>,
     private readonly connectRoomUsecase : ConnectRoomUsecase<any, any>,
+    private readonly getMembersUsecase : GetRoomMembersUsecase<any>,
     private readonly sfuServer : SfuService,
   ) {}
 
@@ -143,7 +146,7 @@ export class SignalingWebsocketService {
   };
 
   // produce를 하기 위한 준비 
-  async onProduce( client : Socket , validate : OnProduceValidate ) : Promise<CreateProduceResult> {
+  async onProduce( client : Socket , validate : OnProduceValidate ) : Promise<CreateProduceResult & { nickname : string }> {
     const room_id : string = client.data.room_id;
     const payload : SocketPayload = client.data.user;
     const dto : CreatePropduceDto = {
@@ -151,7 +154,10 @@ export class SignalingWebsocketService {
       room_id,
       ...payload
     };
-    return this.sfuServer.createProducer(dto);
+    const result = await this.sfuServer.createProducer(dto);
+    return {
+      ...result, nickname : payload.nickname
+    };
   };
 
   // consumer를 하기 위한 준비
@@ -164,6 +170,34 @@ export class SignalingWebsocketService {
       ...payload
     };
     return this.sfuServer.createConsumer(dto);
+  };
+
+  // consumer가 resume하게 하는 로직
+  async resumeConsumer( client : Socket, validate : ResumeConsumersValidate ) : Promise<void> {
+    const room_id : string = client.data.room_id;
+    const payload : SocketPayload = client.data.user;
+    const dto : ResumeConsumerDto = {
+      ...payload,
+      room_id,
+      ...validate
+    };
+    await this.sfuServer.resumeConsumer(dto);
+  };
+
+  // 회의방에 모든 유저를 가져오고 싶을때 사용하는 로직 
+  async getMemberData( client : Socket ) : Promise<GetRoomMembersResult> {
+    const room_id : string = client.data.room_id;
+    return this.getMembersUsecase.execute({room_id});
+  };
+
+  makeUserInfo(client : Socket) : MembersInfo {
+    const payload : SocketPayload = client.data.user;
+    return {
+      ...payload,
+      profile_path : null, // 이 부분은 좀 고민을 해야할 것 같다. 
+      cam : null,
+      mic : null
+    }
   };
 
 };
