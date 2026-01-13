@@ -211,4 +211,15 @@ export class AuthController {
 
     return { status: 'ok' };
   }
+
+  // 유저 정보를 받아오는 로직
+  @UseGuards(JwtGuard)
+  @Get("me")
+  public async meController(
+    @Req() req: Request
+  ) : Promise<Payload> {
+    const payload: Payload = (req as any).user;
+    return payload;
+  };
+
 }
