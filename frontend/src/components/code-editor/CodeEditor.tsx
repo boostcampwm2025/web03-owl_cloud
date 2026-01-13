@@ -100,27 +100,17 @@ export default function CodeEditor({
 
         const { lineNumber, column } = state.cursor;
 
-        const { cursor, lineBg } = colorFromClientId(clientId);
-        injectCursorStyles(clientId, cursor, lineBg);
+        const { cursor } = colorFromClientId(clientId);
+        injectCursorStyles(clientId, cursor);
 
-        decorations.push(
-          {
-            range: new monaco.Range(lineNumber, 1, lineNumber, 1),
-            options: {
-              isWholeLine: true,
-              className: `remote-line-${clientId}`,
-            },
+        decorations.push({
+          range: new monaco.Range(lineNumber, column, lineNumber, column + 1),
+          options: {
+            className: `remote-cursor-${clientId}`,
+            stickiness:
+              monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
           },
-          {
-            range: new monaco.Range(lineNumber, column, lineNumber, column + 1),
-            options: {
-              className: `remote-cursor-${clientId}`,
-              stickiness:
-                monaco.editor.TrackedRangeStickiness
-                  .NeverGrowsWhenTypingAtEdges,
-            },
-          },
-        );
+        });
       });
 
       remoteDecorationsRef.current!.set(decorations);
@@ -219,7 +209,7 @@ export default function CodeEditor({
             disabled={disabledPresenter}
             className={`rounded px-3 py-1 text-sm ${disabledPresenter ? 'bg-neutral-100 text-neutral-400' : 'bg-blue-600 text-white'}`}
           >
-            발표자 되기
+            스포트라이트
           </button>
         )}
 
@@ -228,7 +218,7 @@ export default function CodeEditor({
             onClick={cancelPresenter}
             className="rounded bg-red-600 px-3 py-1 text-sm text-white"
           >
-            발표자 취소
+            스포트라이트 해제
           </button>
         )}
 
