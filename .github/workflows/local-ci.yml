@@ -82,7 +82,7 @@ jobs:
         with:
           node-version: 22
           cache: "pnpm"
-          cache-dependency-path: ./rep/main_backend/pnpm-lock.yaml 
+          cache-dependency-path: ./rep/tool_backend/pnpm-lock.yaml 
 
       # pnpm을 이용해서 설치합니다. ( pnpm-lock.yaml을 사용 )
       - name: backend package 설치
@@ -143,3 +143,13 @@ jobs:
       - name: frontend 통합 테스트 진행
         working-directory: ./test/intergration-build-test
         run: ./frontend-intergration-test.sh ${{ vars.FRONTEND_LOCAL_URL }}
+
+      # 만약 에러가 발생하면 여기서 디버깅 해야 한다.
+      - name: docker 에러 로깅
+        if: failure()
+        run: |
+          docker ps -a
+          echo "==== tool-backend logs ===="
+          docker logs --tail=200 tool-backend-app || true
+          echo "==== main-backend logs ===="
+          docker logs --tail=200 main-backend-app || true
