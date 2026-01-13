@@ -38,5 +38,5 @@ COPY --from=build /app/dist ./dist
 
 # 실행 관련
 # USER node # 이부분은 실행 할때 누구의 권한으로 실행하느냐이다. 이게 없으면 root라는 점이다. ( 좀 불편한점은 많지만 보안적으로는 더 좋다. )
-EXPOSE 8080
+EXPOSE 8000
 CMD ["node", "dist/main.js"]

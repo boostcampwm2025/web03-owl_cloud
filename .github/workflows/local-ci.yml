@@ -65,18 +65,14 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      # 현재 브런치를 이 프로세스에 적용합니다.
       - name: Checkout backend
         uses: actions/checkout@v5
 
-      # pnpm을 사용할 수 있도록pnpm을 설정한다.
       - name: pnpm 사용을 위한 세팅
         uses: pnpm/action-setup@v4
         with: 
           version: 10
       
-      # nodejs를 설정합니다.
-      # pnpm-lock.yaml이 이 전역 cache를 참고하도록 한다.
       - name: nodejs 설정
         uses: actions/setup-node@v5
         with:
@@ -84,7 +80,6 @@ jobs:
           cache: "pnpm"
           cache-dependency-path: ./rep/tool_backend/pnpm-lock.yaml 
 
-      # pnpm을 이용해서 설치합니다. ( pnpm-lock.yaml을 사용 )
       - name: backend package 설치
         working-directory: ./rep/tool_backend
         run: pnpm install --frozen-lockfile
@@ -153,3 +148,5 @@ jobs:
           docker logs --tail=200 tool-backend-app || true
           echo "==== main-backend logs ===="
           docker logs --tail=200 main-backend-app || true
+          echo "==== frontend logs ===="
+          docker logs --tail=200 frontend || true
