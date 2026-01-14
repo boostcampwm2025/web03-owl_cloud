@@ -149,7 +149,7 @@ export class AuthController {
   @Get('kakao/url')
   public authKakaoController(
     @Res({ passthrough : true }) res : Response
-  ) {
+  ) : Record<string, string> {
     const backend_url: string = this.config.get<string>(
       'NODE_BACKEND_SERVER',
       'redirctUrl',
