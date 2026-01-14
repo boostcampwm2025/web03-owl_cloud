@@ -113,6 +113,7 @@ jobs:
         run: |
           echo "${{ secrets.NODE_MAIN_BACKEND_LOCAL_ENV }}" > .env.main.backend
           echo "${{ secrets.NODE_TOOL_BACKEND_LOCAL_ENV }}" > .env.tool.backend
+          echo "${{ secrets.NODE_FRONTEND_LOCAL_ENV }}" > ./frontend/.env.frontend
 
       # frontend도 필요하면 추가
 
