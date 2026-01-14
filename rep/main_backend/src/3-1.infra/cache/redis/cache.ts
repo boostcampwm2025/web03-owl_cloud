@@ -9,7 +9,7 @@ import { REDIS_SERVER } from '../cache.constants';
 import { SelectHsetDataFromRedis } from './user/user.inbound';
 import { DeleteRoomDatasToRedis, InsertRoomDatasToRedis, InsertRoomDataToRedis } from './room/room.outbound';
 import { SelectRoomInfoFromRedis, SelectRoomMemberInfosFromRedis } from './room/room.inbound';
-import { CreateSfuTransportInfoToRedis, DeleteConsumerDataToRedis, DeleteMainProducerDataToRedis, DeleteSfuTransportInfoToRedis, DeleteUserProducerDataToRedis, InsertConsumerDataToRedis, InsertMainProducerDataToRedis, InsertUserProducerDataToRedis,  } from "./sfu/sfu.outbound"
+import { CreateSfuTransportInfoToRedis, DeleteConsumerDataToRedis, DeleteMainProducerDataToRedis, DeleteSfuTransportInfoToRedis, DeleteUserProducerDataToRedis, InsertConsumerDatasToRedis, InsertConsumerDataToRedis, InsertMainProducerDataToRedis, InsertUserProducerDataToRedis,  } from "./sfu/sfu.outbound"
 import { SelectConsumerInfoFromRedis, SelectMainProducerDataFromRedis, SelectSfuTransportDataFromRedis, SelectUserProducerDataFromRedis, SelectUserTransportFromRedis } from './sfu/sfu.inbound';
 
 
@@ -68,6 +68,7 @@ import { SelectConsumerInfoFromRedis, SelectMainProducerDataFromRedis, SelectSfu
     SelectUserTransportFromRedis, // transport에서 유저 정보에 해당하는 데이터가 있는 경우
     SelectConsumerInfoFromRedis, // consumer 정보가 제대로 있는지 확인  
     SelectRoomMemberInfosFromRedis, // 방에 있는 유저들의 정보를 보낸다.
+    InsertConsumerDatasToRedis,
   ],
   exports: [
     REDIS_SERVER,
@@ -92,6 +93,7 @@ import { SelectConsumerInfoFromRedis, SelectMainProducerDataFromRedis, SelectSfu
     SelectUserTransportFromRedis,
     SelectConsumerInfoFromRedis,
     SelectRoomMemberInfosFromRedis, 
+    InsertConsumerDatasToRedis
   ],
 })
 export class RedisModule {}

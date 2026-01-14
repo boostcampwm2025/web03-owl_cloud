@@ -2,7 +2,7 @@ import { DeleteDataToCache, InsertDataToCache } from "@app/ports/cache/cache.out
 import { Inject, Injectable } from "@nestjs/common";
 import { type RedisClientType } from "redis";
 import { CACHE_ROOM_INFO_KEY_NAME, CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME, CACHE_ROOM_NAMESPACE_NAME, CACHE_ROOM_SUB_NAMESPACE_NAME, CACHE_SFU_CONSUMER_KEY_PROPS_NAME, CACHE_SFU_NAMESPACE_NAME, CACHE_SFU_PRODUCES_KEY_PROPS_NAME, CACHE_SFU_TRANSPORTS_KEY_NAME, CACHE_SFU_USER_KEY_NAME, REDIS_SERVER } from "../../cache.constants";
-import { CreateRoomTransportDto, InsertConsumerDataDto, InsertProducerDto } from "@app/sfu/commands/dto";
+import { CreateRoomTransportDto, InsertConsumerDataDto, InsertConsumerDatasDto, InsertProducerDto } from "@app/sfu/commands/dto";
 
 
 @Injectable()
@@ -235,8 +235,45 @@ export class DeleteConsumerDataToRedis extends DeleteDataToCache<RedisClientType
     
     const deleteNamespace : string = `${CACHE_SFU_NAMESPACE_NAME.CONSUMER_INFO}:${namespace}`;
 
-    const result = await this.cache.hDel(deleteNamespace, keyName);
+    await this.cache.hDel(deleteNamespace, keyName);
 
     return true;
   };
+};
+
+// consumer와 관련된 데이터들 redis에 추가함 ( 데이터 여러개 추가 )
+@Injectable()
+export class InsertConsumerDatasToRedis extends InsertDataToCache<RedisClientType<any, any>> {
+
+  constructor(
+    @Inject(REDIS_SERVER) cache : RedisClientType<any, any>
+  ) { super(cache); };
+
+  async insert(entity: InsertConsumerDatasDto): Promise<boolean> {
+    
+    const insertConsumerNamespace = `${CACHE_SFU_NAMESPACE_NAME.CONSUMER_INFO}:${entity.room_id}:${entity.user_id}`;
+
+    const fields: Record<string, string> = {};
+
+    for (const info of entity.consumer_info) {
+      const insertData = {
+        [CACHE_SFU_CONSUMER_KEY_PROPS_NAME.CONSUMER_ID]: info.consumer_id,
+        [CACHE_SFU_CONSUMER_KEY_PROPS_NAME.PRODUCER_ID]: info.producer_id,
+        [CACHE_SFU_CONSUMER_KEY_PROPS_NAME.USER_ID]: entity.user_id,
+        [CACHE_SFU_CONSUMER_KEY_PROPS_NAME.STATUS]: info.status,
+        [CACHE_SFU_CONSUMER_KEY_PROPS_NAME.TRANSPORT_ID]: entity.transport_id,
+      };
+
+      // field = consumer_id, value = json
+      fields[info.consumer_id] = JSON.stringify(insertData);
+    };
+
+    if (Object.keys(fields).length === 0) return true; // 없으면 그냥 반환
+    
+
+    await this.cache.hSet(insertConsumerNamespace, fields);
+
+    return true;
+  };
+
 };

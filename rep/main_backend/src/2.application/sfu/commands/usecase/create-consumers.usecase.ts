@@ -12,7 +12,6 @@ type CreateConsumersUsecaseProps<T> = {
   selectTransportDataFromCache : SelectDataFromCache<T>; // 나의 tranport_id가 맞는지 부터 확인
   insertConsumerDatasToCache : InsertDataToCache<T>; // consumer_id에 대해서 데이터 정보를 저장 -> 새로 만들어야 함
   deleteConsumerDataToCache : DeleteDataToCache<T>; // 에러가 발생하거나 consumer가 내려갔을때 삭제
-  deleteConsumerDatasToCache : DeleteDatasToCache<T>; // 에러가 발생했을때 전체 consumer 삭제 -> 새로 만들어야 함
 };
 
 @Injectable()
@@ -21,19 +20,17 @@ export class CreateConsumersUsecase<T> {
   private readonly selectTransportDataFromCache : CreateConsumersUsecaseProps<T>["selectTransportDataFromCache"];
   private readonly insertConsumerDatasToCache : CreateConsumersUsecaseProps<T>["insertConsumerDatasToCache"];
   private readonly deleteConsumerDataToCache : CreateConsumersUsecaseProps<T>["deleteConsumerDataToCache"];
-  private readonly deleteConsumerDatasToCache : CreateConsumersUsecaseProps<T>["deleteConsumerDatasToCache"];
 
   constructor(
   private readonly routerRepo : RoomRouterRepositoryPort,
   private readonly transportRepo : TransportRepositoryPort,
   private readonly consumerRepo : ConsumerRepositoryPort, // consumer가 있음
   {
-    selectTransportDataFromCache, insertConsumerDatasToCache, deleteConsumerDataToCache, deleteConsumerDatasToCache
+    selectTransportDataFromCache, insertConsumerDatasToCache, deleteConsumerDataToCache
   } : CreateConsumersUsecaseProps<T>) {
     this.selectTransportDataFromCache = selectTransportDataFromCache;
     this.insertConsumerDatasToCache = insertConsumerDatasToCache;
     this.deleteConsumerDataToCache = deleteConsumerDataToCache;
-    this.deleteConsumerDatasToCache = deleteConsumerDatasToCache;
   }
 
   async execute(dto : CreateConsumersDto) : Promise<CreateConsumerResults> {
@@ -139,9 +136,6 @@ export class CreateConsumersUsecase<T> {
             c.close();
           } catch {}
         }
-        await this.deleteConsumerDatasToCache
-          .deleteKeyNames(namespace, createdConsumerIds)
-          .catch(() => {});
         throw new SfuErrorMessage("consumer 데이터를 저장하는데 에러가 발생했습니다.");
       }
 
