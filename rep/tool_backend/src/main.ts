@@ -1,17 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
-import { RedisIoAdapter } from '@infra/channel/redis/channel.service';
 
 async function bootstrap() {
-  // 기본 설정
   const app = await NestFactory.create(AppModule);
-  const config = app.get(ConfigService);
-
-  // 웹소켓 adapter 설정
-  const redisAdapter = new RedisIoAdapter(app, config);
-  await redisAdapter.websocketConnectToRedis(); // websocket을 redis로 연결
-  app.useWebSocketAdapter(redisAdapter);
+  const config : ConfigService = app.get(ConfigService);
 
   // cors 설정
   const origin : Array<string> = config
@@ -32,24 +25,16 @@ async function bootstrap() {
   const credentials : boolean = config
   .get<string>("NODE_ALLOWED_CREDENTIALS", "false").trim() === "true"
 
-  const exposedHeaders : Array<string> = config
-  .get<string>("NODE_ALLOWED_EXPOSE_HEADERS", "")
-  .split(",")
-  .map((header : string) => header.trim());
-
   app.enableCors({
-    origin, methods, allowedHeaders, credentials, exposedHeaders
+    origin, methods, allowedHeaders, credentials
   });
 
-  // port, host 설정
+  // 기본 설정
   const port: number = config.get<number>('NODE_PORT', 8080);
   const host: string = config.get<string>('NODE_HOST', 'localhost');
 
-  // 종료 훅을 반드시 호출해 달라는 함수이다.
-  app.enableShutdownHooks();
-
-  // app에 들어오는 global prefix는 
-  const prefix : string = config.get<string>("NODE_BACKEND_PREFIX", "api");
+  // 기본 prefix 설정
+  const prefix : string = config.get<string>("NODE_BACKEND_PREFIX", "tool");
   app.setGlobalPrefix(prefix);
 
   await app.listen(port, host);

@@ -7,7 +7,7 @@ import { CreateRoomDto, CreateRoomResult } from "@app/room/commands/dto";
 import { Payload } from "@app/auth/commands/dto";
 
 
-@Controller("api/rooms")
+@Controller("rooms")
 export class RoomController {
 
   constructor(

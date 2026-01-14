@@ -1,5 +1,6 @@
 # CI/CD 파이프라인에서 초반 build 후 테스트에서 사용할 예정
 services:
+  # main 백엔드 부분 
   main-backend-app:
     container_name: main-backend-app
     build: 
@@ -8,7 +9,19 @@ services:
     ports:
       - "8080:8080"
     env_file:
-      - .env.backend
+      - .env.main.backend
+    restart: unless-stopped
+
+  # tool 백엔드 부분
+  tool-backend-app:
+    container_name: tool-backend-app
+    build: 
+      context: ./rep/tool_backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.tool.backend
     restart: unless-stopped
   
   frontend:
