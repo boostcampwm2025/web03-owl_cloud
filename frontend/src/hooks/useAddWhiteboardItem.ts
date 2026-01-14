@@ -9,6 +9,7 @@ export const useAddWhiteboardItem = () => {
   const addShape = useCanvasStore((state) => state.addShape);
   const addImage = useCanvasStore((state) => state.addImage);
   const addVideo = useCanvasStore((state) => state.addVideo);
+  const addYoutube = useCanvasStore((state) => state.addYoutube);
 
   // Canvas Store States
   const selectItem = useCanvasStore((state) => state.selectItem);
@@ -170,11 +171,20 @@ export const useAddWhiteboardItem = () => {
     input.click();
   };
 
+  const handleAddYoutube = (url?: string) => {
+    // 넘겨받은 url이 있으면 사용 없으면 prompt
+    const targetUrl = url ?? prompt('유튜브 URL을 입력하세요');
+    if (!targetUrl) return;
+
+    addYoutube(targetUrl);
+  };
+
   return {
     handleAddText,
     handleAddArrow,
     handleAddShape,
     handleAddImage,
     handleAddVideo,
+    handleAddYoutube,
   };
 };
