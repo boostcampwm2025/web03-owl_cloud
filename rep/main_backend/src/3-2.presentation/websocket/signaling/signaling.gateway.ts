@@ -7,7 +7,7 @@ import { TokenDto } from "@app/auth/commands/dto";
 import { PayloadRes } from "@app/auth/queries/dto";
 import { JwtWsGuard } from "../auth/guards/jwt.guard";
 import { WEBSOCKET_AUTH_CLIENT_EVENT_NAME, WEBSOCKET_NAMESPACE, WEBSOCKET_PATH, WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME, WEBSOCKET_SIGNALING_EVENT_NAME } from "../websocket.constants";
-import { DtlsHandshakeValidate, JoinRoomValidate, NegotiateIceValidate, OnConsumesValidate, OnConsumeValidate, OnProduceValidate, pauseConsumersValidate, ResumeConsumersValidate, SocketPayload } from "./signaling.validate";
+import { DtlsHandshakeValidate, JoinRoomValidate, NegotiateIceValidate, OnConsumesValidate, OnConsumeValidate, OnProduceValidate, pauseConsumersValidate, pauseConsumerValidate,  ResumeConsumersValidate,  ResumeConsumerValidate, SocketPayload } from "./signaling.validate";
 import { ConnectResult, ConnectRoomDto } from "@app/room/commands/dto";
 import { CHANNEL_NAMESPACE } from "@infra/channel/channel.constants";
 import { GetRoomMembersResult } from "@app/room/queries/dto";
@@ -244,7 +244,7 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
   @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.RESUME)
   async resumeConsumerGateway(
     @ConnectedSocket() client : Socket,
-    @MessageBody() validate : ResumeConsumersValidate   
+    @MessageBody() validate : ResumeConsumerValidate 
   ) {
     try {
       // 1. consumer 재개
@@ -274,7 +274,7 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
   @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.PAUSE)
   async pauseConsumerGateway(
     @ConnectedSocket() client : Socket,
-    @MessageBody() validate : pauseConsumersValidate 
+    @MessageBody() validate : pauseConsumerValidate 
   ) {
     try {
       // 1. consumer 멈춤
@@ -310,9 +310,37 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
   };
 
   // 여러개의 consumers를 다시 재개하겠다. 
-  
+  @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.RESUMES)
+  async resumeConsumersGateway(
+    @ConnectedSocket() client : Socket,
+    @MessageBody() validate : ResumeConsumersValidate
+  ) {
+    try {
+      // 1. 여러개의 consumer 재개
+      await this.signalingService.resumeConsumers(client, validate);
+
+      return { ok : true };
+    } catch (err) {
+      this.logger.error(err);
+      throw new WsException({ message : err.message ?? "에러 발생", status : err.status ?? 500 });      
+    };
+  };  
 
   // 여러개의 consumers를 다시 멈추겠다. 
-  
+  @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.PAUSES)
+  async pauseConsumersGateway(
+    @ConnectedSocket() client : Socket,
+    @MessageBody() validate : pauseConsumersValidate
+  ) {
+    try {
+      // 1. 여러개의 consumer 멈춤
+      await this.signalingService.pauseConsumers(client, validate);
+
+      return { ok : true };
+    } catch (err) {
+      this.logger.error(err);
+      throw new WsException({ message : err.message ?? "에러 발생", status : err.status ?? 500 });      
+    };
+  };
 
 };

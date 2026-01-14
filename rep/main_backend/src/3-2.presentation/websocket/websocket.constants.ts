@@ -25,6 +25,7 @@ export const WEBSOCKET_SIGNALING_EVENT_NAME = Object.freeze({
   ROOM_MEMBERS : "signaling:ws:room_members",
   CONSUMES : "signaling:ws:consumes",
   RESUMES : "signaling:ws:resumes",
+  PAUSES : "signaling:ws:pauses"
 } as const);
 
 export const WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME = Object.freeze({

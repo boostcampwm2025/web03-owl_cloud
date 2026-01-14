@@ -5,13 +5,13 @@ import * as cookie from "cookie";
 import { ConnectResult, ConnectRoomDto, DisconnectRoomDto } from "@app/room/commands/dto";
 import { ConnectRoomUsecase, DisconnectRoomUsecase } from "@app/room/commands/usecase";
 import { v7 as uuidV7 } from "uuid";
-import { DtlsHandshakeValidate, OnConsumesValidate, OnConsumeValidate, OnProduceValidate, pauseConsumersValidate, ResumeConsumersValidate, SocketPayload } from "./signaling.validate";
+import { DtlsHandshakeValidate, OnConsumesValidate, OnConsumeValidate, OnProduceValidate, pauseConsumersValidate, pauseConsumerValidate, ResumeConsumersValidate, ResumeConsumerValidate, SocketPayload } from "./signaling.validate";
 import { PayloadRes } from "@app/auth/queries/dto";
 import { SfuService } from "@present/webrtc/sfu/sfu.service";
 import { NotConnectSignalling } from "@error/presentation/signalling/signalling.error";
 import { CHANNEL_NAMESPACE } from "@infra/channel/channel.constants";
 import { CreateConsumerDto, CreateConsumerResult, CreateConsumerResults, CreateConsumersDto, CreateProduceResult, CreatePropduceDto, CreateTransportDto } from "@app/sfu/commands/dto";
-import { ConnectTransportType, ResumeConsumerDto } from "@app/sfu/queries/dto";
+import { ConnectTransportType, PauseConsumesDto, ResumeConsumerDto, ResumeConsumersDto } from "@app/sfu/queries/dto";
 import { GetRoomMembersResult, MembersInfo } from "@app/room/queries/dto";
 import { GetRoomMembersUsecase } from "@app/room/queries/usecase";
 
@@ -173,7 +173,7 @@ export class SignalingWebsocketService {
   };
 
   // consumer가 resume하게 하는 로직
-  async resumeConsumer( client : Socket, validate : ResumeConsumersValidate ) : Promise<void> {
+  async resumeConsumer( client : Socket, validate : ResumeConsumerValidate ) : Promise<void> {
     const room_id : string = client.data.room_id;
     const payload : SocketPayload = client.data.user;
     const dto : ResumeConsumerDto = {
@@ -200,7 +200,7 @@ export class SignalingWebsocketService {
     }
   };
 
-  async pauseConsumer( client : Socket, validate : pauseConsumersValidate ) : Promise<void> {
+  async pauseConsumer( client : Socket, validate : pauseConsumerValidate ) : Promise<void> {
     const room_id : string = client.data.room_id;
     const payload : SocketPayload = client.data.user;
     const dto : ResumeConsumerDto = {
@@ -221,4 +221,29 @@ export class SignalingWebsocketService {
     };
     return this.sfuServer.createConsumers(dto);
   };
+
+  // 여러개의 consume을 재개 한다.
+  async resumeConsumers( client : Socket, validate : ResumeConsumersValidate ) : Promise<void> {
+    const room_id : string = client.data.room_id;
+    const payload : SocketPayload = client.data.user;
+    const dto : ResumeConsumersDto = {
+      ...payload,
+      room_id,
+      ...validate
+    };
+    await this.sfuServer.resumeConsumers(dto);
+  };
+
+  // 여라개의 consume을 멈춘다.
+  async pauseConsumers( client : Socket, validate : pauseConsumersValidate ) : Promise<void> {
+    const room_id : string = client.data.room_id;
+    const payload : SocketPayload = client.data.user;
+    const dto : PauseConsumesDto = {
+      ...payload,
+      room_id,
+      ...validate
+    };
+    await this.sfuServer.pauseConsumers(dto);
+  };
+
 };

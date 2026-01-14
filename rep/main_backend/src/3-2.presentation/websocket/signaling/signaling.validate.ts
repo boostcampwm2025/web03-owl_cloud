@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { ArrayMinSize, IsIn, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, MinLength, ValidateNested } from "class-validator";
+import { ArrayMinSize, IsArray, IsIn, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, MinLength, ValidateNested } from "class-validator";
 import type { RtpParameters, DtlsParameters, RtpCapabilities } from "mediasoup/types";
 
 
@@ -102,7 +102,7 @@ export class OnConsumeValidate {
 };  
 
 // resume에 쓰이는 consume validate
-export class ResumeConsumersValidate {
+export class ResumeConsumerValidate {
 
   @IsNotEmpty()
   @IsString()
@@ -110,7 +110,7 @@ export class ResumeConsumersValidate {
 
 };
 
-export class pauseConsumersValidate {
+export class pauseConsumerValidate {
 
   @IsNotEmpty()
   @IsString()
@@ -142,3 +142,24 @@ export class OnConsumesValidate {
   @Type(() => ProducerInfoValidate) 
   producer_infos: ProducerInfoValidate[];
 }
+
+// 여러개의 consumer_ids를 검증
+export class ResumeConsumersValidate {
+
+  @IsNotEmpty()
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsString({ each: true })
+  consumer_ids : Array<string>;
+
+};
+
+export class pauseConsumersValidate {
+
+  @IsNotEmpty()
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsString({ each: true })
+  consumer_ids : Array<string>;
+
+};
