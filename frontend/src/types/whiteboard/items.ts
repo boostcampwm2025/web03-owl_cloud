@@ -1,5 +1,13 @@
 import { BaseItem, TextAlignment, TextWrap } from '@/types/whiteboard/base';
 
+// 화살표 머리 타입
+export type ArrowHeadType =
+  | 'none'
+  | 'triangle'
+  | 'chevron'
+  | 'doubleChevron'
+  | 'line';
+
 export interface TextItem extends BaseItem {
   type: 'text';
   x: number;
@@ -23,6 +31,9 @@ export interface ArrowItem extends BaseItem {
   pointerLength: number;
   pointerWidth: number;
   tension: number;
+  startHeadType?: ArrowHeadType;
+  endHeadType?: ArrowHeadType;
+  chevronSpacing?: number;
 }
 
 export interface LineItem extends BaseItem {

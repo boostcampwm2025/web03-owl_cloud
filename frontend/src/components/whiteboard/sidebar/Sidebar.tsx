@@ -78,12 +78,13 @@ export default function Sidebar() {
           />
         )}
 
-        {/* arrow */}
         {selectionType === 'arrow' && (
           <ArrowPanel
             stroke={(selectedItem as ArrowItem).stroke}
             size={getArrowSize(selectedItem as ArrowItem)}
             style={getArrowStyle(selectedItem as ArrowItem)}
+            startHeadType={(selectedItem as ArrowItem).startHeadType ?? 'none'}
+            endHeadType={(selectedItem as ArrowItem).endHeadType ?? 'triangle'}
             onChangeStroke={(color) =>
               updateItem(selectedId!, { stroke: color })
             }
@@ -97,6 +98,12 @@ export default function Sidebar() {
             }}
             onChangeStyle={(style) => {
               updateItem(selectedId!, { tension: ARROW_STYLE_PRESETS[style] });
+            }}
+            onChangeStartHeadType={(type) => {
+              updateItem(selectedId!, { startHeadType: type });
+            }}
+            onChangeEndHeadType={(type) => {
+              updateItem(selectedId!, { endHeadType: type });
             }}
           />
         )}

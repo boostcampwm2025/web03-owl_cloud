@@ -6,6 +6,7 @@ import { useCanvasStore } from '@/store/useCanvasStore';
 import { useCursorStyle } from '@/hooks/useCursorStyle';
 import { useItemInteraction } from '@/hooks/useItemInteraction';
 import ShapeItem from '@/components/whiteboard/items/shape/ShapeItem';
+import CustomArrow from '@/components/whiteboard/items/arrow/CustomArrow';
 
 import type {
   TextItem,
@@ -101,6 +102,26 @@ export default function RenderItem({
 
   if (item.type === 'arrow') {
     const arrowItem = item as ArrowItem;
+
+    // 커스텀 머리 타입이 설정되어 있으면 CustomArrow 사용
+    const hasCustomHead =
+      arrowItem.startHeadType !== undefined ||
+      arrowItem.endHeadType !== undefined;
+
+    if (hasCustomHead) {
+      return (
+        <CustomArrow
+          item={arrowItem}
+          onSelect={onSelect}
+          onChange={onChange}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          onArrowDblClick={onArrowDblClick}
+        />
+      );
+    }
+
+    // 기본 Konva Arrow
     return (
       <Arrow
         {...arrowItem}

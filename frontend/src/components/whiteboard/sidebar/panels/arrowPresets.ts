@@ -14,5 +14,5 @@ export const ARROW_SIZE_PRESETS = {
 // Arrow 스타일 프리셋
 export const ARROW_STYLE_PRESETS = {
   straight: 0,
-  curved: 0.5,
+  curved: 0.4,
 } as const;

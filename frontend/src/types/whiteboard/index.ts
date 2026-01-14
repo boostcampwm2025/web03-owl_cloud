@@ -7,7 +7,10 @@ import {
   LineItem,
   DrawingItem,
   ShapeItem,
+  ArrowHeadType,
 } from '@/types/whiteboard/items';
+
+export type { ArrowHeadType };
 
 export type WhiteboardItem =
   | TextItem

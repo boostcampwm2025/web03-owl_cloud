@@ -1,32 +1,37 @@
 'use client';
 
-import { useState } from 'react';
 import ArrowStrokeSection from '@/components/whiteboard/sidebar/sections/ArrowStrokeSection';
 import ArrowStyleSection from '@/components/whiteboard/sidebar/sections/ArrowStyleSection';
 import ButtonGroup from '@/components/whiteboard/sidebar/ui/ButtonGroup';
 import type { ArrowSize, ArrowStyle } from './arrowPresets';
+import type { ArrowHeadType } from '@/types/whiteboard';
 
 // ArrowPanel 컴포넌트
 interface ArrowPanelProps {
   stroke: string;
   size: ArrowSize;
   style: ArrowStyle;
+  startHeadType?: ArrowHeadType;
+  endHeadType?: ArrowHeadType;
   onChangeStroke: (color: string) => void;
   onChangeSize: (size: ArrowSize) => void;
   onChangeStyle: (style: ArrowStyle) => void;
+  onChangeStartHeadType: (type: ArrowHeadType) => void;
+  onChangeEndHeadType: (type: ArrowHeadType) => void;
 }
 
 export default function ArrowPanel({
   stroke,
   size,
   style,
+  startHeadType = 'none',
+  endHeadType = 'triangle',
   onChangeStroke,
   onChangeSize,
   onChangeStyle,
+  onChangeStartHeadType,
+  onChangeEndHeadType,
 }: ArrowPanelProps) {
-  const [arrowHeadType, setArrowHeadType] = useState<number>(0);
-  const [arrowTailType, setArrowTailType] = useState<number>(0);
-
   return (
     <div className="flex flex-col gap-2">
       {/* Arrow 색상 설정 섹션 */}
@@ -44,26 +49,28 @@ export default function ArrowPanel({
       <ButtonGroup
         label="Head"
         options={[
-          { value: 0, label: '1' },
-          { value: 1, label: '2' },
-          { value: 2, label: '3' },
-          { value: 3, label: '4' },
+          { value: 'none' as ArrowHeadType, label: '—' },
+          { value: 'triangle' as ArrowHeadType, label: '▷' },
+          { value: 'chevron' as ArrowHeadType, label: '>' },
+          { value: 'doubleChevron' as ArrowHeadType, label: '>>' },
+          { value: 'line' as ArrowHeadType, label: '|' },
         ]}
-        value={arrowHeadType}
-        onChange={setArrowHeadType}
+        value={endHeadType}
+        onChange={onChangeEndHeadType}
       />
 
       {/* Tail 옵션 */}
       <ButtonGroup
         label="Tail"
         options={[
-          { value: 0, label: '1' },
-          { value: 1, label: '2' },
-          { value: 2, label: '3' },
-          { value: 3, label: '4' },
+          { value: 'none' as ArrowHeadType, label: '—' },
+          { value: 'triangle' as ArrowHeadType, label: '▷' },
+          { value: 'chevron' as ArrowHeadType, label: '>' },
+          { value: 'doubleChevron' as ArrowHeadType, label: '>>' },
+          { value: 'line' as ArrowHeadType, label: '|' },
         ]}
-        value={arrowTailType}
-        onChange={setArrowTailType}
+        value={startHeadType}
+        onChange={onChangeStartHeadType}
       />
     </div>
   );
