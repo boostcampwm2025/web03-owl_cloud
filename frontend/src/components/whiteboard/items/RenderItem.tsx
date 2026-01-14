@@ -147,7 +147,7 @@ export default function RenderItem({
         draggable={isDraggable}
         listening={isListening}
         hitStrokeWidth={30}
-        tension={0.5}
+        tension={0.4}
         lineCap="round"
         lineJoin="round"
         strokeScaleEnabled={true}
@@ -177,9 +177,15 @@ export default function RenderItem({
           const scaleX = lineNode.scaleX();
           const scaleY = lineNode.scaleY();
 
-          // strokeWidth를 scale로 나눠서 두께 유지
-          const avgScale = (scaleX + scaleY) / 2;
-          lineNode.strokeWidth(drawingItem.strokeWidth / avgScale);
+          // 현재 points를 가져와서 scale 적용
+          const currentPoints = lineNode.points();
+          const newPoints = currentPoints.map((p, i) =>
+            i % 2 === 0 ? p * scaleX : p * scaleY,
+          );
+
+          lineNode.points(newPoints);
+          lineNode.scaleX(1);
+          lineNode.scaleY(1);
         }}
         onTransformEnd={(e) => {
           if (!isInteractive || isEraserMode) return;
@@ -188,22 +194,8 @@ export default function RenderItem({
           if (node.getClassName() !== 'Line') return;
           const lineNode = node as Konva.Line;
 
-          const scaleX = lineNode.scaleX();
-          const scaleY = lineNode.scaleY();
-
-          // 기존 좌표에 scale 곱한 후 scale 1로 초기화
-          const newPoints = drawingItem.points.map((p, i) =>
-            i % 2 === 0 ? p * scaleX : p * scaleY,
-          );
-
-          lineNode.scaleX(1);
-          lineNode.scaleY(1);
-
-          //두께 유지
-          lineNode.strokeWidth(drawingItem.strokeWidth);
-
           onChange({
-            points: newPoints,
+            points: lineNode.points(),
             rotation: lineNode.rotation(),
             scaleX: 1,
             scaleY: 1,
