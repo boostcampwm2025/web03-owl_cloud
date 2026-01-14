@@ -9,11 +9,13 @@ import type {
   ShapeItem as ShapeItemType,
   ImageItem as ImageItemType,
   VideoItem as VideoItemType,
+  YoutubeItem as YoutubeItemType,
   WhiteboardItem,
 } from '@/types/whiteboard';
 import ShapeItem from '@/components/whiteboard/items/shape/ShapeItem';
 import ImageItem from '@/components/whiteboard/items/image/ImageItem';
 import VideoItem from '@/components/whiteboard/items/video/VideoItem';
+import YoutubeItem from '@/components/whiteboard/items/youtube/YoutubeItem';
 
 import { useCanvasStore } from '@/store/useCanvasStore';
 
@@ -149,6 +151,22 @@ export default function RenderItem({
     return (
       <VideoItem
         videoItem={videoItem}
+        onSelect={() => onSelect(item.id)}
+        onChange={onChange}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+      />
+    );
+  }
+
+  // Youtube Rendering
+  if (item.type === 'youtube') {
+    const youtubeItem = item as YoutubeItemType;
+    return (
+      <YoutubeItem
+        youtubeItem={youtubeItem}
         onSelect={() => onSelect(item.id)}
         onChange={onChange}
         onMouseEnter={handleMouseEnter}
