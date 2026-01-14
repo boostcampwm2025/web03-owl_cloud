@@ -41,7 +41,7 @@ export default function Header() {
   };
 
   return (
-    <header className="fixed flex h-16 w-screen items-center justify-between border-b border-neutral-200 px-6">
+    <header className="fixed top-0 left-0 flex h-16 w-screen items-center justify-between border-b border-neutral-200 px-6">
       <Link href="/landing">로고</Link>
 
       {isLoaded &&

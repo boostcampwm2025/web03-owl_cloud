@@ -3,6 +3,7 @@ import Button from '../common/button';
 import { DeviceDropdown } from './DeviceDropdown';
 import { MediaPreview } from './media/MediaPreview';
 import { CamOnIcon, MicOnIcon, VolumnIcon } from '@/assets/icons/meeting';
+import Header from '@/components/layout/Header';
 
 export default function MeetingLobby({
   meetingId,
@@ -28,6 +29,8 @@ export default function MeetingLobby({
 
   return (
     <main className="box-border flex min-h-screen items-center justify-center gap-20 px-6 py-4">
+      <Header />
+
       {/* 영상, 마이크 설정 부분 */}
       <section className="flex w-full max-w-160 flex-col gap-6">
         <MediaPreview />
