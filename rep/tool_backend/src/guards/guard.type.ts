@@ -8,5 +8,6 @@ export type AuthType = {
 export type ToolBackendPayload = {
   user_id : string;
   room_id : string;
-  tool : "whiteboard" | "codeeditor"
+  tool : "whiteboard" | "codeeditor";
+  clientType : "main" | "sub";
 };

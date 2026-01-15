@@ -7,7 +7,7 @@ import { MysqlModule } from '@infra/db/mysql/db';
 import CookieParser from "cookie-parser";
 import { KafkaModule } from '@infra/event-stream/kafka/event-stream';
 import { GuardModule } from './guards/guard.module';
-import { WhiteboardWebsocketGateway } from './whiteboard/whiteboard.gateway';
+import { WhiteboardModule } from './whiteboard/whiteboard.module';
 
 
 @Module({
@@ -23,7 +23,7 @@ import { WhiteboardWebsocketGateway } from './whiteboard/whiteboard.gateway';
     // 추가 모듈
     HealthModule,
     GuardModule,
-    WhiteboardWebsocketGateway
+    WhiteboardModule
   ],
   controllers: [],
   providers: [],

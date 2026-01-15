@@ -1,9 +1,11 @@
-import { GuardService } from "@/guards/guard.service";
 import { AuthType, ToolBackendPayload } from "@/guards/guard.type";
 import { Logger } from "@nestjs/common";
-import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
+import { ConnectedSocket, OnGatewayConnection, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer, WsException } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
-import { WHITEBOARD_CLIENT_EVENT_NAME, WHITEBOARD_GROUP } from "./whiteboard.constants";
+import { WHITEBOARD_CLIENT_EVENT_NAME, WHITEBOARD_EVENT_NAME, WHITEBOARD_GROUP } from "./whiteboard.constants";
+import { WhiteboardService } from "./whiteboard.service";
+import { KafkaService } from "@/infra/event-stream/kafka/event-stream.service";
+import { EVENT_STREAM_NAME } from "@/infra/event-stream/event-stream.constants";
 
 
 // 아래쪽에 whiteboard 관련 @Submessage를 붙이셔서 해주시면 될것 같아요 ㅎㅎ
@@ -25,7 +27,8 @@ export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConne
   private readonly logger = new Logger();
 
   constructor(
-    private readonly guard : GuardService
+    private readonly whiteboarService : WhiteboardService,
+    private readonly kafkaService : KafkaService
   ) {}
 
   // 연결을 했을때 
@@ -38,18 +41,11 @@ export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConne
         if (!token) return next(new Error("TOKEN_REQUIRED"));
         if (type !== "main" && type !== "sub") return next(new Error("INVALID_TYPE"));
         
-        const verified = await this.guard.verify(token);
+        const payload = await this.whiteboarService.guardService(token, type);
 
-        const payload : ToolBackendPayload = {
-          room_id : verified.room_id,
-          user_id : verified.sub,
-          tool : verified.tool
-        };
-
-        if ( payload.tool !== "whiteboard" ) throw new Error("whiteboard만 가능한 gateway입니다.");
-
-        // main인 경우 emit 해준다. 
+        // data 추가
         socket.data.payload = payload;
+        this.logger.log("웹소켓 준비되었습니다.")
         return next();
       } catch (err) {
         this.logger.error(err);
@@ -69,8 +65,33 @@ export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConne
     // 방 입장후 알림
     const namespace : string = `${WHITEBOARD_GROUP.WHITEBOARD}:${payload.room_id}`; // 방가입
     client.join(namespace);
+
+    if ( payload.clientType === "main" ) {
+      this.kafkaService.emit(EVENT_STREAM_NAME.WHITEBOARD_ENTER, {
+        room_id: payload.room_id,
+        user_id: payload.user_id,
+        tool: payload.tool,
+        socket_id: client.id,
+        at: Date.now(), // 현재 보낸 시간
+      });
+    };
+
     client.emit(WHITEBOARD_CLIENT_EVENT_NAME.PERMISSION, { ok : true });
   };
 
+  @SubscribeMessage(WHITEBOARD_EVENT_NAME.HEALTH_CHECK)
+  healthCheck(
+    @ConnectedSocket() client : Socket,
+  ) {
+    try {
+      const payload : ToolBackendPayload = client.data.payload;
+      this.logger.log("health체크중: ", payload)
+      
+      return {ok : true}
+    } catch (err) {
+      this.logger.error(err);
+      throw new WsException({ message : err.message ?? "에러 발생", status : err.status ?? 500 });     
+    };
+  }
 
 }
