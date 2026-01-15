@@ -10,7 +10,7 @@ import { VideoIcon, YoutubeIcon } from '@/assets/icons/whiteboard';
 import { useAddWhiteboardItem } from '@/hooks/useAddWhiteboardItem';
 
 export default function MediaPanel({ selectedTool, onSelect }: PanelProps) {
-  const { handleAddImage } = useAddWhiteboardItem();
+  const { handleAddImage, handleAddVideo } = useAddWhiteboardItem();
 
   const commonProps = {
     bgColor: 'bg-white',
@@ -33,7 +33,10 @@ export default function MediaPanel({ selectedTool, onSelect }: PanelProps) {
         icon={VideoIcon}
         label="비디오 업로드"
         isActive={selectedTool === 'video'}
-        onClick={() => onSelect('video')}
+        onClick={() => {
+          onSelect('video');
+          handleAddVideo();
+        }}
         {...commonProps}
       />
       <NavButton

@@ -8,10 +8,12 @@ import type {
   ArrowItem,
   ShapeItem as ShapeItemType,
   ImageItem as ImageItemType,
+  VideoItem as VideoItemType,
   WhiteboardItem,
 } from '@/types/whiteboard';
 import ShapeItem from '@/components/whiteboard/items/shape/ShapeItem';
 import ImageItem from '@/components/whiteboard/items/image/ImageItem';
+import VideoItem from '@/components/whiteboard/items/video/VideoItem';
 
 import { useCanvasStore } from '@/store/useCanvasStore';
 
@@ -131,6 +133,22 @@ export default function RenderItem({
     return (
       <ImageItem
         imageItem={imageItem}
+        onSelect={() => onSelect(item.id)}
+        onChange={onChange}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+      />
+    );
+  }
+
+  // Video Rendering
+  if (item.type === 'video') {
+    const videoItem = item as VideoItemType;
+    return (
+      <VideoItem
+        videoItem={videoItem}
         onSelect={() => onSelect(item.id)}
         onChange={onChange}
         onMouseEnter={handleMouseEnter}

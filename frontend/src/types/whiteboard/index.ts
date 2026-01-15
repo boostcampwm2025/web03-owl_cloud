@@ -6,6 +6,12 @@ import {
   ArrowItem,
   ShapeItem,
   ImageItem,
+  VideoItem,
 } from '@/types/whiteboard/items';
 
-export type WhiteboardItem = TextItem | ArrowItem | ShapeItem | ImageItem;
+export type WhiteboardItem =
+  | TextItem
+  | ArrowItem
+  | ShapeItem
+  | ImageItem
+  | VideoItem;

@@ -12,6 +12,7 @@ import type {
   ShapeItem,
   ShapeType,
   ImageItem,
+  VideoItem,
   WhiteboardItem,
 } from '@/types/whiteboard';
 
@@ -47,6 +48,13 @@ interface CanvasState {
     payload?: Partial<Omit<ShapeItem, 'id' | 'type' | 'shapeType'>>,
   ) => void;
   addImage: (payload: {
+    src: string;
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+  }) => void;
+  addVideo: (payload: {
     src: string;
     x?: number;
     y?: number;
@@ -177,10 +185,10 @@ export const useCanvasStore = create<CanvasState>((set) => ({
         id,
         type: 'image',
         src: payload.src,
-        x: payload.x ?? state.canvasWidth / 2 - 100,
-        y: payload.y ?? state.canvasHeight / 2 - 100,
+        x: payload.x ?? state.canvasWidth / 2 - 250,
+        y: payload.y ?? state.canvasHeight / 2 - 125,
         width: payload.width ?? 500,
-        height: payload.height ?? 200,
+        height: payload.height ?? 250,
         rotation: 0,
         stroke: undefined,
         strokeWidth: 0,
@@ -190,6 +198,31 @@ export const useCanvasStore = create<CanvasState>((set) => ({
 
       return {
         items: [...state.items, newImage],
+        selectedId: id,
+      };
+    }),
+
+  // 비디오 추가
+  addVideo: (payload) =>
+    set((state) => {
+      const id = uuidv4();
+      const newVideo: VideoItem = {
+        id,
+        type: 'video',
+        src: payload.src,
+        x: payload.x ?? state.canvasWidth / 2 - 250,
+        y: payload.y ?? state.canvasHeight / 2 - 125,
+        width: payload.width ?? 500,
+        height: payload.height ?? 250,
+        rotation: 0,
+        stroke: undefined,
+        strokeWidth: 0,
+        cornerRadius: 0,
+        opacity: 1,
+      };
+
+      return {
+        items: [...state.items, newVideo],
         selectedId: id,
       };
     }),
