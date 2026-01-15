@@ -351,7 +351,7 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
     try {
       const ticket : string = await this.signalingService.openTool(client, "whiteboard");
       
-      return ticket;
+      return { ticket, tool : "whiteboard" };
     } catch (err) {
       this.logger.error(err);
       throw new WsException({ message : err.message ?? "에러 발생", status : err.status ?? 500 });          
@@ -363,9 +363,9 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
     @ConnectedSocket() client : Socket,
   ) {
     try {
-      const ticket : string = await this.signalingService.openTool(client, "whiteboard");
+      const ticket : string = await this.signalingService.openTool(client, "codeeditor");
       
-      return ticket;
+      return { ticket, tool : "codeeditor" };
     } catch (err) {
       this.logger.error(err);
       throw new WsException({ message : err.message ?? "에러 발생", status : err.status ?? 500 });          

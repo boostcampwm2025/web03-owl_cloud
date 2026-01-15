@@ -84,7 +84,7 @@ export class NotAllowRoomDataUpdate extends BaseError {
 export class NotAllowRoomMember extends BaseError {
   constructor() {
     super({
-      message: "현재 방에 위치에 있지 않습니다.",
+      message: "현재 방에 위치에 있지 않거나 이미 다른 main producer가 실행중입니다.",
       status: 500,
     });
   }

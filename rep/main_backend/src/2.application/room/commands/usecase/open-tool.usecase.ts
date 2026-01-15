@@ -20,10 +20,11 @@ export class OpenToolUsecase<T> {
   private readonly insertToolTicketToCache : OpenToolUsecaseProps<T>["insertToolTicketToCache"];
 
   constructor({
-    checkUserPaylodFromCache, makeToolTicket
+    checkUserPaylodFromCache, makeToolTicket, insertToolTicketToCache
   } : OpenToolUsecaseProps<T>) {
     this.checkUserPaylodFromCache = checkUserPaylodFromCache;
     this.makeToolTicket = makeToolTicket;
+    this.insertToolTicketToCache = insertToolTicketToCache
   }
 
   async execute(dto : OpenToolDto) : Promise<string> {
