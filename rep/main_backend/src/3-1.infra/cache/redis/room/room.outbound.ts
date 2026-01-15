@@ -180,3 +180,14 @@ export class DeleteRoomDatasToRedis extends DeleteDatasToCache<RedisClientType<a
   };
 
 };
+
+@Injectable()
+export class InsertToolTicketToRedis extends InsertDataToCache<RedisClientType<any, any>> {
+
+  constructor(
+    @Inject(REDIS_SERVER) cache : RedisClientType<any, any>,
+  ) { super(cache); };
+
+
+
+};

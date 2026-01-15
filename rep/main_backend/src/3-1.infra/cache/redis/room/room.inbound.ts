@@ -234,3 +234,35 @@ export class SelectRoomMemberInfosFromRedis extends SelectDataFromCache<RedisCli
   }
 
 };
+
+// user가 멤버가 맞는지 확인
+@Injectable()
+export class CheckUserPayloadFromRedis extends SelectDataFromCache<RedisClientType<any, any>> {
+
+  constructor(
+    @Inject(REDIS_SERVER) cache : RedisClientType<any, any>
+  ) { super(cache); };  
+
+  // namespace는 room_id, keyname은 user_id
+  async select({ namespace, keyName, }: { namespace: string; keyName: string; }): Promise<boolean> {
+    
+    const room_id : string = namespace.trim();
+    const roomMemberNamespace : string = `${CACHE_ROOM_NAMESPACE_NAME.CACHE_ROOM}:${room_id}:${CACHE_ROOM_SUB_NAMESPACE_NAME.MEMBERS}`;
+    const roomInfoNamespace : string = `${CACHE_ROOM_NAMESPACE_NAME.CACHE_ROOM}:${room_id}:${CACHE_ROOM_SUB_NAMESPACE_NAME.INFO}`;
+
+    const user_id : string = keyName;
+    try {
+      const [memberExists, mainProducer] = await this.cache
+        .multi()
+        .hExists(roomMemberNamespace, user_id)
+        .hGet(roomInfoNamespace, CACHE_ROOM_INFO_KEY_NAME.MAIN_PRODUCER)
+        .exec();
+
+      const memberExistsBool = Boolean(memberExists);  
+      return memberExistsBool && !mainProducer; // 방에 인원이어야 하고 + 현재 main_producer에 점유하면 안된다.
+    } catch (err) {
+      throw err;
+    }
+  };
+  
+};
