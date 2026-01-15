@@ -1,5 +1,5 @@
 // 시그널링 서버의 역할이라고 할 수 있을 것 같다.
-import { Logger, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Inject, Logger, UsePipes, ValidationPipe } from "@nestjs/common";
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer, WsException } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io"
 import { SignalingWebsocketService } from "./signaling.service";
@@ -11,6 +11,8 @@ import { DtlsHandshakeValidate, JoinRoomValidate, NegotiateIceValidate, OnConsum
 import { ConnectResult, ConnectRoomDto } from "@app/room/commands/dto";
 import { CHANNEL_NAMESPACE } from "@infra/channel/channel.constants";
 import { GetRoomMembersResult } from "@app/room/queries/dto";
+import { SIGNALING_WEBSOCKET } from "@infra/websocket/websocket.constants";
+import { SignalingWebsocket } from "@infra/websocket/signaling/signaling.service";
 
 
 @WebSocketGateway({
@@ -35,11 +37,15 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
   constructor(
     private readonly jwtGuard : JwtWsGuard,
     private readonly signalingService : SignalingWebsocketService,
+    @Inject(SIGNALING_WEBSOCKET) private readonly signalingSocket : SignalingWebsocket
   ) {}
 
   // onGatewayInit으로 websocket 연결됐을때 사용할 함수
   afterInit(server: Server) : void {
     this.logger.log("signaling websocket 서버 등록 되었습니다.");
+
+    // 여기서 주입
+    this.signalingSocket.bindServer(server);
 
     // 여기서 middleware를 추가할 수도 있다. ( 등록 후 연결 요청하면 이 미들웨어를 거친다. )
     server.use(async (socket, next) => {

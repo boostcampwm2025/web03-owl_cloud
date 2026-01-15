@@ -9,7 +9,7 @@ import { SignalingWebsocketService } from "./signaling.service";
 import { AuthWebsocketModule } from "../auth/auth.module";
 import { SignalingWebsocketGateway } from "./signaling.gateway";
 import { SfuModule } from "@present/webrtc/sfu/sfu.module";
-import { GetRoomMembersUsecase } from "@/2.application/room/queries/usecase";
+import { GetRoomMembersUsecase } from "@app/room/queries/usecase";
 import { ConfigService } from "@nestjs/config";
 
 

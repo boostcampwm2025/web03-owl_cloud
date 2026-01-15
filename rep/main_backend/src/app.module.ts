@@ -20,6 +20,8 @@ import { MediaModule } from "@infra/media/media.module";
 import { SfuModule } from "@present/webrtc/sfu/sfu.module";
 import { MemoryModule } from "@infra/memory/memory.module";
 import { KafkaModule } from "@infra/event-stream/kafka/event-stream";
+import { ToolConsumerModule } from "@present/tcp/tool/tool.module";
+import { SignalingBroadcasterModule } from "./3-1.infra/websocket/signaling/signaling.module";
 
 
 @Module({
@@ -43,6 +45,8 @@ import { KafkaModule } from "@infra/event-stream/kafka/event-stream";
     RoomModule, // 회의방 생성과 관련된 모듈
     SignalingWebsocketModule , // 사실상 시그널링 서버의 역할을 하는 모듈 
     SfuModule, // sfu와 관련되 모듈 ( 나중에 sfu 서버를 따로 분리할것을 생각하고 만든 모듈 그러니 sfu server라고 생각하면 될것 같다. )
+    ToolConsumerModule, // tool이 사용하는 모듈
+    SignalingBroadcasterModule, // braod casting을 위해서
 
   ],
   controllers: [],

@@ -9,5 +9,6 @@ export type ToolBackendPayload = {
   user_id : string;
   room_id : string;
   tool : "whiteboard" | "codeeditor";
+  socket_id : string;
   clientType : "main" | "sub";
 };
