@@ -10,7 +10,6 @@ import NavButton from '@/components/whiteboard/common/NavButton';
 
 // Panel import
 import ShapePanel from '@/components/whiteboard/toolbar/panels/ShapePanel';
-import LinePanel from '@/components/whiteboard/toolbar/panels/LinePanel';
 import ArrowPanel from '@/components/whiteboard/toolbar/panels/ArrowPanel';
 import MediaPanel from '@/components/whiteboard/toolbar/panels/MediaPanel';
 import StackPanel from '@/components/whiteboard/toolbar/panels/StackPanel';
@@ -33,13 +32,7 @@ import {
 import { ToolType, PanelType } from '@/types/whiteboard/whiteboardUI';
 
 // Constants import
-import {
-  SHAPE_TOOLS,
-  LINE_TOOLS,
-  ARROW_TOOLS,
-  MEDIA_TOOLS,
-  STACK_TOOLS,
-} from '@/constants/whiteboard';
+import { SHAPE_TOOLS, ARROW_TOOLS, MEDIA_TOOLS } from '@/constants/whiteboard';
 
 export default function ToolbarContainer() {
   // 상태 관리 로직
@@ -154,8 +147,10 @@ export default function ToolbarContainer() {
         <NavButton
           icon={LineIcon}
           label="선"
-          isActive={LINE_TOOLS.includes(activeTool) || activePanel === 'line'}
-          onClick={() => togglePanel('line')}
+          onClick={() => {
+            setCursorMode('select');
+            setActiveTool('select');
+          }}
           bgColor="bg-white"
           activeBgColor="bg-sky-100"
         />
@@ -191,12 +186,6 @@ export default function ToolbarContainer() {
       {activePanel === 'shape' && (
         <div className="absolute top-full mt-2">
           <ShapePanel selectedTool={activeTool} onSelect={handleToolSelect} />
-        </div>
-      )}
-
-      {activePanel === 'line' && (
-        <div className="absolute top-full mt-2">
-          <LinePanel selectedTool={activeTool} onSelect={handleToolSelect} />
         </div>
       )}
 
