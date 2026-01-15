@@ -3,7 +3,6 @@
 import { useState, useRef } from 'react';
 
 import { useCanvasStore } from '@/store/useCanvasStore';
-import { useToolbarMode } from '@/hooks/useToolbarMode';
 import { useAddWhiteboardItem } from '@/hooks/useAddWhiteboardItem';
 import { useClickOutside } from '@/hooks/useClickOutside';
 
@@ -46,9 +45,6 @@ export default function ToolbarContainer() {
   const cursorMode = useCanvasStore((state) => state.cursorMode);
   const setCursorMode = useCanvasStore((state) => state.setCursorMode);
 
-  // 툴바 모드 전환 훅
-  const { updateModeForTool, updateModeForPanel } = useToolbarMode();
-
   // 아이템 추가 훅
   const { handleAddText, handleAddArrow } = useAddWhiteboardItem();
 
@@ -60,8 +56,16 @@ export default function ToolbarContainer() {
   const handleToolSelect = (tool: ToolType) => {
     setActiveTool(tool);
     setActivePanel(null);
-    updateModeForTool(tool);
+    setCursorMode('select');
     // TODO: useWorkspaceStore.getState().setTool(tool);
+  };
+
+  // 아이템 추가 후 select 모드로 전환
+  const handleAddItem = (addFn: () => void) => {
+    addFn();
+    setCursorMode('select');
+    setActiveTool('select');
+    setActivePanel(null);
   };
 
   // 메인 툴바 버튼을 눌렀을 때 (패널 토글/즉시 선택)
@@ -80,7 +84,6 @@ export default function ToolbarContainer() {
     }
 
     setActivePanel((prev) => (prev === panel ? null : panel));
-    updateModeForPanel(panel);
   };
 
   return (
@@ -93,10 +96,7 @@ export default function ToolbarContainer() {
           icon={CursorIcon}
           label="선택"
           isActive={activeTool === 'select'}
-          onClick={() => {
-            handleToolSelect('select');
-            setActivePanel(null);
-          }}
+          onClick={() => handleToolSelect('select')}
           bgColor="bg-white"
           hvColor="bg-neutral-100"
           activeBgColor="bg-sky-100"
@@ -106,10 +106,7 @@ export default function ToolbarContainer() {
           icon={HandIcon}
           label="화면 이동"
           isActive={activeTool === 'move'}
-          onClick={() => {
-            handleToolSelect('move');
-            setActivePanel(null);
-          }}
+          onClick={() => handleToolSelect('move')}
           bgColor="bg-white"
           hvColor="bg-neutral-100"
           activeBgColor="bg-sky-100"
@@ -158,12 +155,7 @@ export default function ToolbarContainer() {
         <NavButton
           icon={TextBoxIcon}
           label="텍스트"
-          onClick={() => {
-            handleAddText();
-            setCursorMode('select');
-            setActiveTool('select');
-            setActivePanel(null);
-          }}
+          onClick={() => handleAddItem(handleAddText)}
           bgColor="bg-white"
           hvColor="bg-neutral-100"
           activeBgColor="bg-sky-100"
@@ -199,12 +191,7 @@ export default function ToolbarContainer() {
         <NavButton
           icon={ArrowIcon}
           label="화살표"
-          onClick={() => {
-            handleAddArrow();
-            setCursorMode('select');
-            setActiveTool('select');
-            setActivePanel(null);
-          }}
+          onClick={() => handleAddItem(handleAddArrow)}
           bgColor="bg-white"
           hvColor="bg-neutral-100"
           activeBgColor="bg-sky-100"
