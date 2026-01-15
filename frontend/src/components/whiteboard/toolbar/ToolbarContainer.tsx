@@ -31,7 +31,7 @@ import {
 import { ToolType, PanelType } from '@/types/whiteboard/whiteboardUI';
 
 // Constants import
-import { SHAPE_TOOLS, ARROW_TOOLS, MEDIA_TOOLS } from '@/constants/whiteboard';
+import { SHAPE_TOOLS, MEDIA_TOOLS } from '@/constants/whiteboard';
 
 export default function ToolbarContainer() {
   // 상태 관리 로직
@@ -140,7 +140,7 @@ export default function ToolbarContainer() {
           isActive={SHAPE_TOOLS.includes(activeTool) || activePanel === 'shape'}
           onClick={() => togglePanel('shape')}
           bgColor="bg-white"
-          activeBgColor="bg-sky-100"
+          activeBgColor="bg-neutral-100"
         />
 
         <NavButton
@@ -172,7 +172,7 @@ export default function ToolbarContainer() {
           isActive={MEDIA_TOOLS.includes(activeTool) || activePanel === 'media'}
           onClick={() => togglePanel('media')}
           bgColor="bg-white"
-          activeBgColor="bg-sky-100"
+          activeBgColor="bg-neutral-100"
         />
 
         {/* <NavButton
