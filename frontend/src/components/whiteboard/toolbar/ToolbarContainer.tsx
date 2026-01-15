@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useToolbarMode } from '@/hooks/useToolbarMode';
+import { useAddWhiteboardItem } from '@/hooks/useAddWhiteboardItem';
 
 import NavButton from '@/components/whiteboard/common/NavButton';
 
@@ -11,7 +12,6 @@ import NavButton from '@/components/whiteboard/common/NavButton';
 import ShapePanel from '@/components/whiteboard/toolbar/panels/ShapePanel';
 import LinePanel from '@/components/whiteboard/toolbar/panels/LinePanel';
 import ArrowPanel from '@/components/whiteboard/toolbar/panels/ArrowPanel';
-import TextPanel from '@/components/whiteboard/toolbar/panels/TextPanel';
 import MediaPanel from '@/components/whiteboard/toolbar/panels/MediaPanel';
 import StackPanel from '@/components/whiteboard/toolbar/panels/StackPanel';
 
@@ -37,7 +37,6 @@ import {
   SHAPE_TOOLS,
   LINE_TOOLS,
   ARROW_TOOLS,
-  TEXT_TOOLS,
   MEDIA_TOOLS,
   STACK_TOOLS,
 } from '@/constants/whiteboard';
@@ -53,6 +52,9 @@ export default function ToolbarContainer() {
 
   // 툴바 모드 전환 훅
   const { updateModeForTool, updateModeForPanel } = useToolbarMode();
+
+  // 아이템 추가 훅
+  const { handleAddText } = useAddWhiteboardItem();
 
   // 핸들러 로직
   // 하위 패널에서 구체적인 도구 선택
@@ -131,8 +133,11 @@ export default function ToolbarContainer() {
         <NavButton
           icon={TextBoxIcon}
           label="텍스트"
-          isActive={TEXT_TOOLS.includes(activeTool) || activePanel === 'text'}
-          onClick={() => togglePanel('text')}
+          onClick={() => {
+            handleAddText();
+            setCursorMode('select');
+            setActiveTool('select');
+          }}
           bgColor="bg-white"
           activeBgColor="bg-sky-100"
         />
@@ -198,12 +203,6 @@ export default function ToolbarContainer() {
       {activePanel === 'arrow' && (
         <div className="absolute top-full mt-2">
           <ArrowPanel selectedTool={activeTool} onSelect={handleToolSelect} />
-        </div>
-      )}
-
-      {activePanel === 'text' && (
-        <div className="absolute top-full mt-2">
-          <TextPanel selectedTool={activeTool} onSelect={handleToolSelect} />
         </div>
       )}
 
