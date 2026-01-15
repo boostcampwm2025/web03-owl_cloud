@@ -10,7 +10,6 @@ import NavButton from '@/components/whiteboard/common/NavButton';
 
 // Panel import
 import ShapePanel from '@/components/whiteboard/toolbar/panels/ShapePanel';
-import ArrowPanel from '@/components/whiteboard/toolbar/panels/ArrowPanel';
 import MediaPanel from '@/components/whiteboard/toolbar/panels/MediaPanel';
 import StackPanel from '@/components/whiteboard/toolbar/panels/StackPanel';
 
@@ -47,7 +46,7 @@ export default function ToolbarContainer() {
   const { updateModeForTool, updateModeForPanel } = useToolbarMode();
 
   // 아이템 추가 훅
-  const { handleAddText } = useAddWhiteboardItem();
+  const { handleAddText, handleAddArrow } = useAddWhiteboardItem();
 
   // 핸들러 로직
   // 하위 패널에서 구체적인 도구 선택
@@ -158,8 +157,11 @@ export default function ToolbarContainer() {
         <NavButton
           icon={ArrowIcon}
           label="화살표"
-          isActive={ARROW_TOOLS.includes(activeTool) || activePanel === 'arrow'}
-          onClick={() => togglePanel('arrow')}
+          onClick={() => {
+            handleAddArrow();
+            setCursorMode('select');
+            setActiveTool('select');
+          }}
           bgColor="bg-white"
           activeBgColor="bg-sky-100"
         />
@@ -186,12 +188,6 @@ export default function ToolbarContainer() {
       {activePanel === 'shape' && (
         <div className="absolute top-full mt-2">
           <ShapePanel selectedTool={activeTool} onSelect={handleToolSelect} />
-        </div>
-      )}
-
-      {activePanel === 'arrow' && (
-        <div className="absolute top-full mt-2">
-          <ArrowPanel selectedTool={activeTool} onSelect={handleToolSelect} />
         </div>
       )}
 

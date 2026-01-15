@@ -7,6 +7,5 @@ export const SHAPE_TOOLS: ToolType[] = [
   'circle',
   'pentagon',
 ];
-export const ARROW_TOOLS: ToolType[] = ['arrow', 'doubleArrow', 'chevronArrow'];
 export const MEDIA_TOOLS: ToolType[] = ['image', 'video', 'youtube'];
 export const STACK_TOOLS: ToolType[] = ['stack'];
