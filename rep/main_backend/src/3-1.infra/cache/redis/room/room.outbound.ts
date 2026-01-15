@@ -1,9 +1,9 @@
 import { DeleteDatasToCache, DeleteDataToCache, InsertDataToCache } from "@app/ports/cache/cache.outbound";
-import { Inject, Injectable } from "@nestjs/common";
+import { ConflictException, Inject, Injectable } from "@nestjs/common";
 import { type RedisClientType } from "redis";
-import { CACHE_ROOM_INFO_KEY_NAME, CACHE_ROOM_MEMBERS_KEY_PROPS_NAME, CACHE_ROOM_NAMESPACE_NAME, CACHE_ROOM_SOCKETS_KEY_PROPS_NAME, CACHE_ROOM_SUB_NAMESPACE_NAME, REDIS_SERVER } from "../../cache.constants";
+import { CACHE_ROOM_INFO_KEY_NAME, CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME, CACHE_ROOM_MEMBERS_KEY_PROPS_NAME, CACHE_ROOM_NAMESPACE_NAME, CACHE_ROOM_SOCKETS_KEY_PROPS_NAME, CACHE_ROOM_SUB_NAMESPACE_NAME, REDIS_SERVER } from "../../cache.constants";
 import { RoomProps } from "@domain/room/vo";
-import { InsertRoomDataDto } from "@app/room/commands/dto";
+import { InsertRoomDataDto, InsertToolInfoData } from "@app/room/commands/dto";
 import { CacheError } from "@error/infra/infra.error";
 
 
@@ -181,13 +181,62 @@ export class DeleteRoomDatasToRedis extends DeleteDatasToCache<RedisClientType<a
 
 };
 
+// lua 사용 -> 원자성이 보장되어야 함으로
+const LUA_SET_PRODUCER_AND_TICKET_IF_EMPTY = `
+local key = KEYS[1]
+local producerField = ARGV[1]
+local ticketField = ARGV[2]
+local producerValue = ARGV[3]
+local ticketValue = ARGV[4]
+
+if redis.call('HEXISTS', key, producerField) == 1 then
+  return {0, 'PRODUCER_EXISTS'}
+end
+if redis.call('HEXISTS', key, ticketField) == 1 then
+  return {0, 'TICKET_EXISTS'}
+end
+
+redis.call('HSET', key, producerField, producerValue)
+redis.call('HSET', key, ticketField, ticketValue)
+return {1, 'OK'}
+`;
 @Injectable()
 export class InsertToolTicketToRedis extends InsertDataToCache<RedisClientType<any, any>> {
 
   constructor(
-    @Inject(REDIS_SERVER) cache : RedisClientType<any, any>,
+    @Inject(REDIS_SERVER) cache: RedisClientType<any, any>
   ) { super(cache); };
 
+  async insert(entity: InsertToolInfoData): Promise<boolean> {
+    const room_id = entity.room_id.trim();
+    const namespaceInfo = `${CACHE_ROOM_NAMESPACE_NAME.CACHE_ROOM}:${room_id}:${CACHE_ROOM_SUB_NAMESPACE_NAME.INFO}`;
 
+    const producerInfo = JSON.stringify({
+      [CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME.USER_ID]: entity.user_id,
+      [CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME.TOOL]: entity.tool,
+    });
 
-};
+    // redis를 eval로 사용함
+    const res = (await this.cache.eval(LUA_SET_PRODUCER_AND_TICKET_IF_EMPTY, {
+      keys: [namespaceInfo],
+      arguments: [
+        CACHE_ROOM_INFO_KEY_NAME.MAIN_PRODUCER,
+        CACHE_ROOM_INFO_KEY_NAME.TOOL_TICKET,
+        producerInfo,
+        entity.ticket,
+      ],
+    })) as [number, string];
+
+    const ok = res[0] === 1;
+    if (ok) return true;
+
+    const reason = res[1];
+    if (reason === 'PRODUCER_EXISTS') {
+      throw new ConflictException('이미 main_producer가 존재합니다.');
+    }
+    if (reason === 'TICKET_EXISTS') {
+      throw new ConflictException('이미 tool_ticket이 존재합니다.');
+    }
+    throw new ConflictException('tool_ticket을 볼 수 없습니다.');
+  }
+}

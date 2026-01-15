@@ -41,7 +41,8 @@ export const CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME = Object.freeze({
   PRODUCER_ID : "producer_id",
   TYPE : "type",
   KIND : "kind",
-  USER_ID : "user_id"
+  USER_ID : "user_id",
+  TOOL : "tool"
 } as const);
 
 // members는 user_id를 기반으로 저장할 예정이기 때문에 ( user_id : { props } )에 props에 들어갈 데이터이다.
