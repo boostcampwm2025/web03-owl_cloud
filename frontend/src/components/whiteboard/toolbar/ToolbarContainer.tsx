@@ -85,31 +85,24 @@ export default function ToolbarContainer() {
         />
 
         <NavButton
-          icon={TriangleIcon}
-          label="도형"
-          isActive={SHAPE_TOOLS.includes(activeTool) || activePanel === 'shape'}
-          onClick={() => togglePanel('shape')}
+          icon={EraserIcon}
+          label="지우개"
+          isActive={cursorMode === 'eraser'}
+          onClick={() => {
+            if (cursorMode === 'eraser') {
+              setCursorMode('select');
+              setActiveTool('select');
+            } else {
+              setCursorMode('eraser');
+              setActiveTool('eraser');
+              setActivePanel(null);
+            }
+          }}
           bgColor="bg-white"
           activeBgColor="bg-sky-100 text-sky-600"
         />
 
-        <NavButton
-          icon={LineIcon}
-          label="선"
-          isActive={LINE_TOOLS.includes(activeTool) || activePanel === 'line'}
-          onClick={() => togglePanel('line')}
-          bgColor="bg-white"
-          activeBgColor="bg-sky-100 text-sky-600"
-        />
-
-        <NavButton
-          icon={ArrowIcon}
-          label="화살표"
-          isActive={ARROW_TOOLS.includes(activeTool) || activePanel === 'arrow'}
-          onClick={() => togglePanel('arrow')}
-          bgColor="bg-white"
-          activeBgColor="bg-sky-100 text-sky-600"
-        />
+        <div className="h-8 w-px bg-neutral-200" />
 
         <NavButton
           icon={PenIcon}
@@ -139,6 +132,33 @@ export default function ToolbarContainer() {
         />
 
         <NavButton
+          icon={TriangleIcon}
+          label="도형"
+          isActive={SHAPE_TOOLS.includes(activeTool) || activePanel === 'shape'}
+          onClick={() => togglePanel('shape')}
+          bgColor="bg-white"
+          activeBgColor="bg-sky-100 text-sky-600"
+        />
+
+        <NavButton
+          icon={LineIcon}
+          label="선"
+          isActive={LINE_TOOLS.includes(activeTool) || activePanel === 'line'}
+          onClick={() => togglePanel('line')}
+          bgColor="bg-white"
+          activeBgColor="bg-sky-100 text-sky-600"
+        />
+
+        <NavButton
+          icon={ArrowIcon}
+          label="화살표"
+          isActive={ARROW_TOOLS.includes(activeTool) || activePanel === 'arrow'}
+          onClick={() => togglePanel('arrow')}
+          bgColor="bg-white"
+          activeBgColor="bg-sky-100 text-sky-600"
+        />
+
+        <NavButton
           icon={ImageIcon}
           label="미디어"
           isActive={MEDIA_TOOLS.includes(activeTool) || activePanel === 'media'}
@@ -155,24 +175,6 @@ export default function ToolbarContainer() {
           bgColor="bg-white"
           activeBgColor="bg-sky-100 text-sky-600"
         /> */}
-
-        <NavButton
-          icon={EraserIcon}
-          label="지우개"
-          isActive={cursorMode === 'eraser'}
-          onClick={() => {
-            if (cursorMode === 'eraser') {
-              setCursorMode('select');
-              setActiveTool('select');
-            } else {
-              setCursorMode('eraser');
-              setActiveTool('eraser');
-              setActivePanel(null);
-            }
-          }}
-          bgColor="bg-white"
-          activeBgColor="bg-sky-100 text-sky-600"
-        />
       </div>
 
       {activePanel === 'cursor' && (
