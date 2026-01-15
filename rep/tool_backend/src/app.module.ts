@@ -6,6 +6,7 @@ import { RedisChannelModule } from '@infra/channel/redis/channel';
 import { MysqlModule } from '@infra/db/mysql/db';
 import CookieParser from "cookie-parser";
 import { KafkaModule } from '@infra/event-stream/kafka/event-stream';
+import { GuardModule } from './guards/guard.module';
 
 
 @Module({
@@ -20,6 +21,7 @@ import { KafkaModule } from '@infra/event-stream/kafka/event-stream';
 
     // 추가 모듈
     HealthModule,
+    GuardModule
   ],
   controllers: [],
   providers: [],
