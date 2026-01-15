@@ -349,12 +349,27 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
     @ConnectedSocket() client : Socket,
   ) {
     try {
+      const ticket : string = await this.signalingService.openTool(client, "whiteboard");
       
+      return ticket;
     } catch (err) {
       this.logger.error(err);
       throw new WsException({ message : err.message ?? "에러 발생", status : err.status ?? 500 });          
     };
   };
 
+  @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.OPEN_CODEEDITOR)
+  async openCodeEditorGateway(
+    @ConnectedSocket() client : Socket,
+  ) {
+    try {
+      const ticket : string = await this.signalingService.openTool(client, "whiteboard");
+      
+      return ticket;
+    } catch (err) {
+      this.logger.error(err);
+      throw new WsException({ message : err.message ?? "에러 발생", status : err.status ?? 500 });          
+    };
+  };
 
 };

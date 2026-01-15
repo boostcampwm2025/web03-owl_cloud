@@ -1,15 +1,16 @@
-import { ConnectRoomUsecase, DisconnectRoomUsecase } from "@app/room/commands/usecase";
+import { ConnectRoomUsecase, DisconnectRoomUsecase, OpenToolUsecase } from "@app/room/commands/usecase";
 import { Module } from "@nestjs/common";
 import { SelectRoomDataFromMysql } from "@infra/db/mysql/room/room.inbound";
 import { CompareRoomArgonHash, MakeIssueToolTicket } from "./signaling.interface";
-import { SelectRoomInfoFromRedis, SelectRoomMemberInfosFromRedis } from "@infra/cache/redis/room/room.inbound";
+import { CheckUserPayloadFromRedis, SelectRoomInfoFromRedis, SelectRoomMemberInfosFromRedis } from "@infra/cache/redis/room/room.inbound";
 import { DeleteHardRoomParticipantInfoDataToMysql, InsertRoomParticipantInfoDataToMysql, UpdateRoomParticipantInfoToMysql } from "@infra/db/mysql/room/room.outbound";
-import { DeleteRoomDatasToRedis, InsertRoomDatasToRedis } from "@infra/cache/redis/room/room.outbound";
+import { DeleteRoomDatasToRedis, InsertRoomDatasToRedis, InsertToolTicketToRedis } from "@infra/cache/redis/room/room.outbound";
 import { SignalingWebsocketService } from "./signaling.service";
 import { AuthWebsocketModule } from "../auth/auth.module";
 import { SignalingWebsocketGateway } from "./signaling.gateway";
 import { SfuModule } from "@present/webrtc/sfu/sfu.module";
 import { GetRoomMembersUsecase } from "@/2.application/room/queries/usecase";
+import { ConfigService } from "@nestjs/config";
 
 
 @Module({
@@ -19,10 +20,19 @@ import { GetRoomMembersUsecase } from "@/2.application/room/queries/usecase";
   ],  
   providers : [
     // sfu 자체적인 모듈
+    ConfigService,
     SignalingWebsocketGateway,
     SignalingWebsocketService,
     CompareRoomArgonHash,
-    MakeIssueToolTicket,
+    {
+      provide : MakeIssueToolTicket,
+      useFactory : (config : ConfigService) => {
+        return new MakeIssueToolTicket(config)
+      },
+      inject : [
+        ConfigService
+      ]
+    },
 
     // usecase 모아두기
 
@@ -80,6 +90,25 @@ import { GetRoomMembersUsecase } from "@/2.application/room/queries/usecase";
         SelectRoomMemberInfosFromRedis
       ]
     },
+
+    // tool을 사용하기 위해서 검증용 jwk 요청 usecase
+    {
+      provide : OpenToolUsecase,
+      useFactory : (
+        checkUserPaylodFromCache : CheckUserPayloadFromRedis,
+        makeToolTicket : MakeIssueToolTicket,
+        insertToolTicketToCache : InsertToolTicketToRedis
+      ) => {
+        return new OpenToolUsecase({
+          checkUserPaylodFromCache, makeToolTicket, insertToolTicketToCache
+        })
+      },
+      inject : [
+        CheckUserPayloadFromRedis,
+        MakeIssueToolTicket,
+        InsertToolTicketToRedis
+      ]
+    }
   ]
 })
 export class SignalingWebsocketModule {};

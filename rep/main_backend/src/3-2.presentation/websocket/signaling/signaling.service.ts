@@ -2,8 +2,8 @@ import { TokenDto } from "@app/auth/commands/dto";
 import { Injectable } from "@nestjs/common";
 import { Socket } from "socket.io";
 import * as cookie from "cookie";
-import { ConnectResult, ConnectRoomDto, DisconnectRoomDto } from "@app/room/commands/dto";
-import { ConnectRoomUsecase, DisconnectRoomUsecase } from "@app/room/commands/usecase";
+import { ConnectResult, ConnectRoomDto, DisconnectRoomDto, OpenToolDto } from "@app/room/commands/dto";
+import { ConnectRoomUsecase, DisconnectRoomUsecase, OpenToolUsecase } from "@app/room/commands/usecase";
 import { v7 as uuidV7 } from "uuid";
 import { DtlsHandshakeValidate, OnConsumesValidate, OnConsumeValidate, OnProduceValidate, pauseConsumersValidate, pauseConsumerValidate, ResumeConsumersValidate, ResumeConsumerValidate, SocketPayload } from "./signaling.validate";
 import { PayloadRes } from "@app/auth/queries/dto";
@@ -23,6 +23,7 @@ export class SignalingWebsocketService {
     private readonly disconnectRoomUsecase : DisconnectRoomUsecase<any, any>,
     private readonly connectRoomUsecase : ConnectRoomUsecase<any, any>,
     private readonly getMembersUsecase : GetRoomMembersUsecase<any>,
+    private readonly openToolUsecase : OpenToolUsecase<any>,
     private readonly sfuServer : SfuService,
   ) {}
 
@@ -247,5 +248,15 @@ export class SignalingWebsocketService {
     };
     await this.sfuServer.pauseConsumers(dto);
   };
+
+  // tool open에 대해서 요청한다. 
+  async openTool(client : Socket , tool : "whiteboard" | "codeeditor") {
+    const room_id : string = client.data.room_id;
+    const payload : SocketPayload = client.data.user;
+    const dto : OpenToolDto = {
+      ...payload, room_id, tool
+    };
+    return this.openToolUsecase.execute(dto);
+  }
 
 };
