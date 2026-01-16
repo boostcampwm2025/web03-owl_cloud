@@ -42,15 +42,28 @@ export class ToolConsumerController {
       `[${topic}] room=${value.room_id} user=${value.user_id} socket=${value.socket_id} partition=${partition}`,
     );
 
-    // redis 확인 main으로 보낸것이 맞는지 그리고 처음인지
+    try {
+      // redis 확인 main으로 보낸것이 맞는지 그리고 처음인지
+      await this.toolConsumerService.checkTicketService(value);
 
-    // 전체를 broad casting 한다.
-    const socket_id : string = value.socket_id;
-    const payload : InformPayload = {
-      request_user : value.user_id,
-      tool : value.tool
-    };
-    this.server.broadcastToolRequest(value.room_id, WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.REQUEST_WHITEBOARD, payload, socket_id);
+      // 전체를 broad casting 한다.
+      const socket_id : string = value.socket_id;
+      const payload : InformPayload = {
+        request_user : value.user_id,
+        tool : value.tool
+      };
+      this.server.broadcastToolRequest(value.room_id, WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.REQUEST_WHITEBOARD, payload, socket_id);
+    } catch (err) {
+      this.logger.error(err);
+      this.server.emitToSocket(
+        value.socket_id,
+        WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.ERROR,
+        {
+          message : err.message
+        },
+      );
+      return;
+    }
   };
 
   // codeeditor 입장 이벤트 consumer
@@ -71,12 +84,27 @@ export class ToolConsumerController {
       `[${topic}] room=${value.room_id} user=${value.user_id} socket=${value.socket_id}`,
     );
 
-    // redis 확인 main으로 보낸것이 맞는지 그리고 처음인지
-    const socket_id : string = value.socket_id;
-    const payload : InformPayload = {
-      request_user : value.user_id,
-      tool : value.tool
-    };
-    this.server.broadcastToolRequest(value.room_id, WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.REQUEST_CODEEDITOR, payload, socket_id);
+    try {
+      // redis 확인 main으로 보낸것이 맞는지 그리고 처음인지
+      await this.toolConsumerService.checkTicketService(value);
+
+      // 전체를 broad casting 한다.
+      const socket_id : string = value.socket_id;
+      const payload : InformPayload = {
+        request_user : value.user_id,
+        tool : value.tool
+      };
+      this.server.broadcastToolRequest(value.room_id, WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.REQUEST_WHITEBOARD, payload, socket_id);
+    } catch (err) {
+      this.logger.error(err);
+      this.server.emitToSocket(
+        value.socket_id,
+        WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.ERROR,
+        {
+          message : err.message
+        },
+      );
+      return;
+    }
   };
 };

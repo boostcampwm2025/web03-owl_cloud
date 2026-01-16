@@ -38,6 +38,7 @@ export const WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME = Object.freeze({
   NEW_PRODUCED : "room:new_produced",
   NEW_USER : "room:new_user",
   USER_CLOSED : "room:user_closed",
+  ERROR : "room:error",
 
   // 아래는 오게될 요청
   REQUEST_WHITEBOARD : "room:request_whiteboard",

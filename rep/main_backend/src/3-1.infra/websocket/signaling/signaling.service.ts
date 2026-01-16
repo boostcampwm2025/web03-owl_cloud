@@ -22,4 +22,8 @@ export class SignalingWebsocket {
       this.server.to(namespace).emit(event, payload);
     }
   }
+
+  emitToSocket(socket_id: string, event: string, payload: any) {
+    this.server.to(socket_id).emit(event, payload);
+  }
 };

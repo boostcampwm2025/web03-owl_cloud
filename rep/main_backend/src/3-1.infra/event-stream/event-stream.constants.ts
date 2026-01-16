@@ -11,5 +11,6 @@ export type ToolEnterEvent = {
   user_id: string;
   tool: "whiteboard" | "codeeditor";
   socket_id: string;
+  ticket : string;
   at: number;
 };
