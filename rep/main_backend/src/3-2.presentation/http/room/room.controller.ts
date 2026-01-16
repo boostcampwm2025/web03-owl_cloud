@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Req, UseGuards, UsePipes, ValidationPipe } from "@nestjs/common";
 import { JwtGuard } from "../auth/guards";
 import { type Request } from "express";
 import { CreateRoomValidate } from "./room.validate";
@@ -31,6 +31,14 @@ export class RoomController {
       user_id : payload.user_id
     };
     return this.roomService.createRoomService(dto);
+  };
+
+  @Get(":code")
+  async getRoomInfoController(
+    @Param("code") code : string
+  ) {
+    
+
   };
 
 };

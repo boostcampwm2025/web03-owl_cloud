@@ -364,6 +364,7 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
     };
   };
 
+  // codeeditor를 열겠다.
   @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.OPEN_CODEEDITOR)
   async openCodeEditorGateway(
     @ConnectedSocket() client : Socket,
@@ -393,6 +394,7 @@ export class SignalingWebsocketGateway implements OnGatewayInit, OnGatewayConnec
     };
   };
 
+  // tool의 연결을 끊고 싶을때 사용한다.
   @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.DISCONNECT_TOOL)
   async disconnectToolGateway(
     @ConnectedSocket() client : Socket,
