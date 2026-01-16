@@ -4,6 +4,7 @@ import { type RedisClientType } from "redis";
 import { CACHE_ROOM_INFO_KEY_NAME, CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME, CACHE_ROOM_MEMBERS_KEY_PROPS_NAME, CACHE_ROOM_NAMESPACE_NAME, CACHE_ROOM_SUB_NAMESPACE_NAME, CACHE_SFU_NAMESPACE_NAME, CACHE_SFU_PRODUCERS_KEY_NAME, CACHE_SFU_PRODUCES_KEY_PROPS_NAME, REDIS_SERVER } from "../../cache.constants";
 import { RoomInfoValues } from "@app/room/dtos";
 import { GetRoomMainInfo, GetRoomMembersResult, MembersInfo, ProviderInfo } from "@app/room/queries/dto";
+import { NotAllowToolPayload, NotAllowToolTicket } from "@error/infra/infra.error";
 
 
 @Injectable()
@@ -265,4 +266,99 @@ export class CheckUserPayloadFromRedis extends SelectDataFromCache<RedisClientTy
     }
   };
   
+};
+
+// 현재 방에 해당 user가 한적이 있는지 그리고 ticket이 존재하는지 확인
+const LUA_VERIFY_AND_DELETE_TOOL_TICKET = `
+-- KEYS[1] = namespaceInfo (hash key)
+-- ARGV[1] = field_main_producer
+-- ARGV[2] = field_tool_ticket
+-- ARGV[3] = expected_user_id
+-- ARGV[4] = expected_tool
+-- ARGV[5] = presented_ticket
+
+local key = KEYS[1]
+local fProducer = ARGV[1]
+local fTicket = ARGV[2]
+local userId = ARGV[3]
+local tool = ARGV[4]
+local ticket = ARGV[5]
+
+local producerJson = redis.call("HGET", key, fProducer)
+if not producerJson then
+  return {0, "NO_PRODUCER"}
+end
+
+local storedTicket = redis.call("HGET", key, fTicket)
+if not storedTicket then
+  return {0, "NO_TICKET"}
+end
+
+if storedTicket ~= ticket then
+  return {0, "TICKET_MISMATCH"}
+end
+
+local ok, producer = pcall(cjson.decode, producerJson)
+if not ok or not producer then
+  return {0, "PRODUCER_JSON_INVALID"}
+end
+
+if producer["user_id"] ~= userId then
+  return {0, "USER_MISMATCH"}
+end
+
+if producer["tool"] ~= tool then
+  return {0, "TOOL_MISMATCH"}
+end
+
+redis.call("HDEL", key, fTicket)
+
+return {1, "OK"}
+`;
+@Injectable()
+export class CheckToolTicketFromRedis extends SelectDataFromCache<RedisClientType<any, any>> {
+
+  constructor(
+    @Inject(REDIS_SERVER) cache : RedisClientType<any, any>
+  ) { super(cache); };  
+
+  // namespace는 room_id, keyname은 user_id:tool:ticket 이렇게 온다. 
+  async select({ namespace, keyName, }: { namespace: string; keyName: string; }): Promise<boolean> {
+
+    const room_id : string = namespace;
+    const [ user_id, tool, ticket ] = keyName.split(":");
+
+    if ( !user_id || !tool || !ticket ) throw new NotAllowToolPayload();
+
+    const roomInfoNamespace : string = `${CACHE_ROOM_NAMESPACE_NAME.CACHE_ROOM}:${room_id}:${CACHE_ROOM_SUB_NAMESPACE_NAME.INFO}`;
+
+    const res = (await this.cache.eval(LUA_VERIFY_AND_DELETE_TOOL_TICKET, {
+      keys: [roomInfoNamespace],
+      arguments: [
+      CACHE_ROOM_INFO_KEY_NAME.MAIN_PRODUCER, 
+      CACHE_ROOM_INFO_KEY_NAME.TOOL_TICKET,  
+      user_id.trim(),                         
+      tool.trim(),                            
+      ticket.trim(),  
+      ],
+    })) as [number, string];
+
+    const ok = res[0] === 1;
+    if (ok) return true;
+
+    const reason = res[1];
+    switch (reason) {
+      case "NO_TICKET":
+      case "TICKET_MISMATCH":
+        throw new NotAllowToolTicket();
+
+      case "NO_PRODUCER":
+      case "USER_MISMATCH":
+      case "TOOL_MISMATCH":
+        throw new NotAllowToolPayload();
+
+      default:
+        throw new NotAllowToolTicket();
+    }
+  }
 };

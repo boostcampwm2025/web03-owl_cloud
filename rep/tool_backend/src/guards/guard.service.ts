@@ -28,18 +28,20 @@ export class GuardService {
     const room_id = payload["room_id"];
     const tool = payload["tool"] as "whiteboard" | "codeeditor";
     const socket_id = payload["socket_id"];
+    const ticket = payload["ticket"];
     const scope = payload["scope"];
 
     if (typeof sub !== "string") throw new Error("sub가 없습니다. (user_id)");
     if (typeof room_id !== "string") throw new Error("room_id가 없습니다.");
     if ( typeof socket_id !== "string" ) throw new Error("socket_id가 없습니다.")
     if (typeof tool !== "string") throw new Error("tool이 없습니다.");
+    if (typeof ticket !== "string") throw new Error("ticket이 없습니다.");
     if (scope && !Array.isArray(scope)) throw new Error("scope가 없습니다.");
 
     const allowedTools = new Set(["whiteboard", "codeeditor"]);
     if (!allowedTools.has(tool)) throw new Error("허용되지 않은 tool 입니다.");
 
-    return { sub, room_id, tool, socket_id, scope: scope as string[] | undefined };
+    return { sub, room_id, tool, socket_id, ticket, scope: scope as string[] | undefined };
   };
 
 };

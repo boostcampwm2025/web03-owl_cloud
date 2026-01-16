@@ -8,7 +8,7 @@ import {
 import { REDIS_SERVER } from '../cache.constants';
 import { SelectHsetDataFromRedis } from './user/user.inbound';
 import { DeleteRoomDatasToRedis, InsertRoomDatasToRedis, InsertRoomDataToRedis, InsertToolTicketToRedis } from './room/room.outbound';
-import { CheckUserPayloadFromRedis, SelectRoomInfoFromRedis, SelectRoomMemberInfosFromRedis } from './room/room.inbound';
+import { CheckToolTicketFromRedis, CheckUserPayloadFromRedis, SelectRoomInfoFromRedis, SelectRoomMemberInfosFromRedis } from './room/room.inbound';
 import { CreateSfuTransportInfoToRedis, DeleteConsumerDataToRedis, DeleteMainProducerDataToRedis, DeleteSfuTransportInfoToRedis, DeleteUserProducerDataToRedis, InsertConsumerDatasToRedis, InsertConsumerDataToRedis, InsertMainProducerDataToRedis, InsertUserProducerDataToRedis,  } from "./sfu/sfu.outbound"
 import { SelectConsumerInfoFromRedis, SelectConsumerInfosFromRedis, SelectMainProducerDataFromRedis, SelectSfuTransportDataFromRedis, SelectUserProducerDataFromRedis, SelectUserTransportFromRedis } from './sfu/sfu.inbound';
 
@@ -72,6 +72,7 @@ import { SelectConsumerInfoFromRedis, SelectConsumerInfosFromRedis, SelectMainPr
     SelectConsumerInfosFromRedis, // 해당 consumer_ids들의 정보를 보낸다.
     CheckUserPayloadFromRedis, // 현재 유저가 보낸 요청이 맞는지 확인
     InsertToolTicketToRedis, // tool에 대해서 redis에 정보를 저장한다.
+    CheckToolTicketFromRedis // ticket을 이용해서 검증 맞는지
   ],
   exports: [
     REDIS_SERVER,
@@ -99,7 +100,8 @@ import { SelectConsumerInfoFromRedis, SelectConsumerInfosFromRedis, SelectMainPr
     InsertConsumerDatasToRedis,
     SelectConsumerInfosFromRedis,
     CheckUserPayloadFromRedis,
-    InsertToolTicketToRedis
+    InsertToolTicketToRedis,
+    CheckToolTicketFromRedis
   ],
 })
 export class RedisModule {}

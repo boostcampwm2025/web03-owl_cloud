@@ -4,6 +4,7 @@ import { EVENT_STREAM_NAME, ToolEnterEvent } from "@infra/event-stream/event-str
 import { Controller, Inject, Logger } from "@nestjs/common";
 import { Ctx, EventPattern, KafkaContext, Payload } from "@nestjs/microservices";
 import { WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME } from "@present/websocket/websocket.constants";
+import { ToolConsumerService } from "./tool.service";
 
 
 type InformPayload = {
@@ -16,7 +17,8 @@ export class ToolConsumerController {
   private readonly logger = new Logger(ToolConsumerController.name);
 
   constructor(
-    @Inject(SIGNALING_WEBSOCKET) private readonly server : SignalingWebsocket
+    @Inject(SIGNALING_WEBSOCKET) private readonly server : SignalingWebsocket,
+    private readonly toolConsumerService : ToolConsumerService,
   ) {}
 
   // whiteboard 입장 이벤트 consumer
@@ -25,7 +27,7 @@ export class ToolConsumerController {
     @Payload() message: any,
     @Ctx() context: KafkaContext,
   ) {
-    const value = message?.value as ToolEnterEvent; // Nest Kafka는 value에 payload 들어오는 경우가 흔함
+    const value = message?.value as ToolEnterEvent; // 
     const topic = context.getTopic();
     const partition = context.getPartition();
 

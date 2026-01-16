@@ -20,6 +20,7 @@ export class WhiteboardService {
       user_id : verified.sub,
       tool : verified.tool,
       socket_id: verified.socket_id,
+      ticket : verified.ticket,
       clientType : type
     };
 

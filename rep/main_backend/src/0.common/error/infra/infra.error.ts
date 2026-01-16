@@ -103,3 +103,21 @@ export class NotDeleteCardItem extends BaseError {
     });
   }
 }
+
+export class NotAllowToolPayload extends BaseError {
+  constructor() {
+    super({
+      message: 'tool에서 보낸 payload에 user_id와 tool이 없습니다.',
+      status: 500,
+    });
+  }
+}
+
+export class NotAllowToolTicket extends BaseError {
+  constructor() {
+    super({
+      message: '이미 검증되었거나 ticket이 존재하지 않습니다.',
+      status: 500,
+    });
+  }
+}

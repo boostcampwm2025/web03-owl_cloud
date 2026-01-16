@@ -72,6 +72,7 @@ export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConne
         user_id: payload.user_id,
         tool: payload.tool,
         socket_id: payload.socket_id,
+        ticket : payload.ticket,
         at: Date.now(), // 현재 보낸 시간
       });
     };

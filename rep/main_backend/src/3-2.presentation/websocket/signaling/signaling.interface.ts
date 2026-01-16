@@ -53,6 +53,7 @@ export class MakeIssueToolTicket extends MakeToken {
       room_id : payload.room_id,
       tool : payload.tool,
       socket_id : payload.socket_id,
+      ticket : payload.ticket,
       scope : ["tool:open"]
     })
     .setProtectedHeader({
