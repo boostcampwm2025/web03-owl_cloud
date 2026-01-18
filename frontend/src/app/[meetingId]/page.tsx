@@ -7,7 +7,7 @@ import MeetingRoom from '@/components/meeting/MeetingRoom';
 import { useMeetingSocket } from '@/hooks/useMeetingSocket';
 import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
 import { useMeetingStore } from '@/store/useMeetingStore';
-import { createProducers } from '@/utils/createProducers';
+import { createProduceHelper } from '@/utils/createProduceHelpers';
 import { initMediasoupTransports } from '@/utils/initMediasoupTransports';
 import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -80,7 +80,7 @@ export default function MeetingPage() {
 
         // Produce 설정
         const { sendTransport } = transports;
-        const producers = createProducers(sendTransport);
+        const producers = createProduceHelper(sendTransport);
 
         // 초기 입장 시, 로비에서 설정한 미디어 Produce
         const { produceMic, produceCam } = producers;
