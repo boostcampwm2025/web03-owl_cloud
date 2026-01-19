@@ -6,12 +6,13 @@ import {
   CACHE_ROOM_NAMESPACE_NAME,
   CACHE_ROOM_SUB_NAMESPACE_NAME,
   CACHE_SFU_NAMESPACE_NAME,
+  CACHE_SFU_PRODUCES_KEY_PROPS_NAME,
   CACHE_SFU_TRANSPORTS_KEY_NAME,
   CACHE_SFU_USER_KEY_NAME,
   REDIS_SERVER,
 } from '../../cache.constants';
 import { RoomTransportInfo } from '@app/sfu/queries/dto';
-import { DisconnectUserTransportInfos } from '@/2.application/sfu/commands/dto';
+import { DisconnectUserTransportInfos, GetProducerProps } from '@app/sfu/commands/dto';
 
 @Injectable()
 export class SelectSfuTransportDataFromRedis extends SelectDataFromCache<
@@ -189,5 +190,47 @@ export class SelectConsumerInfosFromRedis extends SelectDatasFromCache<RedisClie
       if (values[i]) consumerExisted.push(keyNames[i]); // 값이 있으면 있고 없으면 null이기 때문에 이런식으로 처리
     }
     return consumerExisted;
+  }
+}
+
+// user에 produce 정보를 가져오는 로직
+@Injectable()
+export class SelectUserProducerInfoDataFromRedis extends SelectDataFromCache<
+  RedisClientType<any, any>
+> {
+  constructor(@Inject(REDIS_SERVER) cache: RedisClientType<any, any>) {
+    super(cache);
+  }
+
+  // namespace는 room_id:user_id 이다.
+  async select({
+    namespace,
+    keyName,
+  }: {
+    namespace: string;
+    keyName: 'audio' | 'video';
+  }): Promise<GetProducerProps | undefined> {
+    const userProducerNamespace: string = `${CACHE_SFU_NAMESPACE_NAME.PRODUCER_INFO}:${namespace}`;
+
+    const userProducerData = await this.cache.hGet(userProducerNamespace, keyName);
+    if ( !userProducerData ) return undefined;
+
+    try {
+      const parseData = JSON.parse(userProducerData);
+
+      // 파싱 후 데이터 가져오기
+      const producer_id : string = parseData[CACHE_SFU_PRODUCES_KEY_PROPS_NAME.PRODUCER_ID];
+      const type : "mic" | "cam" = parseData[CACHE_SFU_PRODUCES_KEY_PROPS_NAME.TYPE];
+      const kind : "audio" | "video" = parseData[CACHE_SFU_PRODUCES_KEY_PROPS_NAME.KIND];
+      const status : "on" | "off" = parseData[CACHE_SFU_PRODUCES_KEY_PROPS_NAME.STATUS];
+
+      if ( !producer_id || ( type !== "mic" && type !== "cam" ) || ( kind !== "audio" && kind !== "video" ) || ( status !== "on" && status !== "off" ) ) return undefined;
+      
+      return {
+        producer_id, type, kind, status
+      };
+    } catch (err) {
+      return undefined;
+    };
   }
 }

@@ -259,7 +259,7 @@ export class SignalingWebsocketGateway
       // 2. ( 다른 유저들에게 ) 알려야 함 -> 지금 등록했다는 사실을
       const room_id: string = client.data.room_id;
       const namespace: string = `${CHANNEL_NAMESPACE.SIGNALING}:${room_id}`;
-      client.to(namespace).emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.NEW_PRODUCED, producerInfo);
+      client.to(namespace).emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.ALERT_PRODUCED, producerInfo);
 
       // 3. 반환
       return { producerInfo };
@@ -462,10 +462,10 @@ export class SignalingWebsocketGateway
     try {
       const producerInfo = await this.signalingService.pauseProduce(client, validate);
       
-      // 모두에게 알림 - 마이크 or 카메라 껏다고 
+      // 모두에게 알림 - 마이크 or 카메라 껏다고 방에 인원에게 알린다.
       const room_id: string = client.data.room_id;
       const namespace: string = `${CHANNEL_NAMESPACE.SIGNALING}:${room_id}`;
-      client.to(namespace).emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.PAUSE_PRODUCED, producerInfo); // 현재 마이크 or 카메라가 꺼졌습니다.
+      client.to(namespace).emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.ALERT_PRODUCED, producerInfo); // 현재 마이크 or 카메라가 꺼졌습니다.
 
       return { ok: true };
     } catch (err) {

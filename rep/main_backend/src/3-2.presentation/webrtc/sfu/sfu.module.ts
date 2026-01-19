@@ -52,6 +52,7 @@ import {
   SelectMainProducerDataFromRedis,
   SelectSfuTransportDataFromRedis,
   SelectUserProducerDataFromRedis,
+  SelectUserProducerInfoDataFromRedis,
   SelectUserTransportFromRedis,
 } from '@infra/cache/redis/sfu/sfu.inbound';
 
@@ -136,12 +137,13 @@ import {
         produceRepo: ProducerRepositoryPort,
         transportRepo: TransportRepositoryPort,
         selectTransportDataFromCache: SelectSfuTransportDataFromRedis,
-        selectUserProducerDataFromCache: SelectUserProducerDataFromRedis,
+        selectUserProducerDataFromCache: SelectUserProducerInfoDataFromRedis,
         selectMainProducerDataFromCache: SelectMainProducerDataFromRedis,
         insertUserProducerDataToCache: InsertUserProducerDataToRedis,
         insertMainProducerDataToCache: InsertMainProducerDataToRedis,
         deleteUserProducerDataToCache: DeleteUserProducerDataToRedis,
         deleteMainProducerDataToCache: DeleteMainProducerDataToRedis,
+        updateUserProducerDataToCache : UpdateProducerStatusToRedis,
       ) => {
         return new CreateProduceUsecase(produceRepo, transportRepo, {
           selectTransportDataFromCache,
@@ -151,18 +153,20 @@ import {
           insertMainProducerDataToCache,
           deleteUserProducerDataToCache,
           deleteMainProducerDataToCache,
+          updateUserProducerDataToCache
         });
       },
       inject: [
         ProducerRepository,
         TransportRepository,
         SelectSfuTransportDataFromRedis,
-        SelectUserProducerDataFromRedis,
+        SelectUserProducerInfoDataFromRedis,
         SelectMainProducerDataFromRedis,
         InsertUserProducerDataToRedis,
         InsertMainProducerDataToRedis,
         DeleteUserProducerDataToRedis,
         DeleteMainProducerDataToRedis,
+        UpdateProducerStatusToRedis,
       ],
     },
 

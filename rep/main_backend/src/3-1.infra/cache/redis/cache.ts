@@ -37,6 +37,7 @@ import {
   SelectMainProducerDataFromRedis,
   SelectSfuTransportDataFromRedis,
   SelectUserProducerDataFromRedis,
+  SelectUserProducerInfoDataFromRedis,
   SelectUserTransportFromRedis,
 } from './sfu/sfu.inbound';
 
@@ -98,6 +99,7 @@ import {
     DeleteMainProducerFromRedis, // 해당 room에 있는 main_producer를 삭제
     SelectRoomInfoDataFromRedis, // 해당 방에 정보를 가져오는 redis
     UpdateProducerStatusToRedis, // prodcuer에서 status가 변경 될때 사용하는 redis -> 정합성이 좀 부족하다 고민 해야 함
+    SelectUserProducerInfoDataFromRedis, // user에 producer 관련 데이터를 가져와야 한다. 
   ],
   exports: [
     REDIS_SERVER,
@@ -131,6 +133,7 @@ import {
     DeleteMainProducerFromRedis,
     SelectRoomInfoDataFromRedis,
     UpdateProducerStatusToRedis, 
+    SelectUserProducerInfoDataFromRedis
   ],
 })
 export class RedisModule {}
