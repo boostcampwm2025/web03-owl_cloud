@@ -27,8 +27,7 @@ export default function CustomArrow({
   const endHeadType = item.endHeadType ?? 'triangle';
 
   // 아이템 인터랙션 상태
-  const { isInteractive, isEraserMode, isDraggable, isListening } =
-    useItemInteraction();
+  const { isInteractive, isDraggable, isListening } = useItemInteraction();
 
   // 커서 스타일 훅
   const { handleMouseEnter, handleMouseLeave } = useCursorStyle('move');
@@ -90,20 +89,20 @@ export default function CustomArrow({
       name="arrow-group"
       draggable={isDraggable}
       listening={isListening}
-      onMouseDown={() => isInteractive && !isEraserMode && onSelect(item.id)}
-      onTouchStart={() => isInteractive && !isEraserMode && onSelect(item.id)}
+      onMouseDown={() => isInteractive && onSelect(item.id)}
+      onTouchStart={() => isInteractive && onSelect(item.id)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onDblClick={() => {
-        if (!isInteractive || isEraserMode) return;
+        if (!isInteractive) return;
         onArrowDblClick?.(item.id);
       }}
       onDragStart={() => {
-        if (!isInteractive || isEraserMode) return;
+        if (!isInteractive) return;
         onDragStart?.();
       }}
       onDragEnd={(e) => {
-        if (!isInteractive || isEraserMode) return;
+        if (!isInteractive) return;
         const pos = e.target.position();
         const newPoints = item.points.map((p, i) =>
           i % 2 === 0 ? p + pos.x : p + pos.y,
