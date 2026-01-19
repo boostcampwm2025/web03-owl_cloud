@@ -19,11 +19,13 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
     "konva": "^10.0.12",
+    "mediasoup-client": "^3.18.3",
     "monaco-editor": "^0.55.1",
     "next": "16.0.10",
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "react-konva": "^19.2.1",
+    "socket.io-client": "^4.8.3",
     "tailwind-merge": "^3.4.0",
     "use-image": "^1.1.4",
     "uuid": "^13.0.0",
@@ -58,5 +60,10 @@
     "cz-customizable": {
       "config": "./cz-config.js"
     }
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "mediasoup"
+    ]
   }
 }

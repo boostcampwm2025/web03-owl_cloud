@@ -16,16 +16,14 @@ import {
 } from '@/assets/icons/meeting';
 import Modal from '@/components/common/Modal';
 import MeetingButton from '@/components/meeting/MeetingButton';
-import { useMeeingStore } from '@/store/useMeetingStore';
+import { useMeetingStore } from '@/store/useMeetingStore';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export default function MeetingMenu() {
   const {
-    audio,
-    setAudio,
-    video,
-    setVideo,
+    media,
+    setMedia,
     members,
     hasNewChat,
     setHasNewChat,
@@ -35,11 +33,11 @@ export default function MeetingMenu() {
     isWorkspaceOpen,
     isCodeEditorOpen,
     setIsOpen,
-  } = useMeeingStore();
+  } = useMeetingStore();
 
-  const toggleAudio = () => setAudio(audio === 'ON' ? 'OFF' : 'ON');
+  const toggleAudio = () => setMedia({ audioOn: !media.audioOn });
 
-  const toggleVideo = () => setVideo(video === 'ON' ? 'OFF' : 'ON');
+  const toggleVideo = () => setMedia({ videoOn: !media.videoOn });
 
   const onInfoClick = () => {
     setIsOpen('isInfoOpen', !isInfoOpen);
@@ -73,7 +71,7 @@ export default function MeetingMenu() {
       <section className="flex gap-2">
         <MeetingButton
           icon={
-            audio === 'ON' ? (
+            media.audioOn ? (
               <MicOnIcon className="h-8 w-8" />
             ) : (
               <MicOffIcon className="h-8 w-8" />
@@ -84,7 +82,7 @@ export default function MeetingMenu() {
         />
         <MeetingButton
           icon={
-            video === 'ON' ? (
+            media.videoOn ? (
               <CamOnIcon className="h-8 w-8" />
             ) : (
               <CamOffIcon className="h-8 w-8" />

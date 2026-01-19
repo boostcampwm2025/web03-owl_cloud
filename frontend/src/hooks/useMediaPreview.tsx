@@ -1,23 +1,10 @@
 'use client';
 
+import { useMeetingStore } from '@/store/useMeetingStore';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-export type MediaPermission = 'unknown' | 'granted' | 'denied';
-
-export interface MediaState {
-  videoOn: boolean;
-  audioOn: boolean;
-  cameraPermission: MediaPermission;
-  micPermission: MediaPermission;
-}
-
 export const useMediaPreview = (micId?: string, cameraId?: string) => {
-  const [media, setMedia] = useState<MediaState>({
-    videoOn: false,
-    audioOn: false,
-    cameraPermission: 'unknown',
-    micPermission: 'unknown',
-  });
+  const { media, setMedia } = useMeetingStore();
 
   const [stream, setStream] = useState<MediaStream | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -38,18 +25,13 @@ export const useMediaPreview = (micId?: string, cameraId?: string) => {
         audioTrack = audioStream.getAudioTracks()[0];
 
         if (cancelled) return;
-        setMedia((prev) => ({
-          ...prev,
+        setMedia({
           micPermission: 'granted',
           audioOn: true, // 초기화 시 켜짐
-        }));
+        });
       } catch {
         if (cancelled) return;
-        setMedia((prev) => ({
-          ...prev,
-          micPermission: 'denied',
-          audioOn: false,
-        }));
+        setMedia({ micPermission: 'denied', audioOn: false });
       }
 
       try {
@@ -60,18 +42,13 @@ export const useMediaPreview = (micId?: string, cameraId?: string) => {
         videoTrack = videoStream.getVideoTracks()[0];
 
         if (cancelled) return;
-        setMedia((prev) => ({
-          ...prev,
+        setMedia({
           cameraPermission: 'granted',
           videoOn: true, // 초기화 시 켜짐
-        }));
+        });
       } catch {
         if (cancelled) return;
-        setMedia((prev) => ({
-          ...prev,
-          cameraPermission: 'denied',
-          videoOn: false,
-        }));
+        setMedia({ cameraPermission: 'denied', videoOn: false });
       }
 
       if (cancelled) return;
@@ -104,7 +81,7 @@ export const useMediaPreview = (micId?: string, cameraId?: string) => {
         track.stop();
         streamRef.current?.removeTrack(track);
       });
-      setMedia((prev) => ({ ...prev, videoOn: false }));
+      setMedia({ videoOn: false });
     } else {
       // on시 새로운 장치 스트림 요청
       try {
@@ -114,13 +91,13 @@ export const useMediaPreview = (micId?: string, cameraId?: string) => {
         const newTrack = newStream.getVideoTracks()[0];
 
         streamRef.current.addTrack(newTrack);
-        setMedia((prev) => ({ ...prev, videoOn: true }));
+        setMedia({ videoOn: true });
       } catch (error) {
         // TODO: 토스트 메시지로 바꾸기
         alert('카메라 권한을 허용해주세요.');
       }
     }
-  }, [media.videoOn, cameraId]);
+  }, [media.videoOn, cameraId, setMedia]);
 
   const toggleAudio = useCallback(async () => {
     if (!streamRef.current) return;
@@ -131,7 +108,7 @@ export const useMediaPreview = (micId?: string, cameraId?: string) => {
         track.stop();
         streamRef.current?.removeTrack(track);
       });
-      setMedia((prev) => ({ ...prev, audioOn: false }));
+      setMedia({ audioOn: false });
     } else {
       try {
         const newStream = await navigator.mediaDevices.getUserMedia({
@@ -140,13 +117,13 @@ export const useMediaPreview = (micId?: string, cameraId?: string) => {
         const newTrack = newStream.getAudioTracks()[0];
 
         streamRef.current.addTrack(newTrack);
-        setMedia((prev) => ({ ...prev, audioOn: true }));
+        setMedia({ audioOn: true });
       } catch (error) {
         // TODO: 토스트 메시지로 바꾸기
         alert('마이크 권한을 허용해주세요.');
       }
     }
-  }, [media.audioOn, micId]);
+  }, [media.audioOn, micId, setMedia]);
 
   const canRenderVideo = useMemo(() => {
     return (

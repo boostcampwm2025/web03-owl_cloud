@@ -214,8 +214,14 @@ export const DUMMY_CHATS: ChatListItemProps[] = [
   },
 ];
 
-export const DUMMY_MEETING_INFO = {
+interface MeetingInfo {
+  id: string;
+  host: string;
+  password?: string;
+}
+
+export const DUMMY_MEETING_INFO: MeetingInfo = {
   id: 'ha8owf-h9afoh-3tojns',
   host: 'Tony',
-  password: '1234',
+  password: '123123',
 };
