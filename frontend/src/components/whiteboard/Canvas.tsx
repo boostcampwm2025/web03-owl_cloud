@@ -10,6 +10,7 @@ import type { WhiteboardItem, TextItem, ArrowItem } from '@/types/whiteboard';
 import { useCanvasStore } from '@/store/useCanvasStore';
 
 import { useElementSize } from '@/hooks/useElementSize';
+import { useClickOutside } from '@/hooks/useClickOutside';
 import { useCanvasInteraction } from '@/hooks/useCanvasInteraction';
 import { useCanvasShortcuts } from '@/hooks/useCanvasShortcuts';
 import { useArrowHandles } from '@/hooks/useArrowHandles';
@@ -95,6 +96,18 @@ export default function Canvas() {
       setSelectedHandleIndex(null);
     }
   };
+
+  // 외부 클릭 시 선택 해제 (툴바, 사이드바 등)
+  useClickOutside(
+    containerRef,
+    () => {
+      if (selectedId) {
+        selectItem(null);
+        setSelectedHandleIndex(null);
+      }
+    },
+    !editingTextId && !!selectedId,
+  );
 
   // 마우스 이벤트 통합 훅
   const { handleMouseDown, handleMouseMove, handleMouseUp, currentDrawing } =
