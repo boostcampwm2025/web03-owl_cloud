@@ -2,44 +2,55 @@
 
 import Editor from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 import { colorFromClientId, injectCursorStyles } from '@/utils/code-editor';
-import { AwarenessState } from '@/types/code-editor';
+import { AwarenessState, LanguageState } from '@/types/code-editor';
+import CodeEditorToolbar from './CodeEditorToolbar';
+import { EditorLanguage } from '@/constants/code-editor';
 
 type CodeEditorProps = {
-  language?: string;
   autoComplete?: boolean;
   minimap?: boolean;
 };
 
 export default function CodeEditor({
-  language = 'typescript',
   autoComplete = true,
   minimap = true,
 }: CodeEditorProps) {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const cleanupRef = useRef<(() => void) | null>(null);
   const providerRef = useRef<WebsocketProvider | null>(null);
-  const remoteDecorationsRef =
-    useRef<monaco.editor.IEditorDecorationsCollection | null>(null);
+  const monacoRef = useRef<typeof import('monaco-editor') | null>(null);
+
+  const cursorCollectionsRef = useRef<
+    Map<number, monaco.editor.IEditorDecorationsCollection>
+  >(new Map()); // clientId -> 1 decoration collection
+
+  const onlyMyCursorRef = useRef(false);
+
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   const [isAutoCompleted, setIsAutoCompleted] = useState<boolean>(autoComplete);
   const [isPresenter, setIsPresenter] = useState<boolean>(false);
   const [hasPresenter, setHasPresenter] = useState<boolean>(false);
+  const [codeLanguage, setCodeLanguage] =
+    useState<EditorLanguage>('typescript');
+  const [onlyMyCursor, setOnlyMyCursor] = useState<boolean>(false);
+
+  useEffect(() => {
+    onlyMyCursorRef.current = onlyMyCursor;
+  }, [onlyMyCursor]);
 
   const handleMount = async (
     editor: monaco.editor.IStandaloneCodeEditor,
     monaco: typeof import('monaco-editor'),
   ) => {
     editorRef.current = editor;
-
-    if (!remoteDecorationsRef.current) {
-      remoteDecorationsRef.current = editor.createDecorationsCollection();
-    }
+    monacoRef.current = monaco;
 
     const ydoc = new Y.Doc();
+    const yLanguage = ydoc.getMap<LanguageState>('language');
     const { MonacoBinding } = await import('y-monaco');
 
     const provider = new WebsocketProvider(
@@ -49,7 +60,7 @@ export default function CodeEditor({
     );
     providerRef.current = provider;
 
-    // 사용자 정보 동적 설정
+    // 사용자 정보 동적 설정 > TODO: 실제 사용자 닉네임 가져오기
     const userName = `User-${Math.floor(Math.random() * 100)}`;
 
     provider.awareness.setLocalState({
@@ -92,28 +103,52 @@ export default function CodeEditor({
     const updateRemoteDecorations = (states: Map<number, AwarenessState>) => {
       if (!editorRef.current) return;
 
-      const decorations: monaco.editor.IModelDeltaDecoration[] = [];
+      const onlyMine = onlyMyCursorRef.current;
+      const collections = cursorCollectionsRef.current;
+      const myId = provider.awareness.clientID;
 
       states.forEach((state, clientId) => {
-        if (clientId === provider.awareness.clientID) return;
-        if (!state.cursor) return;
+        if (clientId === myId) return;
+
+        // 본인 제외 클라이언트들 collection 지우기
+        if (!state.cursor || onlyMine) {
+          collections.get(clientId)?.clear();
+          return;
+        }
 
         const { lineNumber, column } = state.cursor;
 
+        if (!collections.has(clientId)) {
+          collections.set(clientId, editor.createDecorationsCollection());
+        }
+
+        const collection = collections.get(clientId)!;
+
         const { cursor } = colorFromClientId(clientId);
-        injectCursorStyles(clientId, cursor);
+        const displayedUserName = state.user?.name ?? 'User';
 
-        decorations.push({
-          range: new monaco.Range(lineNumber, column, lineNumber, column + 1),
-          options: {
-            className: `remote-cursor-${clientId}`,
-            stickiness:
-              monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        injectCursorStyles(clientId, cursor, displayedUserName);
+
+        collection.set([
+          {
+            range: new monaco.Range(lineNumber, column, lineNumber, column + 1),
+            options: {
+              className: `remote-cursor-${clientId}`,
+              stickiness:
+                monaco.editor.TrackedRangeStickiness
+                  .NeverGrowsWhenTypingAtEdges,
+            },
           },
-        });
-      });
+        ]);
 
-      remoteDecorationsRef.current!.set(decorations);
+        // 사라진 client 정리 => GC용
+        for (const [clientId, collection] of collections) {
+          if (!states.has(clientId)) {
+            collection.clear();
+            collections.delete(clientId);
+          }
+        }
+      });
     };
 
     const updatePresenterState = (states: Map<number, AwarenessState>) => {
@@ -142,13 +177,23 @@ export default function CodeEditor({
       updatePresenterState(states);
     });
 
+    yLanguage.observe(() => {
+      const lang = yLanguage.get('current');
+      if (!lang) return;
+
+      if (model.getLanguageId() !== lang.value) {
+        monaco.editor.setModelLanguage(model, lang.value);
+        setCodeLanguage(lang.value);
+      }
+    });
+
     cleanupRef.current = () => {
       binding.destroy();
       provider.destroy();
       ydoc.destroy();
 
-      remoteDecorationsRef.current?.clear();
-      remoteDecorationsRef.current = null;
+      cursorCollectionsRef.current.forEach((c) => c.clear());
+      cursorCollectionsRef.current.clear();
 
       document
         .querySelectorAll('style[data-client-id]')
@@ -160,8 +205,25 @@ export default function CodeEditor({
     return () => cleanupRef.current?.();
   }, []);
 
+  // react <-> monaco <-> awareness 사이 동기화 브릿지 로직
+  useEffect(() => {
+    onlyMyCursorRef.current = onlyMyCursor;
+
+    if (providerRef.current) {
+      if (!editorRef.current) return;
+
+      cursorCollectionsRef.current.forEach((c) => c.clear());
+    }
+  }, [onlyMyCursor]);
+
   // 자동완성 토글
-  const toggleAutoComplete = () => setIsAutoCompleted((prev) => !prev);
+  const toggleAutoComplete = useCallback(() => {
+    setIsAutoCompleted((prev) => !prev);
+  }, []);
+
+  const toggleOnlyMyCursor = useCallback(() => {
+    setOnlyMyCursor((prev) => !prev);
+  }, []);
 
   // 발표자 되기
   const becomePresenter = () => {
@@ -186,55 +248,50 @@ export default function CodeEditor({
     });
   };
 
-  const disabledPresenter = hasPresenter && !isPresenter;
+  const changeLanguage = useCallback((lang: EditorLanguage) => {
+    const editor = editorRef.current;
+    const monaco = monacoRef.current;
+    const model = editor?.getModel();
+    const provider = providerRef.current;
+
+    if (!editor || !monaco || !model || !provider) return;
+
+    if (model.getLanguageId() === lang) return;
+
+    // 로컬 반영
+    monaco.editor.setModelLanguage(model, lang);
+    setCodeLanguage(lang);
+
+    const yLanguage = provider.doc.getMap<LanguageState>('language');
+
+    yLanguage.set('current', {
+      value: lang,
+      updatedAt: Date.now(),
+      updatedBy: provider.awareness.clientID,
+    });
+  }, []);
 
   return (
     <div className="flex h-full w-full flex-col">
-      {/* 상단 컨트롤 */}
-      <div className="flex items-center gap-2 border-b border-neutral-700 p-2">
-        <button
-          onClick={toggleAutoComplete}
-          className={`rounded px-3 py-1 text-sm font-bold text-white transition-colors ${
-            isAutoCompleted
-              ? 'bg-green-600 hover:bg-green-500'
-              : 'bg-red-600 hover:bg-red-500'
-          }`}
-        >
-          자동완성 {isAutoCompleted ? 'ON' : 'OFF'}
-        </button>
-
-        {!isPresenter && (
-          <button
-            onClick={becomePresenter}
-            disabled={disabledPresenter}
-            className={`rounded px-3 py-1 text-sm ${disabledPresenter ? 'bg-neutral-100 text-neutral-400' : 'bg-blue-600 text-white'}`}
-          >
-            스포트라이트
-          </button>
-        )}
-
-        {isPresenter && (
-          <button
-            onClick={cancelPresenter}
-            className="rounded bg-red-600 px-3 py-1 text-sm text-white"
-          >
-            스포트라이트 해제
-          </button>
-        )}
-
-        {hasPresenter && (
-          <span className="text-sm text-neutral-400">
-            {isPresenter ? '편집 가능 (발표자)' : '읽기 전용 (참가자)'}
-          </span>
-        )}
-      </div>
+      <CodeEditorToolbar
+        isAutoCompleted={isAutoCompleted}
+        isPresenter={isPresenter}
+        hasPresenter={hasPresenter}
+        onToggleAutoComplete={toggleAutoComplete}
+        onBecomePresenter={becomePresenter}
+        onCancelPresenter={cancelPresenter}
+        language={codeLanguage}
+        onLanguageChange={changeLanguage}
+        isOnlyMycursor={onlyMyCursor}
+        onToggleOnlyMyCursor={toggleOnlyMyCursor}
+      />
 
       {/* 코드에디터 */}
       <Editor
         width="100%"
         height="100%"
         theme="vs-dark"
-        defaultLanguage={language}
+        defaultLanguage={codeLanguage}
         onMount={handleMount}
         options={{
           automaticLayout: true,
