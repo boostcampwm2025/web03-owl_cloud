@@ -1,15 +1,16 @@
 'use client';
 
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import * as Y from 'yjs';
+import * as awarenessProtocol from 'y-protocols/awareness';
+import { io, Socket } from 'socket.io-client';
+
 import { colorFromClientId, injectCursorStyles } from '@/utils/code-editor';
 import { AwarenessState, LanguageState } from '@/types/code-editor';
 import CodeEditorToolbar from './CodeEditorToolbar';
 import { EditorLanguage } from '@/constants/code-editor';
-import { io, Socket } from 'socket.io-client';
-import * as awarenessProtocol from 'y-protocols/awareness';
 
 type CodeEditorProps = {
   autoComplete?: boolean;
