@@ -19,8 +19,15 @@ import {
   getItemStyle,
 } from '@/utils/arrowPanelHelpers';
 
+// 사이드바에서 지원하는 아이템 타입
+const SIDEBAR_TYPES = {
+  shape: 'Shape',
+  arrow: 'Arrow',
+  line: 'Line',
+} as const;
+
 // 사이드 바 선택된 요소 타입
-type SelectionType = 'shape' | 'arrow' | 'line' | null;
+type SelectionType = keyof typeof SIDEBAR_TYPES | null;
 
 export default function Sidebar() {
   // 스토어에서 선택된 아이템 정보 가져오기
@@ -37,36 +44,18 @@ export default function Sidebar() {
   // 선택된 아이템의 타입 결정
   const getSelectionType = (item: typeof selectedItem): SelectionType => {
     if (!item) return null;
-    switch (item.type) {
-      case 'shape':
-        return 'shape';
-      case 'arrow':
-        return 'arrow';
-      case 'line':
-        return 'line';
-      default:
-        return null;
-    }
+    return item.type in SIDEBAR_TYPES ? (item.type as SelectionType) : null;
   };
 
   const selectionType = getSelectionType(selectedItem);
 
   // 선택 타입에 따른 표시될 헤더 제목
   const getHeaderTitle = () => {
-    switch (selectionType) {
-      case 'shape':
-        return 'Shape';
-      case 'arrow':
-        return 'Arrow';
-      case 'line':
-        return 'Line';
-      default:
-        return '';
-    }
+    return selectionType ? SIDEBAR_TYPES[selectionType] : '';
   };
 
   // 선택된 아이템이 없으면 사이드바 표시 안 함
-  if (!selectedItem) {
+  if (!selectedItem || !selectionType) {
     return null;
   }
 
