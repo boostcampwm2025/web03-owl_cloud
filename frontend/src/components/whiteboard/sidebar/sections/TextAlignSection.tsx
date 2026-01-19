@@ -20,17 +20,15 @@ export default function TextAlignSection({
   onChangeAlign,
 }: TextAlignSectionProps) {
   return (
-    <Section title="Align">
-      <ButtonGroup
-        label="Text Align"
-        options={[
-          { value: 'left', icon: AlignLeftIcon },
-          { value: 'center', icon: AlignCenterIcon },
-          { value: 'right', icon: AlignRightIcon },
-        ]}
-        value={align}
-        onChange={onChangeAlign}
-      />
-    </Section>
+    <ButtonGroup
+      label="Align"
+      options={[
+        { value: 'left', icon: AlignLeftIcon },
+        { value: 'center', icon: AlignCenterIcon },
+        { value: 'right', icon: AlignRightIcon },
+      ]}
+      value={align}
+      onChange={onChangeAlign}
+    />
   );
 }
