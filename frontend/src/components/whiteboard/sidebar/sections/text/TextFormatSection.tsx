@@ -18,7 +18,7 @@ interface TextStyleSectionProps {
 
 type StyleValue = 'bold' | 'italic' | 'underline' | 'line-through';
 
-export default function TextStyleSection({
+export default function TextFormatSection({
   fontStyle,
   textDecoration,
   onChangeFontStyle,
@@ -63,7 +63,7 @@ export default function TextStyleSection({
 
   return (
     <MultipleButtonGroup
-      label="Style"
+      label="Format"
       options={[
         { value: 'bold' as const, icon: BoldIcon },
         { value: 'italic' as const, icon: ItalicIcon },

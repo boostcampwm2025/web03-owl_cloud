@@ -3,7 +3,8 @@
 import StrokeColorSection from '@/components/whiteboard/sidebar/sections/StrokeColorSection';
 import TextSizeSection from '@/components/whiteboard/sidebar/sections/text/TextSizeSection';
 import TextAlignSection from '@/components/whiteboard/sidebar/sections/text/TextAlignSection';
-import TextStyleSection from '@/components/whiteboard/sidebar/sections/text/TextStyleSection';
+import TextFormatSection from '@/components/whiteboard/sidebar/sections/text/TextFormatSection';
+import Section from '@/components/whiteboard/sidebar/ui/Section';
 import type { TextSize } from './textPresets';
 import type { TextAlignment } from '@/types/whiteboard/base';
 
@@ -37,24 +38,27 @@ export default function TextPanel({
     <div className="flex flex-col gap-2">
       {/* 텍스트 색상 설정 섹션 */}
       <StrokeColorSection
+        title="Color"
         color={fill}
         onChange={onChangeFill}
         allowTransparent={false}
       />
 
-      {/* 텍스트 크기 설정 섹션 */}
-      <TextSizeSection size={size} onChangeSize={onChangeSize} />
+      <Section title="Style">
+        {/* 텍스트 크기 설정 섹션 */}
+        <TextSizeSection size={size} onChangeSize={onChangeSize} />
 
-      {/* 텍스트 정렬 설정 섹션 */}
-      <TextAlignSection align={align} onChangeAlign={onChangeAlign} />
+        {/* 텍스트 정렬 설정 섹션 */}
+        <TextAlignSection align={align} onChangeAlign={onChangeAlign} />
 
-      {/* 텍스트 스타일 설정 섹션 */}
-      <TextStyleSection
-        fontStyle={fontStyle}
-        textDecoration={textDecoration}
-        onChangeFontStyle={onChangeFontStyle}
-        onChangeTextDecoration={onChangeTextDecoration}
-      />
+        {/* 텍스트 스타일 설정 섹션 */}
+        <TextFormatSection
+          fontStyle={fontStyle}
+          textDecoration={textDecoration}
+          onChangeFontStyle={onChangeFontStyle}
+          onChangeTextDecoration={onChangeTextDecoration}
+        />
+      </Section>
     </div>
   );
 }
