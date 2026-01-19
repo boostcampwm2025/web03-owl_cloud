@@ -1,13 +1,5 @@
 // PanelType 정의 : 묶어져 있는 것들 -> Panel 형태로 제공
-export type PanelType =
-  | 'cursor'
-  | 'shape'
-  | 'arrow'
-  | 'line'
-  | 'text'
-  | 'media'
-  | 'stack'
-  | null;
+export type PanelType = 'shape' | 'media' | 'stack' | null;
 
 // ToolType 정의 : whiteboard에서 사용되는 모든 도구의 종류
 // 마우스 동작(cursor) 관련 : move / select
