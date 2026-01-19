@@ -125,7 +125,41 @@ export default function ToolbarContainer() {
           activeBgColor="bg-sky-100"
         />
 
-        <div className="h-7 w-px bg-neutral-200" />
+        <NavButton
+          icon={TriangleIcon}
+          label="도형"
+          isActive={SHAPE_TOOLS.includes(activeTool) || activePanel === 'shape'}
+          onClick={(e) => {
+            togglePanel('shape', e);
+            setCursorMode('select');
+            setActiveTool('select');
+          }}
+          bgColor="bg-white"
+          hvColor="bg-neutral-100"
+          activeBgColor="bg-neutral-100"
+        />
+
+        <NavButton
+          icon={ArrowIcon}
+          label="화살표"
+          onClick={() => handleAddItem(handleAddArrow)}
+          bgColor="bg-white"
+          hvColor="bg-neutral-100"
+          activeBgColor="bg-sky-100"
+        />
+
+        <NavButton
+          icon={LineIcon}
+          label="선"
+          onClick={() => {
+            setCursorMode('select');
+            setActiveTool('select');
+            setActivePanel(null);
+          }}
+          bgColor="bg-white"
+          hvColor="bg-neutral-100"
+          activeBgColor="bg-sky-100"
+        />
 
         <NavButton
           icon={PenIcon}
@@ -156,42 +190,6 @@ export default function ToolbarContainer() {
         />
 
         <NavButton
-          icon={TriangleIcon}
-          label="도형"
-          isActive={SHAPE_TOOLS.includes(activeTool) || activePanel === 'shape'}
-          onClick={(e) => {
-            togglePanel('shape', e);
-            setCursorMode('select');
-            setActiveTool('select');
-          }}
-          bgColor="bg-white"
-          hvColor="bg-neutral-100"
-          activeBgColor="bg-neutral-100"
-        />
-
-        <NavButton
-          icon={LineIcon}
-          label="선"
-          onClick={() => {
-            setCursorMode('select');
-            setActiveTool('select');
-            setActivePanel(null);
-          }}
-          bgColor="bg-white"
-          hvColor="bg-neutral-100"
-          activeBgColor="bg-sky-100"
-        />
-
-        <NavButton
-          icon={ArrowIcon}
-          label="화살표"
-          onClick={() => handleAddItem(handleAddArrow)}
-          bgColor="bg-white"
-          hvColor="bg-neutral-100"
-          activeBgColor="bg-sky-100"
-        />
-
-        <NavButton
           icon={ImageIcon}
           label="미디어"
           isActive={MEDIA_TOOLS.includes(activeTool) || activePanel === 'media'}
@@ -213,8 +211,6 @@ export default function ToolbarContainer() {
           bgColor="bg-white"
           activeBgColor="bg-sky-100 text-sky-600"
         /> */}
-
-        <div className="h-7 w-px bg-neutral-200" />
 
         <NavButton
           icon={EraserIcon}
