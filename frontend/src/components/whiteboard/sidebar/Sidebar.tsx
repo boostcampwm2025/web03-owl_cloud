@@ -7,6 +7,9 @@ import ShapePanel from '@/components/whiteboard/sidebar/panels/ShapePanel';
 import ArrowPanel from '@/components/whiteboard/sidebar/panels/ArrowPanel';
 import LinePanel from '@/components/whiteboard/sidebar/panels/LinePanel';
 
+import { StrokeStyleType } from '@/components/whiteboard/sidebar/sections/StrokeStyleSection';
+import { EdgeType } from '@/components/whiteboard/sidebar/sections/EdgesSection';
+
 import { useCanvasStore } from '@/store/useCanvasStore';
 import type { ArrowItem, LineItem, ShapeItem } from '@/types/whiteboard';
 import {
@@ -51,6 +54,36 @@ export default function Sidebar() {
 
   const selectionType = getSelectionType(selectedItem);
 
+  // Dash 배열([10, 5]) -> 스타일 문자열('dashed')
+  const getStrokeStyle = (
+    dash: number[] | undefined,
+    width: number,
+  ): StrokeStyleType => {
+    if (!dash || dash.length === 0) return 'solid';
+    // 점선 패턴이 짧으면(두께와 비슷하면) dotted로 간주
+    if (dash[0] <= width * 1.5) return 'dotted';
+    return 'dashed';
+  };
+
+  // 스타일 문자열 -> Dash 배열 계산
+  const getDashArray = (style: StrokeStyleType, width: number): number[] => {
+    switch (style) {
+      case 'solid':
+        return [];
+      case 'dashed':
+        return [width * 4, width * 2];
+      case 'dotted':
+        return [width, width];
+      default:
+        return [];
+    }
+  };
+
+  // CornerRadius 숫자(20) -> 엣지 타입('round')
+  const getEdgeType = (radius: number | undefined): EdgeType => {
+    return radius && radius > 0 ? 'round' : 'sharp';
+  };
+
   // 선택 타입에 따른 표시될 헤더 제목
   const getHeaderTitle = () => {
     switch (selectionType) {
@@ -84,14 +117,61 @@ export default function Sidebar() {
         {/* shape */}
         {selectionType === 'shape' && (
           <ShapePanel
-            strokeColor={(selectedItem as ShapeItem).stroke}
-            backgroundColor={(selectedItem as ShapeItem).fill}
+            // 테두리 색상
+            strokeColor={(selectedItem as ShapeItem).stroke ?? '#000000'}
+            // 배경 색상
+            backgroundColor={(selectedItem as ShapeItem).fill ?? 'transparent'}
+            // 테두리 두께
+            strokeWidth={(selectedItem as ShapeItem).strokeWidth ?? 2}
+            // 선 스타일
+            strokeStyle={getStrokeStyle(
+              (selectedItem as ShapeItem).dash,
+              (selectedItem as ShapeItem).strokeWidth ?? 2,
+            )}
+            // 투명도
+            opacity={(selectedItem as ShapeItem).opacity ?? 1}
+            // 모서리 타입
+            edgeType={getEdgeType((selectedItem as ShapeItem).cornerRadius)}
+            // 테두리 색상 변경
             onChangeStrokeColor={(color) =>
               updateItem(selectedId!, { stroke: color })
             }
+            // 배경 색상 변경 핸들러 연결
             onChangeBackgroundColor={(color) =>
               updateItem(selectedId!, { fill: color })
             }
+            // 테두리 두께 변경 (두께가 바뀌면 점선 간격 비율에 맞게 재계산)
+            onChangeStrokeWidth={(width) => {
+              const currentItem = selectedItem as ShapeItem;
+              const currentStyle = getStrokeStyle(
+                currentItem.dash,
+                currentItem.strokeWidth ?? 2,
+              );
+              // 스타일 유지하면서 새로운 두께에 맞는 dash 배열 생성
+              const newDash = getDashArray(currentStyle, width);
+
+              updateItem(selectedId!, {
+                strokeWidth: width,
+                dash: newDash,
+              });
+            }}
+            // 선 스타일 변경 (solid, dashed, dotted)
+            onChangeStrokeStyle={(style) => {
+              const width = (selectedItem as ShapeItem).strokeWidth ?? 2;
+              updateItem(selectedId!, { dash: getDashArray(style, width) });
+            }}
+            // 모서리 변경 (sharp, round)
+            onChangeEdgeType={(type) => {
+              // round : 20
+              // sharp : 0
+              updateItem(selectedId!, {
+                cornerRadius: type === 'round' ? 20 : 0,
+              });
+            }}
+            // 투명도 변경
+            onChangeOpacity={(opacity) => {
+              updateItem(selectedId!, { opacity });
+            }}
           />
         )}
 

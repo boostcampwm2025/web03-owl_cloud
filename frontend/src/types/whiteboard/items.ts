@@ -67,6 +67,9 @@ export interface ShapeItem extends BaseItem {
   stroke: string;
   strokeWidth: number;
   rotation: number;
+  opacity?: number;
+  dash?: number[];
+  cornerRadius?: number;
 }
 
 // Image Item

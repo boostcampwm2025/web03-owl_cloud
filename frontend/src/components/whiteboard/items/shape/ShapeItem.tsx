@@ -39,6 +39,9 @@ export default function ShapeItem({
   const h = shapeItem.height;
   const isCircle = shapeItem.shapeType === 'circle';
 
+  // 모서리 둥글기 여부
+  const isRoundEdge = !!shapeItem.cornerRadius && shapeItem.cornerRadius > 0;
+
   const commonProps = {
     id: shapeItem.id,
     draggable: isDraggable,
@@ -49,6 +52,14 @@ export default function ShapeItem({
     fill: shapeItem.fill,
     stroke: shapeItem.stroke,
     strokeWidth: shapeItem.strokeWidth,
+
+    opacity: shapeItem.opacity ?? 1,
+    dash: shapeItem.dash,
+
+    // 모서리 둥글기 설정 : round - 둥근 모서리 / miter - 각진 모서리
+    lineJoin: (isRoundEdge ? 'round' : 'miter') as 'round' | 'miter',
+    lineCap: 'round' as const,
+
     onMouseDown: onSelect,
     onTouchStart: onSelect,
     onMouseEnter: onMouseEnter,
@@ -115,6 +126,7 @@ export default function ShapeItem({
         {...commonProps}
         width={shapeItem.width}
         height={shapeItem.height}
+        cornerRadius={shapeItem.cornerRadius}
       />
     );
   }
