@@ -7,7 +7,7 @@ import ColorPicker from '@/components/whiteboard/sidebar/ui/ColorPicker';
 interface BackgroundColorSectionProps {
   color: string;
   onChange: (color: string) => void;
-  allowTransparent: boolean;
+  allowTransparent?: boolean;
 }
 
 export default function BackgroundColorSection({
