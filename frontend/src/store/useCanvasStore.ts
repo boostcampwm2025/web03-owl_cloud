@@ -7,12 +7,19 @@ import {
 } from '@/components/whiteboard/constants/canvas';
 
 import type {
+  WhiteboardItem,
   TextItem,
   ArrowItem,
+  DrawingItem,
   ShapeItem,
   ShapeType,
-  WhiteboardItem,
+  ImageItem,
+  VideoItem,
+  YoutubeItem,
+  CursorMode,
 } from '@/types/whiteboard';
+
+import { extractYoutubeId } from '@/utils/youtube';
 
 interface CanvasState {
   // viewport State
@@ -45,8 +52,32 @@ interface CanvasState {
     type: ShapeType,
     payload?: Partial<Omit<ShapeItem, 'id' | 'type' | 'shapeType'>>,
   ) => void;
+  addImage: (payload: {
+    src: string;
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+  }) => void;
+  addVideo: (payload: {
+    src: string;
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+  }) => void;
+  addYoutube: (url: string) => void;
 
-  // Item Modification
+  // 커서 모드
+  cursorMode: CursorMode;
+  setCursorMode: (mode: CursorMode) => void;
+
+  // 자유 그리기
+  currentDrawing: DrawingItem | null;
+  startDrawing: (x: number, y: number) => void;
+  continueDrawing: (x: number, y: number) => void;
+  finishDrawing: () => void;
+
   updateItem: (id: string, payload: Partial<WhiteboardItem>) => void;
   deleteItem: (id: string) => void;
   bringToFront: (id: string) => void;
@@ -55,7 +86,7 @@ interface CanvasState {
   sendBackward: (id: string) => void;
 }
 
-export const useCanvasStore = create<CanvasState>((set) => ({
+export const useCanvasStore = create<CanvasState>((set, get) => ({
   // Stage State 초기값
   // StageScale : 줌 배율 / stagePos : 카메라 위치,중앙 정렬
   stageScale: 1,
@@ -137,6 +168,60 @@ export const useCanvasStore = create<CanvasState>((set) => ({
       };
     }),
 
+  cursorMode: 'select',
+  setCursorMode: (mode) => set({ cursorMode: mode }),
+
+  currentDrawing: null,
+
+  // 그리기
+  startDrawing: (x, y) => {
+    const newDrawing: DrawingItem = {
+      id: uuidv4(),
+      type: 'drawing',
+      points: [x, y],
+      stroke: '#111827',
+      strokeWidth: 10,
+      scaleX: 1,
+      scaleY: 1,
+      rotation: 0,
+    };
+    set({ currentDrawing: newDrawing });
+  },
+
+  continueDrawing: (x, y) => {
+    const state = get();
+    if (!state.currentDrawing) return;
+
+    const points = state.currentDrawing.points;
+    const lastX = points[points.length - 2];
+    const lastY = points[points.length - 1];
+
+    const distance = Math.sqrt(Math.pow(x - lastX, 2) + Math.pow(y - lastY, 2));
+
+    if (distance < 2) return;
+
+    const updatedDrawing = {
+      ...state.currentDrawing,
+      points: [...points, x, y],
+    };
+
+    set({ currentDrawing: updatedDrawing });
+  },
+
+  finishDrawing: () => {
+    const state = get();
+    if (!state.currentDrawing) return;
+
+    if (state.currentDrawing.points.length >= 4) {
+      set((state) => ({
+        items: [...state.items, state.currentDrawing!],
+        currentDrawing: null,
+      }));
+    } else {
+      set({ currentDrawing: null });
+    }
+  },
+
   // 도형 추가
   addShape: (type, payload) =>
     set((state) => {
@@ -157,6 +242,93 @@ export const useCanvasStore = create<CanvasState>((set) => ({
 
       return {
         items: [...state.items, newShape],
+        selectedId: id,
+      };
+    }),
+
+  // 이미지 추가
+  addImage: (payload) =>
+    set((state) => {
+      const id = uuidv4();
+      const newImage: ImageItem = {
+        id,
+        type: 'image',
+        src: payload.src,
+        x: payload.x ?? state.canvasWidth / 2 - 250,
+        y: payload.y ?? state.canvasHeight / 2 - 125,
+        width: payload.width ?? 500,
+        height: payload.height ?? 250,
+        rotation: 0,
+        stroke: undefined,
+        strokeWidth: 0,
+        cornerRadius: 0,
+        opacity: 1,
+      };
+
+      return {
+        items: [...state.items, newImage],
+        selectedId: id,
+      };
+    }),
+
+  // 비디오 추가
+  addVideo: (payload) =>
+    set((state) => {
+      const id = uuidv4();
+      const newVideo: VideoItem = {
+        id,
+        type: 'video',
+        src: payload.src,
+        x: payload.x ?? state.canvasWidth / 2 - 250,
+        y: payload.y ?? state.canvasHeight / 2 - 125,
+        width: payload.width ?? 500,
+        height: payload.height ?? 250,
+        rotation: 0,
+        stroke: undefined,
+        strokeWidth: 0,
+        cornerRadius: 0,
+        opacity: 1,
+      };
+
+      return {
+        items: [...state.items, newVideo],
+        selectedId: id,
+      };
+    }),
+
+  // 유튜브 Item 추가
+  addYoutube: (url) =>
+    set((state) => {
+      const videoId = extractYoutubeId(url);
+
+      // 유효하지 않은 URL 입력시 alert 띄우고 중단
+      if (!videoId) {
+        alert('올바른 유튜브 URL이 아닙니다.');
+        return state;
+      }
+
+      const id = uuidv4();
+      const width = 640;
+      const height = 360;
+
+      const newYoutube: YoutubeItem = {
+        id,
+        type: 'youtube',
+        url,
+        videoId,
+        x: state.canvasWidth / 2 - width / 2,
+        y: state.canvasHeight / 2 - height / 2,
+        width,
+        height,
+        rotation: 0,
+        stroke: undefined,
+        strokeWidth: 0,
+        cornerRadius: 10,
+        opacity: 1,
+      };
+
+      return {
+        items: [...state.items, newYoutube],
         selectedId: id,
       };
     }),

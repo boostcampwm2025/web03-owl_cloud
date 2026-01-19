@@ -43,34 +43,40 @@ export class DeleteDataToCache<T> extends OutboundBaseCache<T> {
   }
 }
 
-
 @Injectable()
 export class UpdateDataToCache<T> extends OutboundBaseCache<T> {
   constructor(cache: T) {
     super(cache);
-  }  
+  }
 
   public async updateKey({
     namespace,
     keyName,
-    updateValue
-  } : {
-    namespace : string,
-    keyName : string,
-    updateValue : any
-  }) : Promise<boolean> | never {
+    updateValue,
+  }: {
+    namespace: string;
+    keyName: string;
+    updateValue: any;
+  }): Promise<boolean> | never {
     throw new NullInterfaceError();
   }
-};
+}
 
 // 여러개를 삭제하고 싶을때 사용하는 pory
 @Injectable()
 export class DeleteDatasToCache<T> extends OutboundBaseCache<T> {
-  constructor(cache : T) {
+  constructor(cache: T) {
     super(cache);
-  };
+  }
 
-  public async deleteNamespaces(namespaces : Array<string>) : Promise<boolean> | never {
+  public async deleteNamespaces(namespaces: Array<string>): Promise<boolean> | never {
+    throw new NullInterfaceError();
+  }
+
+  public async deleteKeyNames(
+    namespace: string,
+    keyNames: Array<string>,
+  ): Promise<boolean> | never {
     throw new NullInterfaceError();
   }
 }

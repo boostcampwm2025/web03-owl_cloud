@@ -1,5 +1,4 @@
-import { RoomEntry } from "../commands/dto";
-
+import { RoomEntry } from '../commands/dto';
 
 export interface RoomRouterRepositoryPort {
   get(roomId: string): RoomEntry | undefined;

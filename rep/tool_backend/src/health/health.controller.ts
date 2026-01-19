@@ -1,10 +1,9 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get } from '@nestjs/common';
 
-
-@Controller("health")
+@Controller('health')
 export class HealthController {
-  @Get("")
+  @Get('')
   healthCheck(): Record<string, number> {
     return { status: 200 };
   }
-};
+}

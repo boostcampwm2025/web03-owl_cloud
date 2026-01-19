@@ -12,14 +12,8 @@ export class User {
   private readonly email: UserProps['email'];
   private readonly nickname: UserProps['nickname'];
   private readonly password_hash: UserProps['password_hash'];
-  private readonly created_at: Exclude<
-    Required<UserProps['created_at']>,
-    undefined
-  >;
-  private readonly updated_at: Exclude<
-    Required<UserProps['updated_at']>,
-    undefined
-  >;
+  private readonly created_at: Exclude<Required<UserProps['created_at']>, undefined>;
+  private readonly updated_at: Exclude<Required<UserProps['updated_at']>, undefined>;
 
   constructor({
     user_id,
@@ -32,9 +26,7 @@ export class User {
     this.user_id = userIdVo(user_id);
     this.email = emailVo(email);
     this.nickname = nicknameVo(nickname);
-    this.password_hash = password_hash
-      ? passwordHashVo(password_hash)
-      : undefined;
+    this.password_hash = password_hash ? passwordHashVo(password_hash) : undefined;
     this.created_at = created_at instanceof Date ? created_at : new Date();
     this.updated_at = updated_at instanceof Date ? updated_at : new Date();
     Object.freeze(this);

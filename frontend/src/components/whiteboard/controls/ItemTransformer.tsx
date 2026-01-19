@@ -21,25 +21,19 @@ export default function ItemTransformer({
   const selectedItem = items.find((item) => item.id === selectedId);
   const isTextSelected = selectedItem?.type === 'text';
   const isArrowSelected = selectedItem?.type === 'arrow';
+  const isDrawingSelected = selectedItem?.type === 'drawing';
 
   // Transformer 연결
   useEffect(() => {
     if (transformerRef.current && stageRef.current) {
       const stage = stageRef.current;
-
-      // 선택된 아이디
-      // Arrow 아이템 선택 : Transformer 비활성화
-      // Arrow 외 아이템 선택 : Transformer 활성화
+      // 선택된 요소가 arrow 라면 Transformer 연결 안함(arrow는 자체 핸들 사용)
       if (selectedId && !isArrowSelected) {
-        // 해당 ID 노드 확인
         const selectedNode = stage.findOne('#' + selectedId);
-        // 노드가 존재하면 Transformer에 연결
         if (selectedNode) {
           transformerRef.current.nodes([selectedNode]);
           transformerRef.current.getLayer()?.batchDraw();
-        }
-        // 노드 존재하지 않으면 Transformer 해제
-        else {
+        } else {
           transformerRef.current.nodes([]);
         }
       } else {
@@ -52,8 +46,6 @@ export default function ItemTransformer({
     <Transformer
       ref={transformerRef}
       enabledAnchors={
-        // Text : 좌우 활성화
-        // Text제외 나머지 : 모든 방향 활성화
         isTextSelected
           ? ['middle-left', 'middle-right']
           : [
@@ -67,44 +59,43 @@ export default function ItemTransformer({
               'middle-right',
             ]
       }
-      // 핸들 스타일
-      // anchorSize : 핸들크기 / anchorCornerRadius : 모서리 둥글기 / anchorStrokeWidth : 테두리 두께
+      rotateEnabled={!isDrawingSelected}
       anchorSize={10}
       anchorCornerRadius={5}
       anchorStrokeWidth={1.5}
-      // anchorStroke : 핸들 테두리 색상 / anchorFill : 핸들 내부 색상
       anchorStroke="#0369A1"
       anchorFill="#ffffff"
-      // borderStroke : 테두리 색상 / borderStrokeWidth : 테두리 두께
       borderStroke="#0369A1"
       borderStrokeWidth={1.5}
-      // 회전 관련 설정
-      // rotationSnaps : 회전 스냅 각도 / rotationSnapTolerance : 스냅 허용 오차
       rotationSnaps={[0, 90, 180, 270]}
       rotationSnapTolerance={10}
-      // 비율 유지 설정
       keepRatio={false}
-      // 최소 크기 제한
-      boundBoxFunc={(_oldBox, newBox) => {
-        if (newBox.width < 5 || newBox.height < 5) {
-          return _oldBox;
-        }
-        return newBox;
-      }}
-      // Text 변형 로직
-      onTransform={(e) => {
-        const node = e.target;
+      boundBoxFunc={(oldBox, newBox) => {
+        // 최소 크기 제한
+        const stage = stageRef.current;
+        const stageScale = stage ? stage.scaleX() : 1;
 
-        if (node.getClassName() === 'Text') {
-          const scaleX = node.scaleX();
+        // 화면 확대 시 최소 크기도 함께 증가시켜야 더 못줄임
+        const minWidth = 30 * stageScale;
+        const minHeight = 30 * stageScale;
 
-          // 스케일 변형시 스케일 1로 고정 및 너비 조절
-          if (scaleX !== 1) {
-            node.scaleX(1);
-            node.width(Math.max(30, node.width() * scaleX));
+        // 너비가 최소값보다 작으면 제한하고 위치 보정
+        if (newBox.width < minWidth) {
+          if (newBox.x !== oldBox.x) {
+            newBox.x = oldBox.x + oldBox.width - minWidth;
           }
-          return;
+          newBox.width = minWidth;
         }
+
+        // 높이가 최소값보다 작으면 제한하고 위치 보정
+        if (newBox.height < minHeight) {
+          if (newBox.y !== oldBox.y) {
+            newBox.y = oldBox.y + oldBox.height - minHeight;
+          }
+          newBox.height = minHeight;
+        }
+
+        return newBox;
       }}
     />
   );

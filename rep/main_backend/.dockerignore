@@ -8,5 +8,5 @@ test
 .gitignore
 .prettierrc
 cz-config.js
-.env
+.env*
 jest.config.js

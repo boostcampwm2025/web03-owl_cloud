@@ -1,27 +1,15 @@
 import { User, OauthUser, UserProfile } from '@domain/user/entities';
-import {
-  OauthUserProps,
-  UserProfileProps,
-  UserProps,
-} from '@domain/user/user.vo';
+import { OauthUserProps, UserProfileProps, UserProps } from '@domain/user/user.vo';
 import { IdGenerator } from '@domain/shared';
 
 // 유저를 생성할때 필요한 타입 정리
-export type CreateUserInput = Pick<
-  UserProps,
-  'email' | 'nickname' | 'password_hash'
->;
+export type CreateUserInput = Pick<UserProps, 'email' | 'nickname' | 'password_hash'>;
 
 // oauth 관련 해서 생성할때 필요한 타입 정리
-export type ConnectOauthInput = Required<
-  Omit<OauthUserProps, 'id' | 'user_id'>
->;
+export type ConnectOauthInput = Required<Omit<OauthUserProps, 'id' | 'user_id'>>;
 
 // user_profile 관련해서 생성할때 필요한 타입 정리
-export type UpsertProfileInput = Pick<
-  UserProfileProps,
-  'user_id' | 'profile_path' | 'mime_type'
->;
+export type UpsertProfileInput = Pick<UserProfileProps, 'user_id' | 'profile_path' | 'mime_type'>;
 
 // 각 entity 진입점
 export class UserAggregate {

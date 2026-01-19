@@ -10,7 +10,7 @@ export class SfuError extends BaseError {
 }
 
 export class SfuErrorMessage extends BaseError {
-  constructor(message : string) {
+  constructor(message: string) {
     super({
       message,
       status: 500,

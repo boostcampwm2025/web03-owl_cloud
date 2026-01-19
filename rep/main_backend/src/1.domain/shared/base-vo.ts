@@ -16,8 +16,7 @@ export function baseVo({
   type: 'string' | 'number' | 'boolean';
 }): void | never {
   // null
-  if (!value || value === '' || value === undefined)
-    throw new NotEmptyError(name);
+  if (!value || value === '' || value === undefined) throw new NotEmptyError(name);
 
   // type 확인
   if (typeof value !== type) throw new NotAllowType({ name, type });
@@ -36,12 +35,12 @@ export function idVo(id: number) {
 }
 
 // uuid랑 관련있음
-export function uuidv7Vo({ uuid, name } : { uuid : string, name : string }) : string {
+export function uuidv7Vo({ uuid, name }: { uuid: string; name: string }): string {
+  baseVo({ name, value: uuid, type: 'string' });
 
-  baseVo({ name, value : uuid, type : "string" });
-
-  const uuidV7Regxp: RegExp = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const uuidV7Regxp: RegExp =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   if (!uuidV7Regxp.test(uuid)) throw new NotTypeUUidV7(name);
 
   return uuid.trim();
-};
+}

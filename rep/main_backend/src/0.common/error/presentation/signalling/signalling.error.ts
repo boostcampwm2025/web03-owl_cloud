@@ -8,3 +8,12 @@ export class NotConnectSignalling extends BaseError {
     });
   }
 }
+
+export class NotValiedTickeKey extends BaseError {
+  constructor() {
+    super({
+      message: '티켓을 만들 비밀키가 없습니다.',
+      status: 500,
+    });
+  }
+}

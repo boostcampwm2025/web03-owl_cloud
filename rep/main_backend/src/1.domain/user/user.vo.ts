@@ -61,8 +61,7 @@ export function emailVo(email: UserProps['email']): string | never {
   email = email.trim();
 
   // email 타입 체크
-  const emailRegexp: RegExp =
-    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const emailRegexp: RegExp = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailRegexp.test(email)) throw new NotTypeEmail();
 
   return email;
@@ -77,8 +76,7 @@ export function nicknameVo(nickname: UserProps['nickname']): string | never {
 
   // nickname 갯수 체크
   const length: number = 16;
-  if (nickname.length > length)
-    throw new NotAllowMaxLengthText({ name, length });
+  if (nickname.length > length) throw new NotAllowMaxLengthText({ name, length });
 
   return nickname;
 }
@@ -113,8 +111,7 @@ export function providerVo(provider: OauthUserProps['provider']) {
 
   baseVo({ name, value: provider, type: 'string' });
   provider = provider.trim().toLowerCase();
-  if (!providerTypes.includes(provider))
-    throw new NotAllowProviderType(providerTypes);
+  if (!providerTypes.includes(provider)) throw new NotAllowProviderType(providerTypes);
 
   return provider;
 }
@@ -127,8 +124,7 @@ export function providerIdVo(provider_id: OauthUserProps['provider_id']) {
   provider_id = provider_id.trim();
 
   const length: number = 255;
-  if (provider_id.length > length)
-    throw new NotAllowMaxLengthText({ name, length });
+  if (provider_id.length > length) throw new NotAllowMaxLengthText({ name, length });
 
   return provider_id;
 }
@@ -141,8 +137,7 @@ export function profilePathVo(profile_path: UserProfileProps['profile_path']) {
   profile_path = profile_path.trim();
 
   const length: number = 255;
-  if (profile_path.length > length)
-    throw new NotAllowMaxLengthText({ name, length });
+  if (profile_path.length > length) throw new NotAllowMaxLengthText({ name, length });
 
   return profile_path;
 }
@@ -163,8 +158,7 @@ export function mimeTypeVo(mime_type: UserProfileProps['mime_type']) {
   baseVo({ name, value: mime_type, type: 'string' });
   mime_type = mime_type.trim().toLowerCase();
 
-  if (!mimeTypeList.includes(mime_type))
-    throw new NotAllowMimeType(mimeTypeList);
+  if (!mimeTypeList.includes(mime_type)) throw new NotAllowMimeType(mimeTypeList);
 
   return mime_type;
 }

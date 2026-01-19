@@ -5,10 +5,7 @@ import { SelectDataFromDb } from '@app/ports/db/db.inbound';
 import { InsertValueToDb } from '@app/ports/db/db.outbound';
 import { CreateUserNormalDto } from '../dto';
 import { UserProps } from '@domain/user/user.vo';
-import {
-  InValidEmailError,
-  NotMakeHashValue,
-} from '@error/application/user/user.error';
+import { InValidEmailError, NotMakeHashValue } from '@error/application/user/user.error';
 import { UserAggregate } from '@domain/user/user.aggregate';
 
 type SignUpUsecaseValuesProps = {
@@ -47,11 +44,10 @@ export class SignUpUsecase<T> {
   // email, nickname, password dto 제공
   public async execute(dto: CreateUserNormalDto): Promise<boolean> {
     // 1. 이메일 중복 확인
-    const userEntity: UserProps | undefined =
-      await this.selectDataWhereEmailFromDb.select({
-        attributeName: this.usecaseValues.emailAttributeName,
-        attributeValue: dto.email,
-      });
+    const userEntity: UserProps | undefined = await this.selectDataWhereEmailFromDb.select({
+      attributeName: this.usecaseValues.emailAttributeName,
+      attributeValue: dto.email,
+    });
     if (userEntity) throw new InValidEmailError();
 
     // 2. 비밀번호 해쉬화
@@ -70,8 +66,7 @@ export class SignUpUsecase<T> {
       const newUserData: UserProps = userAggregate.getUserData();
 
       // 4. 유저 정보 저장
-      const insertChecked: boolean =
-        await this.insertUserDataToDb.insert(newUserData);
+      const insertChecked: boolean = await this.insertUserDataToDb.insert(newUserData);
 
       return insertChecked;
     } else throw new NotMakeHashValue(); // 해시 생성 안됨

@@ -1,8 +1,4 @@
-import {
-  InvalidTokenError,
-  NotMakeJwtToken,
-  TokenExpiredError,
-} from '@error/infra/infra.error';
+import { InvalidTokenError, NotMakeJwtToken, TokenExpiredError } from '@error/infra/infra.error';
 import { Payload, TokenDto } from '@app/auth/commands/dto';
 import { TokenIssuer } from '@app/auth/ports';
 import { Injectable } from '@nestjs/common';
@@ -34,18 +30,9 @@ export class JwtTokenIssuer extends TokenIssuer {
     secret_key: string;
     expired_time: string;
   }): Promise<string> {
-    const issuer: string = this.config.get<string>(
-      'NODE_APP_JWT_ISSUE_NAME',
-      'issuer',
-    );
-    const audience: string = this.config.get<string>(
-      'NODE_APP_JWT_AUDIENCE_NAME',
-      'audience',
-    );
-    const algorithm: string = this.config.get<string>(
-      'NODE_APP_JWT_ALGORITHM',
-      'HS256',
-    );
+    const issuer: string = this.config.get<string>('NODE_APP_JWT_ISSUE_NAME', 'issuer');
+    const audience: string = this.config.get<string>('NODE_APP_JWT_AUDIENCE_NAME', 'audience');
+    const algorithm: string = this.config.get<string>('NODE_APP_JWT_ALGORITHM', 'HS256');
 
     const secret: Uint8Array = new TextEncoder().encode(secret_key);
 
@@ -62,26 +49,14 @@ export class JwtTokenIssuer extends TokenIssuer {
   public async makeIssuer(payload: Payload): Promise<TokenDto> {
     // secret key
     const secretKeys: TokenSecretProps = {
-      access_token_secret: this.config.get<string>(
-        'NODE_APP_JWT_ACCESS_SECRET_KEY',
-        'access',
-      ),
-      refresh_token_secret: this.config.get<string>(
-        'NODE_APP_JWT_REFRESH_SECRET_KEY',
-        'refresh',
-      ),
+      access_token_secret: this.config.get<string>('NODE_APP_JWT_ACCESS_SECRET_KEY', 'access'),
+      refresh_token_secret: this.config.get<string>('NODE_APP_JWT_REFRESH_SECRET_KEY', 'refresh'),
     };
 
     // expired time
     const expiredTimes: TokenExpiredProps = {
-      access_token_expired: this.config.get<string>(
-        'NODE_APP_JWT_ACCESS_EXPIRED_TIME',
-        '1m',
-      ),
-      refresh_token_expired: this.config.get<string>(
-        'NODE_APP_JWT_REFRESH_EXPIRED_TIME',
-        '1h',
-      ),
+      access_token_expired: this.config.get<string>('NODE_APP_JWT_ACCESS_EXPIRED_TIME', '1m'),
+      refresh_token_expired: this.config.get<string>('NODE_APP_JWT_REFRESH_EXPIRED_TIME', '1h'),
     };
 
     const access_token: string = await this.makeJwt({
@@ -112,31 +87,16 @@ export class JwtAccessTokenIssuer extends TokenIssuer {
 
   constructor(private readonly config: ConfigService) {
     super();
-    this.secretKey = config.get<string>(
-      'NODE_APP_JWT_ACCESS_SECRET_KEY',
-      'secretKey',
-    );
+    this.secretKey = config.get<string>('NODE_APP_JWT_ACCESS_SECRET_KEY', 'secretKey');
   }
 
   private async makeJwtAccessToken(payload: Payload): Promise<string> {
     // access_token으로 기본 셋팅 되어 있음
-    const issuer: string = this.config.get<string>(
-      'NODE_APP_JWT_ISSUE_NAME',
-      'issuer',
-    );
-    const audience: string = this.config.get<string>(
-      'NODE_APP_JWT_AUDIENCE_NAME',
-      'audience',
-    );
-    const algorithm: string = this.config.get<string>(
-      'NODE_APP_JWT_ALGORITHM',
-      'HS256',
-    );
+    const issuer: string = this.config.get<string>('NODE_APP_JWT_ISSUE_NAME', 'issuer');
+    const audience: string = this.config.get<string>('NODE_APP_JWT_AUDIENCE_NAME', 'audience');
+    const algorithm: string = this.config.get<string>('NODE_APP_JWT_ALGORITHM', 'HS256');
     const secret_key: string = this.secretKey;
-    const expired_time: string = this.config.get<string>(
-      'NODE_APP_JWT_ACCESS_EXPIRED_TIME',
-      '1m',
-    );
+    const expired_time: string = this.config.get<string>('NODE_APP_JWT_ACCESS_EXPIRED_TIME', '1m');
 
     const secret: Uint8Array = new TextEncoder().encode(secret_key);
 
@@ -165,14 +125,8 @@ export class JwtAccessTokenIssuer extends TokenIssuer {
       const algorithms: Array<string> = [
         this.config.get<string>('NODE_APP_JWT_ALGORITHM', 'HS256'),
       ];
-      const issuer: string = this.config.get<string>(
-        'NODE_APP_JWT_ISSUE_NAME',
-        'issuer',
-      );
-      const audience: string = this.config.get<string>(
-        'NODE_APP_JWT_AUDIENCE_NAME',
-        'audience',
-      );
+      const issuer: string = this.config.get<string>('NODE_APP_JWT_ISSUE_NAME', 'issuer');
+      const audience: string = this.config.get<string>('NODE_APP_JWT_AUDIENCE_NAME', 'audience');
 
       const { payload } = await jose.jwtVerify(token, secretKey, {
         algorithms,
@@ -189,9 +143,7 @@ export class JwtAccessTokenIssuer extends TokenIssuer {
         throw new TokenExpiredError();
       }
 
-      throw new InvalidTokenError(
-        err?.message ?? '토큰에 문제가 발생했습니다.',
-      );
+      throw new InvalidTokenError(err?.message ?? '토큰에 문제가 발생했습니다.');
     }
   }
 }
@@ -202,25 +154,14 @@ export class RefreshTokenHashVerify extends TokenIssuer {
 
   constructor(private readonly config: ConfigService) {
     super();
-    this.secretKey = config.get<string>(
-      'NODE_APP_JWT_REFRESH_SECRET_KEY',
-      'secretKey',
-    );
+    this.secretKey = config.get<string>('NODE_APP_JWT_REFRESH_SECRET_KEY', 'secretKey');
   }
 
   public async tokenVerify(token: string): Promise<Payload> {
     const secretKey: Uint8Array = new TextEncoder().encode(this.secretKey);
-    const algorithms: Array<string> = [
-      this.config.get<string>('NODE_APP_JWT_ALGORITHM', 'HS256'),
-    ];
-    const issuer: string = this.config.get<string>(
-      'NODE_APP_JWT_ISSUE_NAME',
-      'issure',
-    );
-    const audience: string = this.config.get<string>(
-      'NODE_APP_JWT_AUDIENCE_NAME',
-      'audience',
-    );
+    const algorithms: Array<string> = [this.config.get<string>('NODE_APP_JWT_ALGORITHM', 'HS256')];
+    const issuer: string = this.config.get<string>('NODE_APP_JWT_ISSUE_NAME', 'issure');
+    const audience: string = this.config.get<string>('NODE_APP_JWT_AUDIENCE_NAME', 'audience');
 
     const { payload } = await jose.jwtVerify(token, secretKey, {
       algorithms,

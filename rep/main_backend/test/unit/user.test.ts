@@ -136,8 +136,7 @@ describe('domain 레이어에 유저 entity 관련 단위테스트', () => {
     {
       user_id: '018e9a48-3c8a-7b20-bc9d-9f5b8e9f88c0',
       email: 'naxtto@naver.com',
-      password_hash:
-        '$2b$10$C6UzMDM.H6dfI/f/IKcEeOQyZ9k4PpZp3YfL2y0w9nQzFz0QFz3e6',
+      password_hash: '$2b$10$C6UzMDM.H6dfI/f/IKcEeOQyZ9k4PpZp3YfL2y0w9nQzFz0QFz3e6',
       nickname: '완두콩',
       created_at: now,
       updated_at: now,
@@ -180,15 +179,7 @@ describe('domain 레이어에 유저 entity 관련 단위테스트', () => {
 
   test.each(TestCase1)(
     'user entity에 정합성을 파악하는 단위테스트',
-    ({
-      user_id,
-      email,
-      password_hash,
-      nickname,
-      created_at,
-      updated_at,
-      ok,
-    }) => {
+    ({ user_id, email, password_hash, nickname, created_at, updated_at, ok }) => {
       const test1 = () => {
         user_id = user_id as string;
         email = email as string;

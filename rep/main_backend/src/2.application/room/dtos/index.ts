@@ -1,1 +1,1 @@
-export * from "./room-info.dto";
+export * from './room-info.dto';

@@ -1,17 +1,25 @@
 'use client';
 
 import Konva from 'konva';
+import { Text, Arrow, Line } from 'react-konva';
+import { useCanvasStore } from '@/store/useCanvasStore';
+import { useCursorStyle } from '@/hooks/useCursorStyle';
+import { useItemInteraction } from '@/hooks/useItemInteraction';
+import ShapeItem from '@/components/whiteboard/items/shape/ShapeItem';
+import ImageItem from '@/components/whiteboard/items/image/ImageItem';
+import VideoItem from '@/components/whiteboard/items/video/VideoItem';
+import YoutubeItem from '@/components/whiteboard/items/youtube/YoutubeItem';
 
-import { Text, Arrow } from 'react-konva';
 import type {
   TextItem,
   ArrowItem,
+  DrawingItem,
   ShapeItem as ShapeItemType,
+  ImageItem as ImageItemType,
+  VideoItem as VideoItemType,
+  YoutubeItem as YoutubeItemType,
   WhiteboardItem,
 } from '@/types/whiteboard';
-import ShapeItem from '@/components/whiteboard/items/shape/ShapeItem';
-
-import { useCanvasStore } from '@/store/useCanvasStore';
 
 // RenderItem Props
 interface RenderItemProps {
@@ -35,36 +43,52 @@ export default function RenderItem({
 }: RenderItemProps) {
   const setEditingTextId = useCanvasStore((state) => state.setEditingTextId);
 
-  // Mouse Enter 시 커서 모양 변경
-  const handleMouseEnter = (e: Konva.KonvaEventObject<MouseEvent>) => {
-    const container = e.target.getStage()?.container();
-    if (container) container.style.cursor = 'move';
-  };
+  // 아이템 인터랙션 상태
+  const { isInteractive, isDraggable, isListening } = useItemInteraction();
 
-  // Mouse Leave 시 커서 모양 기본값으로 변경
-  const handleMouseLeave = (e: Konva.KonvaEventObject<MouseEvent>) => {
-    const container = e.target.getStage()?.container();
-    if (container) container.style.cursor = 'default';
-  };
+  // 커서 스타일 훅
+  const { handleMouseEnter, handleMouseLeave } = useCursorStyle('move');
 
-  // Text Rendering
+  // 텍스트 렌더링
   if (item.type === 'text') {
     const textItem = item as TextItem;
     return (
       <Text
         {...textItem}
         id={item.id}
-        draggable
-        onMouseDown={() => onSelect(item.id)}
-        onTouchStart={() => onSelect(item.id)}
+        draggable={isDraggable}
+        listening={isListening}
+        onMouseDown={() => isInteractive && onSelect(item.id)}
+        onTouchStart={() => isInteractive && onSelect(item.id)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onDblClick={() => {
+          if (!isInteractive) return;
           setEditingTextId(item.id);
           onSelect(item.id);
         }}
-        onDragEnd={(e) => onChange({ x: e.target.x(), y: e.target.y() })}
+        onDragEnd={(e) => {
+          if (!isInteractive) return;
+          onChange({
+            x: e.target.x(),
+            y: e.target.y(),
+          });
+        }}
+        onTransform={(e) => {
+          if (!isInteractive) return;
+          const node = e.target;
+          const scaleX = node.scaleX();
+          const scaleY = node.scaleY();
+
+          // Transform 중에도 스케일 보정
+          if (scaleX !== 1 || scaleY !== 1) {
+            node.scaleX(1);
+            node.scaleY(1);
+            node.width(node.width() * scaleX);
+          }
+        }}
         onTransformEnd={(e) => {
+          if (!isInteractive) return;
           const node = e.target;
           const scaleX = node.scaleX();
           node.scaleX(1);
@@ -87,14 +111,25 @@ export default function RenderItem({
       <Arrow
         {...arrowItem}
         id={item.id}
-        draggable
+        draggable={isDraggable}
+        listening={isListening}
         hitStrokeWidth={30}
-        onMouseDown={() => onSelect(item.id)}
+        tension={0.5}
+        lineCap="round"
+        lineJoin="round"
+        onMouseDown={() => isInteractive && onSelect(item.id)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        onDblClick={() => onArrowDblClick?.(item.id)}
-        onDragStart={onDragStart}
+        onDblClick={() => {
+          if (!isInteractive) return;
+          onArrowDblClick?.(item.id);
+        }}
+        onDragStart={() => {
+          if (!isInteractive) return;
+          onDragStart?.();
+        }}
         onDragEnd={(e) => {
+          if (!isInteractive) return;
           const pos = e.target.position();
           const newPoints = arrowItem.points.map((p, i) =>
             i % 2 === 0 ? p + pos.x : p + pos.y,
@@ -107,12 +142,130 @@ export default function RenderItem({
     );
   }
 
+  // 그리기 렌더링
+  if (item.type === 'drawing') {
+    const drawingItem = item as DrawingItem;
+    return (
+      <Line
+        {...drawingItem}
+        id={item.id}
+        draggable={isDraggable}
+        listening={isListening}
+        hitStrokeWidth={30}
+        tension={0.4}
+        lineCap="round"
+        lineJoin="round"
+        strokeScaleEnabled={true}
+        onMouseDown={() => isInteractive && onSelect(item.id)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onDragEnd={(e) => {
+          if (!isInteractive) return;
+          const pos = e.target.position();
+          const newPoints = drawingItem.points.map((p, i) =>
+            i % 2 === 0 ? p + pos.x : p + pos.y,
+          );
+
+          e.target.position({ x: 0, y: 0 });
+
+          onChange({
+            points: newPoints,
+          });
+        }}
+        onTransform={(e) => {
+          if (!isInteractive) return;
+          const node = e.target;
+
+          if (node.getClassName() !== 'Line') return;
+          const lineNode = node as Konva.Line;
+
+          const scaleX = lineNode.scaleX();
+          const scaleY = lineNode.scaleY();
+
+          // 현재 points를 가져와서 scale 적용
+          const currentPoints = lineNode.points();
+          const newPoints = currentPoints.map((p, i) =>
+            i % 2 === 0 ? p * scaleX : p * scaleY,
+          );
+
+          lineNode.points(newPoints);
+          lineNode.scaleX(1);
+          lineNode.scaleY(1);
+        }}
+        onTransformEnd={(e) => {
+          if (!isInteractive) return;
+          const node = e.target;
+
+          if (node.getClassName() !== 'Line') return;
+          const lineNode = node as Konva.Line;
+
+          onChange({
+            points: lineNode.points(),
+            rotation: lineNode.rotation(),
+            scaleX: 1,
+            scaleY: 1,
+          });
+        }}
+      />
+    );
+  }
+
   // Shape Rendering
   if (item.type === 'shape') {
     const shapeItem = item as ShapeItemType;
     return (
       <ShapeItem
         shapeItem={shapeItem}
+        isDraggable={isDraggable}
+        isListening={isListening}
+        onSelect={() => isInteractive && onSelect(item.id)}
+        onChange={onChange}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+      />
+    );
+  }
+
+  // Image Rendering
+  if (item.type === 'image') {
+    const imageItem = item as ImageItemType;
+    return (
+      <ImageItem
+        imageItem={imageItem}
+        onSelect={() => onSelect(item.id)}
+        onChange={onChange}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+      />
+    );
+  }
+
+  // Video Rendering
+  if (item.type === 'video') {
+    const videoItem = item as VideoItemType;
+    return (
+      <VideoItem
+        videoItem={videoItem}
+        onSelect={() => onSelect(item.id)}
+        onChange={onChange}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+      />
+    );
+  }
+
+  // Youtube Rendering
+  if (item.type === 'youtube') {
+    const youtubeItem = item as YoutubeItemType;
+    return (
+      <YoutubeItem
+        youtubeItem={youtubeItem}
         onSelect={() => onSelect(item.id)}
         onChange={onChange}
         onMouseEnter={handleMouseEnter}

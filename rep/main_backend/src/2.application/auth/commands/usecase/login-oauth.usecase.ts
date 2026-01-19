@@ -5,10 +5,7 @@ import { MakeHashPort } from '@app/ports/share';
 import { TokenIssuer } from '@app/auth/ports';
 import { InsertDataToCache } from '@app/ports/cache/cache.outbound';
 import { type OauthUserProps, type UserProps } from '@domain/user/user.vo';
-import {
-  NotAllowOauthLoginError,
-  NotValidEmailError,
-} from '@error/application/user/user.error';
+import { NotAllowOauthLoginError, NotValidEmailError } from '@error/application/user/user.error';
 
 type LoginOauthUsecaseValueProps = {
   emailAttributeName: string;
@@ -39,10 +36,7 @@ export type InsertCacheDataProps = {
 
 @Injectable()
 export class LoginOauthUsecase<T1, T2> {
-  private readonly usecaseValues: LoginOauthUsecaseProps<
-    T1,
-    T2
-  >['usecaseValues'];
+  private readonly usecaseValues: LoginOauthUsecaseProps<T1, T2>['usecaseValues'];
   private readonly selectUserAndOauthWhereEmailFromDb: LoginOauthUsecaseProps<
     T1,
     T2
@@ -65,8 +59,7 @@ export class LoginOauthUsecase<T1, T2> {
     insertRefreshDataToCache,
   }: LoginOauthUsecaseProps<T1, T2>) {
     this.usecaseValues = usecaseValues;
-    this.selectUserAndOauthWhereEmailFromDb =
-      selectUserAndOauthWhereEmailFromDb;
+    this.selectUserAndOauthWhereEmailFromDb = selectUserAndOauthWhereEmailFromDb;
     this.tokenIssuersInterfaceMakeIssuer = tokenIssuersInterfaceMakeIssuer;
     this.makeHash = makeHash;
     this.insertRefreshDataToCache = insertRefreshDataToCache;
@@ -82,10 +75,7 @@ export class LoginOauthUsecase<T1, T2> {
     if (!oauthUser) throw new NotValidEmailError();
 
     // 2. provider, provider_id 검증
-    if (
-      oauthUser.provider !== dto.provider ||
-      oauthUser.provider_id !== dto.provider_id
-    )
+    if (oauthUser.provider !== dto.provider || oauthUser.provider_id !== dto.provider_id)
       throw new NotAllowOauthLoginError();
 
     // 3. tokens 생성
@@ -94,13 +84,10 @@ export class LoginOauthUsecase<T1, T2> {
       email: oauthUser.email,
       nickname: oauthUser.nickname,
     };
-    const issueTokens: TokenDto =
-      await this.tokenIssuersInterfaceMakeIssuer.makeIssuer(payload);
+    const issueTokens: TokenDto = await this.tokenIssuersInterfaceMakeIssuer.makeIssuer(payload);
 
     // 4. refresh_tokens hash화
-    const refresh_token_hash: string = await this.makeHash.makeHash(
-      issueTokens.refresh_token,
-    );
+    const refresh_token_hash: string = await this.makeHash.makeHash(issueTokens.refresh_token);
 
     // 5. refresh_token_hash 저장
     const insertData: InsertCacheDataProps = {

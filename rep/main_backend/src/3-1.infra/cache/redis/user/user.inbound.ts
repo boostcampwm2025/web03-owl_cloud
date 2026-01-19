@@ -5,9 +5,7 @@ import { REDIS_SERVER } from '../../cache.constants';
 
 /** hset으로 저장된 데이터에서 값을 가져오고 싶을때 사용 */
 @Injectable()
-export class SelectHsetDataFromRedis extends SelectDataFromCache<
-  RedisClientType<any, any>
-> {
+export class SelectHsetDataFromRedis extends SelectDataFromCache<RedisClientType<any, any>> {
   constructor(@Inject(REDIS_SERVER) cache: RedisClientType<any, any>) {
     super(cache);
   }

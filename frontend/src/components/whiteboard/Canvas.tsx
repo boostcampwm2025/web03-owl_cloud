@@ -3,7 +3,7 @@
 import { useRef, useState, useMemo } from 'react';
 
 import Konva from 'konva';
-import { Stage, Layer, Rect } from 'react-konva';
+import { Stage, Layer, Rect, Line } from 'react-konva';
 
 import type { WhiteboardItem, TextItem, ArrowItem } from '@/types/whiteboard';
 
@@ -13,6 +13,7 @@ import { useWindowSize } from '@/hooks/useWindowSize';
 import { useCanvasInteraction } from '@/hooks/useCanvasInteraction';
 import { useCanvasShortcuts } from '@/hooks/useCanvasShortcuts';
 import { useArrowHandles } from '@/hooks/useArrowHandles';
+import { useCanvasMouseEvents } from '@/hooks/useCanvasMouseEvents';
 
 import RenderItem from '@/components/whiteboard/items/RenderItem';
 import TextArea from '@/components/whiteboard/items/text/TextArea';
@@ -53,6 +54,7 @@ export default function Canvas() {
 
   const isArrowSelected = selectedItem?.type === 'arrow';
 
+  // 화살표 훅
   const {
     selectedHandleIndex,
     setSelectedHandleIndex,
@@ -68,12 +70,7 @@ export default function Canvas() {
     updateItem,
   });
 
-  useCanvasShortcuts({
-    isArrowSelected,
-    selectedHandleIndex,
-    deleteControlPoint,
-  });
-
+  // 선택 해제 핸들러
   const handleCheckDeselect = (
     e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
   ) => {
@@ -87,6 +84,21 @@ export default function Canvas() {
       setSelectedHandleIndex(null);
     }
   };
+
+  // 마우스 이벤트 통합 훅
+  const { handleMouseDown, handleMouseMove, handleMouseUp, currentDrawing } =
+    useCanvasMouseEvents({
+      onDeselect: handleCheckDeselect,
+    });
+
+  // 캔버스 드래그 가능 여부
+  const isDraggable = useCanvasStore((state) => state.cursorMode === 'move');
+
+  useCanvasShortcuts({
+    isArrowSelected,
+    selectedHandleIndex,
+    deleteControlPoint,
+  });
 
   const handleItemChange = (
     id: string,
@@ -103,7 +115,7 @@ export default function Canvas() {
         ref={stageRef}
         width={size.width}
         height={size.height}
-        draggable
+        draggable={isDraggable}
         x={stagePos.x}
         y={stagePos.y}
         scaleX={stageScale}
@@ -111,7 +123,10 @@ export default function Canvas() {
         onWheel={handleWheel}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
-        onMouseDown={handleCheckDeselect}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
         onTouchStart={handleCheckDeselect}
       >
         <Layer
@@ -120,6 +135,7 @@ export default function Canvas() {
           clipWidth={canvasWidth}
           clipHeight={canvasHeight}
         >
+          {/* Canvas 경계 */}
           <Rect
             name="bg-rect"
             x={0}
@@ -132,6 +148,7 @@ export default function Canvas() {
             listening={true}
           />
 
+          {/* 아이템 렌더링 */}
           {items.map((item) => (
             <RenderItem
               key={item.id}
@@ -155,6 +172,7 @@ export default function Canvas() {
             />
           ))}
 
+          {/* 화살표 핸들 (드래그 중이 아닐 때만) */}
           {isArrowSelected && selectedItem && !isDraggingArrow && (
             <ArrowHandles
               arrow={selectedItem as ArrowItem}
@@ -166,6 +184,19 @@ export default function Canvas() {
             />
           )}
 
+          {/* 그리는 중인 선 */}
+          {currentDrawing && (
+            <Line
+              points={currentDrawing.points}
+              stroke={currentDrawing.stroke}
+              strokeWidth={currentDrawing.strokeWidth}
+              tension={0.5}
+              lineCap="round"
+              lineJoin="round"
+            />
+          )}
+
+          {/* Transformer */}
           <ItemTransformer
             selectedId={selectedId}
             items={items}
@@ -174,6 +205,7 @@ export default function Canvas() {
         </Layer>
       </Stage>
 
+      {/* 텍스트 편집 모드 */}
       {editingTextId && editingItem && (
         <TextArea
           textId={editingTextId}

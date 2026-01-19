@@ -44,35 +44,62 @@ export const useCanvasInteraction = (
     return { x, y };
   };
 
-  // 마우스 휠로 줌 인/아웃
+  // 줌 인/아웃, 스크롤
   const handleWheel = (e: KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
 
     const stage = e.target.getStage();
     if (!stage) return;
 
-    const oldScale = stage.scaleX();
-    const pointer = stage.getPointerPosition();
-    if (!pointer) return;
+    // Ctrl 키가 눌려있으면 줌
+    if (e.evt.ctrlKey || e.evt.metaKey) {
+      // 줌 로직
+      const oldScale = stage.scaleX();
+      const pointer = stage.getPointerPosition();
+      if (!pointer) return;
 
-    const rawScale =
-      e.evt.deltaY < 0 ? oldScale * SCALE_BY : oldScale / SCALE_BY;
-    const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, rawScale));
+      const rawScale =
+        e.evt.deltaY < 0 ? oldScale * SCALE_BY : oldScale / SCALE_BY;
+      const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, rawScale));
 
-    if (newScale === oldScale) return;
+      if (newScale === oldScale) return;
 
-    const mousePointTo = {
-      x: (pointer.x - stage.x()) / oldScale,
-      y: (pointer.y - stage.y()) / oldScale,
-    };
+      const mousePointTo = {
+        x: (pointer.x - stage.x()) / oldScale,
+        y: (pointer.y - stage.y()) / oldScale,
+      };
 
-    const newPos = {
-      x: pointer.x - mousePointTo.x * newScale,
-      y: pointer.y - mousePointTo.y * newScale,
-    };
+      const newPos = {
+        x: pointer.x - mousePointTo.x * newScale,
+        y: pointer.y - mousePointTo.y * newScale,
+      };
 
-    setStageScale(newScale);
-    setStagePos(constrainStagePosition(newPos, newScale));
+      setStageScale(newScale);
+      setStagePos(constrainStagePosition(newPos, newScale));
+    } else if (e.evt.shiftKey) {
+      // shift키 있으면 좌우 스크롤
+      const currentPos = stage.position();
+      const currentScale = stage.scaleX();
+      const deltaX = e.evt.deltaX !== 0 ? e.evt.deltaX : e.evt.deltaY;
+
+      const newPos = {
+        x: currentPos.x - deltaX, // 좌우로 이동
+        y: currentPos.y,
+      };
+
+      setStagePos(constrainStagePosition(newPos, currentScale));
+    } else {
+      // Ctrl 키가 없으면 캔버스 위아래 스크롤
+      const currentPos = stage.position();
+      const currentScale = stage.scaleX();
+
+      const newPos = {
+        x: currentPos.x,
+        y: currentPos.y - e.evt.deltaY, // 위 아래 이동
+      };
+
+      setStagePos(constrainStagePosition(newPos, currentScale));
+    }
   };
 
   const handleDragMove = (e: KonvaEventObject<DragEvent>) => {

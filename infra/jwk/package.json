@@ -1,0 +1,12 @@
+{
+  "name": "jwk",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "gen": "node index.js"
+  },
+  "dependencies": {
+    "jose": "^6.1.3"
+  }
+}

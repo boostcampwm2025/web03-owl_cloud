@@ -1,4 +1,4 @@
-import type { Router } from "mediasoup/types";
+import type { Router } from 'mediasoup/types';
 
 export type CreateRouterResult = {
   router: Router;

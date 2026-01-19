@@ -27,6 +27,15 @@ export interface ArrowItem extends BaseItem {
   tension: number;
 }
 
+export interface DrawingItem extends BaseItem {
+  type: 'drawing';
+  points: number[];
+  stroke: string;
+  strokeWidth: number;
+  scaleX?: number;
+  scaleY?: number;
+  rotation?: number;
+}
 // Shape Item
 export type ShapeType = 'rect' | 'circle' | 'triangle' | 'diamond' | 'pentagon';
 
@@ -41,4 +50,51 @@ export interface ShapeItem extends BaseItem {
   stroke: string;
   strokeWidth: number;
   rotation: number;
+}
+
+// Image Item
+export interface ImageItem extends BaseItem {
+  type: 'image';
+  src: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  stroke?: string;
+  strokeWidth?: number;
+  cornerRadius?: number;
+  opacity?: number;
+}
+
+// Video Item
+export interface VideoItem extends BaseItem {
+  type: 'video';
+  src: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  stroke?: string;
+  strokeWidth?: number;
+  cornerRadius?: number;
+  opacity?: number;
+}
+
+export interface YoutubeItem extends BaseItem {
+  type: 'youtube';
+  // 원본 유튜브 URL
+  url: string;
+  // 유튜브 비디오 ID : 썸네일 표시용
+  videoId: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  stroke?: string;
+  strokeWidth?: number;
+  cornerRadius?: number;
+  opacity?: number;
 }

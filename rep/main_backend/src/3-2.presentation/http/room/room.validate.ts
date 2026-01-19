@@ -1,8 +1,15 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString, Max, MaxLength, Min, MinLength } from "class-validator";
-
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 export class CreateRoomValidate {
-  
   @IsNotEmpty()
   @IsNumber()
   @Min(1)
@@ -19,5 +26,4 @@ export class CreateRoomValidate {
   @MinLength(6)
   @MaxLength(16)
   password?: string;
-
-};
+}

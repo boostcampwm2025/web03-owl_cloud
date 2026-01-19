@@ -1,5 +1,3 @@
-
-
 export interface MakeRandomStr {
-  make(length : number) : string;
-};
+  make(length: number): string;
+}

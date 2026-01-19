@@ -3,10 +3,7 @@ import { type CreateUserOauthDto } from '@app/auth/commands/dto';
 import { SelectDataFromDb } from '@app/ports/db/db.inbound';
 import { InsertValueToDb } from '@app/ports/db/db.outbound';
 import { OauthUserProps, UserProps } from '@domain/user/user.vo';
-import {
-  InValidEmailError,
-  NotInvalidOauthUserError,
-} from '@error/application/user/user.error';
+import { InValidEmailError, NotInvalidOauthUserError } from '@error/application/user/user.error';
 import { UserAggregate } from '@domain/user/user.aggregate';
 import { IdGenerator } from '@domain/shared';
 
@@ -53,11 +50,10 @@ export class SignUpOauthUsecase<T> {
     // 굳이 mapper를 사용할 필요가 있을까? 여기서는 생략
 
     // 1. email 중복 확인
-    const user: UserProps | undefined =
-      await this.selectDataWhereEmailFromDb.select({
-        attributeName: this.usecaseValues.emailAttributeName,
-        attributeValue: dto.email,
-      });
+    const user: UserProps | undefined = await this.selectDataWhereEmailFromDb.select({
+      attributeName: this.usecaseValues.emailAttributeName,
+      attributeValue: dto.email,
+    });
     if (user) throw new InValidEmailError();
 
     // 2. user 객체 생성 - 정합성 파악
@@ -87,8 +83,7 @@ export class SignUpOauthUsecase<T> {
       userData,
       oauthData,
     };
-    const insertChecked: boolean =
-      await this.insertUserAndOauthDataToDb.insert(insertData);
+    const insertChecked: boolean = await this.insertUserAndOauthDataToDb.insert(insertData);
 
     return insertChecked;
   }

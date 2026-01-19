@@ -10,7 +10,6 @@ services:
       - "8080:8080"
     env_file:
       - .env.main.backend
-    restart: unless-stopped
 
   # tool 백엔드 부분
   tool-backend-app:
@@ -22,7 +21,6 @@ services:
       - "8000:8000"
     env_file:
       - .env.tool.backend
-    restart: unless-stopped
   
   frontend:
     build: 
@@ -30,4 +28,3 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
-    restart: unless-stopped

@@ -220,31 +220,32 @@ import { JwtGuard } from './guards';
           deleteUserSessionToCache,
         });
       },
-      inject: [
-        JWT_SESSION_NAMESPACE_ATTR,
-        REFRESH_TOKEN_HASH_KEY_NAME_ATTR,
-        DeleteUserDataToRedis,
-      ],
+      inject: [JWT_SESSION_NAMESPACE_ATTR, REFRESH_TOKEN_HASH_KEY_NAME_ATTR, DeleteUserDataToRedis],
     },
 
     // 로그인 회원가입이 원큐에 되는 oauth 로직
     {
-      provide : OauthUsecase,
-      useFactory : (
+      provide: OauthUsecase,
+      useFactory: (
         emailAttributeName: string,
         selectUserAndOauthWhereEmailFromDb: SelectUserAndOauthFromMysql,
-        userIdGenerator : UserIdGenerator,
+        userIdGenerator: UserIdGenerator,
         insertUserAndOauthDataToDb: InsertOauthAndUserDataToMysql,
         tokenIssuersInterfaceMakeIssuer: JwtTokenIssuer,
         makeHash: MakeArgonHash,
         insertRefreshDataToCache: InsertUserSessionDataToRedis,
       ) => {
         return new OauthUsecase({
-          usecaseValues : { emailAttributeName },
-          selectUserAndOauthWhereEmailFromDb, userIdGenerator, insertUserAndOauthDataToDb, tokenIssuersInterfaceMakeIssuer, makeHash, insertRefreshDataToCache
-        })
+          usecaseValues: { emailAttributeName },
+          selectUserAndOauthWhereEmailFromDb,
+          userIdGenerator,
+          insertUserAndOauthDataToDb,
+          tokenIssuersInterfaceMakeIssuer,
+          makeHash,
+          insertRefreshDataToCache,
+        });
       },
-      inject : [
+      inject: [
         USERS_EMAIL_ATTR,
         SelectUserAndOauthFromMysql,
         UserIdGenerator,
@@ -252,7 +253,7 @@ import { JwtGuard } from './guards';
         JwtTokenIssuer,
         MakeArgonHash,
         InsertUserSessionDataToRedis,
-      ]
+      ],
     },
 
     // 자체 service
@@ -260,9 +261,6 @@ import { JwtGuard } from './guards';
     UserIdGenerator,
     JwtGuard,
   ],
-  exports: [
-    JwtGuard,
-    JwtAuth
-  ],
+  exports: [JwtGuard, JwtAuth],
 })
 export class AuthModule {}

@@ -16,13 +16,15 @@ import { GqlExecutionContext } from '@nestjs/graphql';
 export class JwtGuard implements CanActivate {
   constructor(private readonly authUsecase: JwtAuth<unknown>) {}
 
-  // graphql, http가 header가 다름으로 이를 커스텀 해주어야 한다. 
-  private getReqAndRes(context : ExecutionContext) : { req : Request, res : Response } {
-
-    // graphql 이라면 
-    if ( context.getType<"graphql" | "http">() === "graphql" ) {
-      const gplContext = GqlExecutionContext.create(context).getContext<{ req : Request, res : Response }>();
-      return { req : gplContext.req, res : gplContext.res  }
+  // graphql, http가 header가 다름으로 이를 커스텀 해주어야 한다.
+  private getReqAndRes(context: ExecutionContext): { req: Request; res: Response } {
+    // graphql 이라면
+    if (context.getType<'graphql' | 'http'>() === 'graphql') {
+      const gplContext = GqlExecutionContext.create(context).getContext<{
+        req: Request;
+        res: Response;
+      }>();
+      return { req: gplContext.req, res: gplContext.res };
     }
 
     // http 라면
@@ -52,14 +54,13 @@ export class JwtGuard implements CanActivate {
 
   public async canActivate(context: ExecutionContext): Promise<boolean> {
     // req, res 관련해서 일단 받아오기
-    const { req : request, res : response } = this.getReqAndRes(context);
+    const { req: request, res: response } = this.getReqAndRes(context);
 
     // access_tokens - RFC 7235 Bearer 토큰 기준으로 정식으로 전달
     const access_token = this.extractBearerToken(request.headers.authorization);
 
     // refresh_token
-    const refresh_token: string | undefined =
-      request.cookies?.['refresh_token'];
+    const refresh_token: string | undefined = request.cookies?.['refresh_token'];
 
     try {
       if (!access_token || !refresh_token) {
@@ -74,8 +75,7 @@ export class JwtGuard implements CanActivate {
       };
 
       // jwt 인증
-      const payload: PayloadRes | undefined =
-        await this.authUsecase.execute(tokenDto);
+      const payload: PayloadRes | undefined = await this.authUsecase.execute(tokenDto);
 
       if (payload) {
         // header에 전달 access_token 전달
@@ -89,9 +89,7 @@ export class JwtGuard implements CanActivate {
         return true;
       } else {
         // payload가 없으면 삭제가 된다. 아래에 추가 하였다.
-        throw new UnauthorizedException(
-          '유저 인증 절차를 진행하고 있는데 에러가 발생했습니다.',
-        );
+        throw new UnauthorizedException('유저 인증 절차를 진행하고 있는데 에러가 발생했습니다.');
       }
     } catch (err) {
       // 삭제

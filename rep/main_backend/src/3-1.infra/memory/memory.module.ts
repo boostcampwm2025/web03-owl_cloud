@@ -1,23 +1,27 @@
-import { Global, Module } from "@nestjs/common";
-import { ConsumerRepository, ProducerRepository, RoomCreateLockRepo, RoomRouterRepository } from "./sfu";
-import { TransportRepository } from "./sfu/transport-repo";
-
+import { Global, Module } from '@nestjs/common';
+import {
+  ConsumerRepository,
+  ProducerRepository,
+  RoomCreateLockRepo,
+  RoomRouterRepository,
+} from './sfu';
+import { TransportRepository } from './sfu/transport-repo';
 
 @Global()
 @Module({
-  providers : [
+  providers: [
     RoomRouterRepository,
     RoomCreateLockRepo,
     TransportRepository,
     ProducerRepository,
     ConsumerRepository,
   ],
-  exports : [
+  exports: [
     RoomRouterRepository,
     RoomCreateLockRepo,
     TransportRepository,
     ProducerRepository,
     ConsumerRepository,
-  ]
+  ],
 })
-export class MemoryModule {};
+export class MemoryModule {}

@@ -1,5 +1,4 @@
-import { Producer } from "mediasoup/types";
-
+import { Producer } from 'mediasoup/types';
 
 export interface ProducerRepositoryPort {
   get(id: string): Producer | undefined;

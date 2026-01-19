@@ -6,6 +6,7 @@ interface NavButtonProps {
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   label: string;
   bgColor?: string;
+  hvColor?: string;
   activeBgColor?: string;
   isActive?: boolean;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
@@ -15,12 +16,17 @@ export default function NavButton({
   icon: Icon,
   label,
   bgColor,
+  hvColor,
   activeBgColor,
   isActive,
   onClick,
 }: NavButtonProps) {
   const baseBg = bgColor ?? 'bg-neutral-800';
-  const hoverBg = bgColor ? `hover:${bgColor}` : 'hover:bg-neutral-700';
+  const hoverBg = hvColor
+    ? `hover:${hvColor}`
+    : bgColor
+      ? `hover:${bgColor}`
+      : 'hover:bg-neutral-700';
   const activeStyle = activeBgColor ?? 'bg-sky-700';
 
   return (

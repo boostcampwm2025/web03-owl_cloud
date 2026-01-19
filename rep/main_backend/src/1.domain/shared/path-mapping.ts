@@ -1,3 +1,3 @@
 export interface PathMapping {
-  mapping(pathList : Array<string>) : string
-};
+  mapping(pathList: Array<string>): string;
+}

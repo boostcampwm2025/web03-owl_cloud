@@ -1,10 +1,5 @@
 import { idVo } from '@domain/shared';
-import {
-  OauthUserProps,
-  providerIdVo,
-  providerVo,
-  userIdVo,
-} from '@domain/user/user.vo';
+import { OauthUserProps, providerIdVo, providerVo, userIdVo } from '@domain/user/user.vo';
 
 export class OauthUser {
   private readonly id: OauthUserProps['id'];
@@ -26,10 +21,8 @@ export class OauthUser {
     this.user_id = userIdVo(user_id);
     this.provider = providerVo(provider);
     this.provider_id = providerIdVo(provider_id);
-    this.created_at =
-      created_at && created_at instanceof Date ? created_at : new Date();
-    this.updated_at =
-      updated_at && updated_at instanceof Date ? updated_at : new Date();
+    this.created_at = created_at && created_at instanceof Date ? created_at : new Date();
+    this.updated_at = updated_at && updated_at instanceof Date ? updated_at : new Date();
 
     Object.freeze(this);
   }

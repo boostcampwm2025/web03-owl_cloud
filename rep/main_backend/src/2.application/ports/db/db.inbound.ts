@@ -31,14 +31,16 @@ export class SelectDataFromDb<T> extends InboundBaseDb<T> {
 
 @Injectable()
 export class SelectDatasFromDb<T> extends InboundBaseDb<T> {
-  constructor(db : T) {
+  constructor(db: T) {
     super(db);
   }
 
-  public async selects(attributes : Array<{
-    attributeName: string;
-    attributeValue: any;
-  }>) : Promise<Array<any> | undefined> | never {
+  public async selects(
+    attributes: Array<{
+      attributeName: string;
+      attributeValue: any;
+    }>,
+  ): Promise<Array<any> | undefined> | never {
     throw new NullInterfaceError();
-  };;
+  }
 }

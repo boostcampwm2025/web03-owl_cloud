@@ -1,24 +1,13 @@
 import { idVo } from '@domain/shared';
-import {
-  mimeTypeVo,
-  profilePathVo,
-  userIdVo,
-  UserProfileProps,
-} from '@domain/user/user.vo';
+import { mimeTypeVo, profilePathVo, userIdVo, UserProfileProps } from '@domain/user/user.vo';
 
 export class UserProfile {
   private readonly id: UserProfileProps['id'];
   private readonly user_id: UserProfileProps['user_id'];
   private readonly profile_path: UserProfileProps['profile_path'];
   private readonly mime_type: UserProfileProps['mime_type'];
-  private readonly created_at: Exclude<
-    UserProfileProps['created_at'],
-    undefined
-  >;
-  private readonly updated_at: Exclude<
-    UserProfileProps['updated_at'],
-    undefined
-  >;
+  private readonly created_at: Exclude<UserProfileProps['created_at'], undefined>;
+  private readonly updated_at: Exclude<UserProfileProps['updated_at'], undefined>;
 
   constructor({
     id,
@@ -32,10 +21,8 @@ export class UserProfile {
     this.user_id = userIdVo(user_id);
     this.profile_path = profilePathVo(profile_path);
     this.mime_type = mimeTypeVo(mime_type);
-    this.created_at =
-      created_at && created_at instanceof Date ? created_at : new Date();
-    this.updated_at =
-      updated_at && updated_at instanceof Date ? updated_at : new Date();
+    this.created_at = created_at && created_at instanceof Date ? created_at : new Date();
+    this.updated_at = updated_at && updated_at instanceof Date ? updated_at : new Date();
 
     Object.freeze(this);
   }

@@ -11,9 +11,7 @@ export const USERS_EMAIL_ATTR = Symbol('USERS_EMAIL_ATTR');
 export const JWT_SESSION_NAMESPACE_ATTR = Symbol('JWT_SESSION_NAMESPACE_ATTR');
 
 // refresh_token_hash에 의존성 주입에 사용할 예정
-export const REFRESH_TOKEN_HASH_KEY_NAME_ATTR = Symbol(
-  'REFRESH_TOKEN_HASH_KEY_NAME_ATTR',
-);
+export const REFRESH_TOKEN_HASH_KEY_NAME_ATTR = Symbol('REFRESH_TOKEN_HASH_KEY_NAME_ATTR');
 
 // user_id를 만들때 사용하는 interface
 @Injectable()
@@ -44,13 +42,7 @@ export class MakeArgonHash extends MakeHashPort {
 export class CompareArgonHash implements CompareHash {
   constructor() {}
 
-  async compare({
-    value,
-    hash,
-  }: {
-    value: string;
-    hash: string;
-  }): Promise<boolean> {
+  async compare({ value, hash }: { value: string; hash: string }): Promise<boolean> {
     const compareChecked: boolean = await argon.verify(hash, value);
 
     return compareChecked;

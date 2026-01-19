@@ -13,7 +13,7 @@ import {
   LoginOauthUserDto,
   Payload,
   TokenDto,
-  UserOauthDto
+  UserOauthDto,
 } from '@app/auth/commands/dto';
 import { HttpService } from '@nestjs/axios';
 import { HttpException, Injectable } from '@nestjs/common';
@@ -22,7 +22,6 @@ import { firstValueFrom } from 'rxjs';
 import { NotGenerateUser } from '@error/presentation/user/user.error';
 import { LoginValidate, SignUpValidate } from './auth.validate';
 import { Response } from 'express';
-
 
 type KakaoTokenResponse = {
   token_type: string;
@@ -42,7 +41,7 @@ export class AuthService {
     private readonly signUpOauthUsecase: SignUpOauthUsecase<any>,
     private readonly loginUsecase: LoginUsecase<any, any>,
     private readonly loginOauthUsecase: LoginOauthUsecase<any, any>,
-    private readonly oauthUsecase : OauthUsecase<any, any>,
+    private readonly oauthUsecase: OauthUsecase<any, any>,
     private readonly logoutUsecase: LogoutUseCase<any>,
   ) {}
 
@@ -82,11 +81,9 @@ export class AuthService {
     });
 
     const res = await firstValueFrom(
-      this.http.post<KakaoTokenResponse>(
-        'https://kauth.kakao.com/oauth/token',
-        body.toString(),
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
-      ),
+      this.http.post<KakaoTokenResponse>('https://kauth.kakao.com/oauth/token', body.toString(), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      }),
     );
 
     return res.data;
@@ -104,14 +101,9 @@ export class AuthService {
   }
 
   // kakao에서 회원가입과 관련된 데이터 가져오기
-  public async getDataKakaoLogicVerSignUp(
-    code: string,
-  ): Promise<CreateUserOauthDto> {
+  public async getDataKakaoLogicVerSignUp(code: string): Promise<CreateUserOauthDto> {
     // access_token 받기
-    const backend_url: string = this.config.get<string>(
-      'NODE_BACKEND_SERVER',
-      'redirctUrl',
-    );
+    const backend_url: string = this.config.get<string>('NODE_BACKEND_SERVER', 'redirctUrl');
     const redirect_url: string = `${backend_url}/api/auth/signup/kakao/redirect`;
     const token = await this.getAccessTokenKakaoUrl(code, redirect_url);
 
@@ -128,14 +120,9 @@ export class AuthService {
   }
 
   // kakao에서 로그인과 관련된 데이터 가져오기
-  public async getDataKakaoLogicVerLogin(
-    code: string,
-  ): Promise<LoginOauthUserDto> {
+  public async getDataKakaoLogicVerLogin(code: string): Promise<LoginOauthUserDto> {
     // access_token 받기
-    const backend_url: string = this.config.get<string>(
-      'NODE_BACKEND_SERVER',
-      'redirctUrl',
-    );
+    const backend_url: string = this.config.get<string>('NODE_BACKEND_SERVER', 'redirctUrl');
     const redirect_url: string = `${backend_url}/api/auth/login/kakao/redirect`;
     const token = await this.getAccessTokenKakaoUrl(code, redirect_url);
 
@@ -148,16 +135,28 @@ export class AuthService {
     };
 
     return loginData;
-  };
+  }
 
-  public async getDataKakaoLogic(
-    code : string
-  ) : Promise<UserOauthDto> {
-    // access_token 받기
-    const backend_url: string = this.config.get<string>(
-      'NODE_BACKEND_SERVER',
-      'redirctUrl',
+  // kakao에 인증서버에 코드 요청
+  public getKakaoUrl(redirct_url: string, state: string): string {
+    const rest_api_key: string = this.config.get<string>(
+      'NODE_APP_KAKAO_REST_API_KEY',
+      'rest_api_key',
     );
+
+    const url: string =
+      'https://kauth.kakao.com/oauth/authorize' +
+      '?response_type=code' +
+      `&client_id=${encodeURIComponent(rest_api_key)}` +
+      `&redirect_uri=${encodeURIComponent(redirct_url)}` +
+      `&state=${encodeURIComponent(state)}`; // frontend에서 이를 검증할 예정이다.
+
+    return url;
+  }
+
+  public async getDataKakaoLogic(code: string): Promise<UserOauthDto> {
+    // access_token 받기
+    const backend_url: string = this.config.get<string>('NODE_BACKEND_SERVER', 'redirctUrl');
     const redirect_url: string = `${backend_url}/api/auth/kakao/redirect`;
     const token = await this.getAccessTokenKakaoUrl(code, redirect_url);
 
@@ -170,7 +169,7 @@ export class AuthService {
       nickname: String(kakaoData.properties.nickname),
     };
 
-    return oauthData
+    return oauthData;
   }
 
   // 실제 회원 가입이 이루어지는 로직 - local
@@ -199,12 +198,9 @@ export class AuthService {
   }
 
   // 실제 회원 가입이 이루어지는 로직 - oauth2
-  public async signUpVerOauthService(
-    signUpData: CreateUserOauthDto,
-  ): Promise<void> {
+  public async signUpVerOauthService(signUpData: CreateUserOauthDto): Promise<void> {
     try {
-      const generateChecked: boolean =
-        await this.signUpOauthUsecase.execute(signUpData);
+      const generateChecked: boolean = await this.signUpOauthUsecase.execute(signUpData);
 
       if (generateChecked) return;
       else throw new NotGenerateUser();
@@ -248,9 +244,7 @@ export class AuthService {
   }
 
   // 실제 로그인이 이루어지는 로직 - oauth2
-  public async loginVerOauthService(
-    loginData: LoginOauthUserDto,
-  ): Promise<TokenDto> {
+  public async loginVerOauthService(loginData: LoginOauthUserDto): Promise<TokenDto> {
     try {
       const tokens: TokenDto = await this.loginOauthUsecase.execute(loginData);
 
@@ -269,9 +263,9 @@ export class AuthService {
     }
   }
 
-  public async authKakaoService( oauthData: UserOauthDto) : Promise<TokenDto> {
+  public async authKakaoService(oauthData: UserOauthDto): Promise<TokenDto> {
     return this.oauthUsecase.execute(oauthData);
-  };
+  }
 
   // 실제 로그아웃이 이루어지는 로직
   public async logoutService(payload: Payload): Promise<void> {

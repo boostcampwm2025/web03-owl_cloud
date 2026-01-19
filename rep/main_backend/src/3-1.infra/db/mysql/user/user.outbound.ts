@@ -30,9 +30,7 @@ export class InsertOauthAndUserDataToMysql extends InsertValueToDb<Pool> {
       await connect.beginTransaction();
 
       // 현재 시간
-      const now = new Date(
-        new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }),
-      );
+      const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
 
       // user 정보 저장
       const userEntity: UserProps = entity.userData;
@@ -47,10 +45,13 @@ export class InsertOauthAndUserDataToMysql extends InsertValueToDb<Pool> {
       \`${DB_USERS_ATTRIBUTE_NAME.UPDATED_AT}\`) 
       VALUES (UUID_TO_BIN(?, true), ?, ?, ?, ?)
       `;
-      const [userInsertChecked] = await connect.query<ResultSetHeader>(
-        userSql,
-        [userEntity.user_id, userEntity.email, userEntity.nickname, now, now],
-      );
+      const [userInsertChecked] = await connect.query<ResultSetHeader>(userSql, [
+        userEntity.user_id,
+        userEntity.email,
+        userEntity.nickname,
+        now,
+        now,
+      ]);
 
       // oauth 정보 저장
       const oauthUserEntity: OauthUserProps = entity.oauthData;
@@ -65,16 +66,13 @@ export class InsertOauthAndUserDataToMysql extends InsertValueToDb<Pool> {
       \`${DB_OAUTH_USERS_ATTRIBUTE_NAME.UPDATED_AT}\`)
       VALUES (UUID_TO_BIN(?, true), ?, ?, ?, ?)
       `;
-      const [oauthUserInsertChecked] = await connect.query<ResultSetHeader>(
-        oauthUserSql,
-        [
-          oauthUserEntity.user_id,
-          oauthUserEntity.provider,
-          oauthUserEntity.provider_id,
-          now,
-          now,
-        ],
-      );
+      const [oauthUserInsertChecked] = await connect.query<ResultSetHeader>(oauthUserSql, [
+        oauthUserEntity.user_id,
+        oauthUserEntity.provider,
+        oauthUserEntity.provider_id,
+        now,
+        now,
+      ]);
 
       await connect.commit();
 

@@ -7,6 +7,8 @@ import { ShapeItem as ShapeItemType } from '@/types/whiteboard';
 
 interface ShapeItemProps {
   shapeItem: ShapeItemType;
+  isDraggable: boolean;
+  isListening: boolean;
 
   onSelect: () => void;
   onChange: (newAttrs: Partial<ShapeItemType>) => void;
@@ -20,6 +22,8 @@ interface ShapeItemProps {
 
 export default function ShapeItem({
   shapeItem,
+  isDraggable,
+  isListening,
   onSelect,
   onChange,
   onMouseEnter,
@@ -37,7 +41,8 @@ export default function ShapeItem({
 
   const commonProps = {
     id: shapeItem.id,
-    draggable: true,
+    draggable: isDraggable,
+    listening: isListening,
     x: isCircle ? shapeItem.x + shapeItem.width / 2 : shapeItem.x,
     y: isCircle ? shapeItem.y + shapeItem.height / 2 : shapeItem.y,
     rotation: shapeItem.rotation,

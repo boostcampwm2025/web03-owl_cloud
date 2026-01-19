@@ -1,7 +1,4 @@
-import {
-  DeleteDataToCache,
-  InsertDataToCache,
-} from '@app/ports/cache/cache.outbound';
+import { DeleteDataToCache, InsertDataToCache } from '@app/ports/cache/cache.outbound';
 import { Inject, Injectable } from '@nestjs/common';
 import { type RedisClientType } from 'redis';
 import { InsertCacheDataProps } from '@app/auth/commands/usecase';
@@ -12,9 +9,7 @@ import {
 } from '../../cache.constants';
 
 @Injectable()
-export class InsertUserSessionDataToRedis extends InsertDataToCache<
-  RedisClientType<any, any>
-> {
+export class InsertUserSessionDataToRedis extends InsertDataToCache<RedisClientType<any, any>> {
   constructor(@Inject(REDIS_SERVER) cache: RedisClientType<any, any>) {
     super(cache);
   }
@@ -33,11 +28,7 @@ export class InsertUserSessionDataToRedis extends InsertDataToCache<
 
     try {
       const tx = cache.multi();
-      tx.hSet(
-        np,
-        CACHE_USER_SESSION_KEY_NAME.REFRESH_TOKEN_HASH,
-        refresh_token_hash,
-      );
+      tx.hSet(np, CACHE_USER_SESSION_KEY_NAME.REFRESH_TOKEN_HASH, refresh_token_hash);
       tx.expire(np, 8 * 24 * 60 * 60);
 
       const insertChecked = await tx.exec();
@@ -64,9 +55,7 @@ export class InsertUserSessionDataToRedis extends InsertDataToCache<
 
 // 지금 당장은 key 값 하나 삭제인데 user내에서는 얼마든지 확장 가능하도록 생각해봐야 겠다.
 @Injectable()
-export class DeleteUserDataToRedis extends DeleteDataToCache<
-  RedisClientType<any, any>
-> {
+export class DeleteUserDataToRedis extends DeleteDataToCache<RedisClientType<any, any>> {
   constructor(@Inject(REDIS_SERVER) cache: RedisClientType<any, any>) {
     super(cache);
   }

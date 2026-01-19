@@ -1,14 +1,13 @@
-import { BaseError } from "../error";
-
+import { BaseError } from '../error';
 
 export class NotAcceptEqualLengthError extends BaseError {
-  constructor({ name, length } : { name : string, length : number }) {
+  constructor({ name, length }: { name: string; length: number }) {
     super({
-      message : `${name}은 ${length}길이여야 합니다.`,
-      status : 500
+      message: `${name}은 ${length}길이여야 합니다.`,
+      status: 500,
     });
-  };
-};
+  }
+}
 
 export class NotAllowRoomStatusError extends BaseError {
   constructor() {

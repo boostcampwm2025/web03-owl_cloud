@@ -5,10 +5,7 @@ import { SelectDataFromDb } from '@app/ports/db/db.inbound';
 import { MakeHashPort } from '@app/ports/share';
 import { TokenIssuer } from '@app/auth/ports';
 import { InsertDataToCache } from '@app/ports/cache/cache.outbound';
-import {
-  NotAllowPasswordError,
-  NotValidEmailError,
-} from '@error/application/user/user.error';
+import { NotAllowPasswordError, NotValidEmailError } from '@error/application/user/user.error';
 import { CompareHash } from '@domain/shared';
 import { UserProps } from '@domain/user/user.vo';
 import { InsertCacheDataProps } from './login-oauth.usecase';
@@ -28,14 +25,8 @@ type LoginOauthUsecaseProps<T1, T2> = {
 
 @Injectable()
 export class LoginUsecase<T1, T2> {
-  private readonly usecaseValues: LoginOauthUsecaseProps<
-    T1,
-    T2
-  >['usecaseValues'];
-  private readonly selectUserEmailFromDb: LoginOauthUsecaseProps<
-    T1,
-    T2
-  >['selectUserEmailFromDb'];
+  private readonly usecaseValues: LoginOauthUsecaseProps<T1, T2>['usecaseValues'];
+  private readonly selectUserEmailFromDb: LoginOauthUsecaseProps<T1, T2>['selectUserEmailFromDb'];
   private readonly compareHash: LoginOauthUsecaseProps<T1, T2>['compareHash'];
   private readonly tokenIssuersInterfaceMakeIssuer: LoginOauthUsecaseProps<
     T1,
@@ -65,12 +56,10 @@ export class LoginUsecase<T1, T2> {
 
   public async execute(dto: LoginNormalUserDto): Promise<TokenDto> {
     // 1. email 검증
-    const user: UserProps | undefined = await this.selectUserEmailFromDb.select(
-      {
-        attributeName: this.usecaseValues.emailAttributeName,
-        attributeValue: dto.email,
-      },
-    );
+    const user: UserProps | undefined = await this.selectUserEmailFromDb.select({
+      attributeName: this.usecaseValues.emailAttributeName,
+      attributeValue: dto.email,
+    });
     if (!user) throw new NotValidEmailError();
 
     // 2. 비밀번호 검증
@@ -87,13 +76,10 @@ export class LoginUsecase<T1, T2> {
       email: user.email,
       nickname: user.nickname,
     };
-    const issueTokens: TokenDto =
-      await this.tokenIssuersInterfaceMakeIssuer.makeIssuer(payload);
+    const issueTokens: TokenDto = await this.tokenIssuersInterfaceMakeIssuer.makeIssuer(payload);
 
     // 4. refresh_tokens hash화
-    const refresh_token_hash: string = await this.makeHash.makeHash(
-      issueTokens.refresh_token,
-    );
+    const refresh_token_hash: string = await this.makeHash.makeHash(issueTokens.refresh_token);
 
     // 5. refresh_token_hash 저장
     const insertData: InsertCacheDataProps = {

@@ -7,8 +7,8 @@ export const DB_TABLE_NAME = Object.freeze({
   USER_PROFILES: 'User_profiles',
   OAUTH_USERS: 'Oauth_users',
   DELETE_USERS: 'Delete_users',
-  ROOMS : "Rooms",
-  ROOM_PARTICIPANTS : "Room_participants"
+  ROOMS: 'Rooms',
+  ROOM_PARTICIPANTS: 'Room_participants',
 } as const);
 
 // 기본 테이블 이름에 쓰이는거
@@ -53,22 +53,22 @@ export const DB_DELETE_USERS_ATTRIBUTE_NAME = Object.freeze({
 
 // 방과 관련된 테이블 열 이름
 export const DB_ROOMS_ATTRIBUTE_NAME = Object.freeze({
-  ROOM_ID : "room_id",
-  CODE : "code",
-  TITLE : "title",
-  PASSWORD_HASH : "password_hash",
-  OWNER_USER_ID : "owner_user_id",
-  MAX_PARTICIPANTS : "max_participants",
-  STATUS : "status", 
-  DELETED_AT : "deleted_at",
-  ...DB_BASE_ATTRIBTE_NAME
+  ROOM_ID: 'room_id',
+  CODE: 'code',
+  TITLE: 'title',
+  PASSWORD_HASH: 'password_hash',
+  OWNER_USER_ID: 'owner_user_id',
+  MAX_PARTICIPANTS: 'max_participants',
+  STATUS: 'status',
+  DELETED_AT: 'deleted_at',
+  ...DB_BASE_ATTRIBTE_NAME,
 } as const);
 
 // 방에 가입자들과 관련된 테이블 이름
 export const DB_ROOM_PARTICIPANTS_ATTRIBUTE_NAME = Object.freeze({
-  ID : "id",
-  ROOM_ID : "room_id",
-  USER_ID : "user_id",
-  JOINED_AT : "joined_at",
-  LEFT_AT : "left_at"
+  ID: 'id',
+  ROOM_ID: 'room_id',
+  USER_ID: 'user_id',
+  JOINED_AT: 'joined_at',
+  LEFT_AT: 'left_at',
 } as const);

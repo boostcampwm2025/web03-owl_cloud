@@ -1,5 +1,4 @@
-import { Consumer } from "mediasoup/types";
-
+import { Consumer } from 'mediasoup/types';
 
 export interface ConsumerRepositoryPort {
   get(id: string): Consumer | undefined;

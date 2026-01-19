@@ -1,5 +1,6 @@
 'use client';
 
+import CodeEditor from '@/components/code-editor/CodeEditor';
 import ChatModal from '@/components/meeting/ChatModal';
 import InfoModal from '@/components/meeting/InfoModal';
 import MeetingMenu from '@/components/meeting/MeetingMenu';
@@ -11,8 +12,14 @@ import { useMeetingStore } from '@/store/useMeetingStore';
 import { useEffect } from 'react';
 
 export default function MeetingRoom({ meetingId }: { meetingId: string }) {
-  const { media, isInfoOpen, isMemberOpen, isChatOpen, isWorkspaceOpen } =
-    useMeetingStore();
+  const {
+    media,
+    isInfoOpen,
+    isMemberOpen,
+    isChatOpen,
+    isWorkspaceOpen,
+    isCodeEditorOpen,
+  } = useMeetingStore();
   const { startAudioProduce, startVideoProduce, isReady } = useProduce();
 
   // 초기 입장 시 로비에서 설정한 미디어 Produce
@@ -30,11 +37,24 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
 
       <section className="relative flex-1">
         {/* 워크스페이스 / 코드 에디터 등의 컴포넌트가 들어갈 공간 */}
-        {isWorkspaceOpen && <Whiteboard />}
+        <div className="flex h-full">
+          {isWorkspaceOpen && (
+            <div
+              className={isCodeEditorOpen ? 'h-full w-1/2' : 'h-full w-full'}
+            >
+              <Whiteboard />
+            </div>
+          )}
+          {isCodeEditorOpen && (
+            <div className={isWorkspaceOpen ? 'h-full w-1/2' : 'h-full w-full'}>
+              <CodeEditor />
+            </div>
+          )}
+        </div>
 
         {/* 참가자 / 채팅창 */}
         {(isMemberOpen || isChatOpen) && (
-          <div className="absolute top-2 right-2 bottom-2 z-100 flex w-80 flex-col gap-2">
+          <div className="absolute top-2 right-2 bottom-2 flex w-80 flex-col gap-2">
             {isMemberOpen && <MemberModal />}
             {isChatOpen && <ChatModal />}
           </div>

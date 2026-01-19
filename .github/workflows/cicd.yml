@@ -187,6 +187,13 @@ jobs:
       - name: Checkout docker frontend
         uses: actions/checkout@v5
 
+      # 프론트엔드 환경변수 설정 -> 프론트엔드도 빌드할때 들어가야 한다고 한다.
+      - name: frontend env 생성
+        run: | 
+          cat << 'EOF' > ./frontend/.env.frontend
+          ${{ secrets.NODE_FRONTEND_ENV_TEST_SERVER }}
+          EOF
+    
       - name: QEMU 설정
         uses: docker/setup-qemu-action@v3
 
@@ -356,6 +363,7 @@ jobs:
             # compose.env 파일 생성
             cat << EOF > compose.env
             MAIN_BACKEND_IMG=${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_MAIN_BACKEND_TEST_SERVER_IMG }}
+            TOOL_BACKEND_IMG=${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_TOOL_BACKEND_TEST_SERVER_IMG }}
             FRONTEND_IMG=${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_FRONTEND_TEST_SERVER_IMG }}
             EOF
 

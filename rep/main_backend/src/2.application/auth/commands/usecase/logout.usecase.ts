@@ -16,10 +16,7 @@ export class LogoutUseCase<T> {
   private readonly usecaseValues: LogoutUsecaseProps<T>['usecaseValues'];
   private readonly deleteUserSessionToCache: LogoutUsecaseProps<T>['deleteUserSessionToCache'];
 
-  constructor({
-    usecaseValues,
-    deleteUserSessionToCache,
-  }: LogoutUsecaseProps<T>) {
+  constructor({ usecaseValues, deleteUserSessionToCache }: LogoutUsecaseProps<T>) {
     this.usecaseValues = usecaseValues;
     this.deleteUserSessionToCache = deleteUserSessionToCache;
   }

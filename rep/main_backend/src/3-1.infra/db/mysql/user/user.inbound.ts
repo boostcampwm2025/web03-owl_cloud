@@ -140,10 +140,7 @@ export class SelectUserAndOauthWhereEmailFromMysql extends SelectDataFromDb<Pool
     LIMIT 1
     `;
 
-    const [oauthAndUsers] = await db.query<Array<UserAndOauthUserRowPacket>>(
-      sql,
-      [attributeValue],
-    );
+    const [oauthAndUsers] = await db.query<Array<UserAndOauthUserRowPacket>>(sql, [attributeValue]);
 
     return oauthAndUsers[0];
   }
@@ -157,8 +154,11 @@ export class SelectUserAndOauthWhereEmailFromMysql extends SelectDataFromDb<Pool
   }): Promise<CheckOauthDataType | undefined> {
     const db: Pool = this.db;
 
-    const oauthAndUser: UserAndOauthUserRowPacket | undefined =
-      await this.selectUserAndOauthData({ db, attributeName, attributeValue });
+    const oauthAndUser: UserAndOauthUserRowPacket | undefined = await this.selectUserAndOauthData({
+      db,
+      attributeName,
+      attributeValue,
+    });
     if (!oauthAndUser) return undefined;
 
     return {
@@ -224,8 +224,11 @@ export class SelectUserAndOauthFromMysql extends SelectDataFromDb<Pool> {
   }): Promise<CheckOauthDataType | undefined> {
     const db: Pool = this.db;
 
-    const oauthAndUser: UserAndOauthUserRowPacket | undefined =
-      await this.selectUserAndOauthData({ db, attributeName, attributeValue });
+    const oauthAndUser: UserAndOauthUserRowPacket | undefined = await this.selectUserAndOauthData({
+      db,
+      attributeName,
+      attributeValue,
+    });
     if (!oauthAndUser) return undefined;
 
     return {

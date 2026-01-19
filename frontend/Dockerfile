@@ -22,8 +22,12 @@ RUN --mount=type=cache,id=pnpm-store-frontend,target=/root/.local/share/pnpm/sto
 
 COPY . .
 
-# 질문 pnpm build로 할것인가? - package.json을 보면 맞는것 같기는 한데
-RUN pnpm build
+# 환경 변수 설정
+RUN set -a \
+  && [ -f .env.frontend ] && . ./.env.frontend || true \
+  && set +a \
+  && pnpm build \ 
+  && rm -f .env.frontend
 
 # 실제 runtime
 FROM node:22-slim AS runner
