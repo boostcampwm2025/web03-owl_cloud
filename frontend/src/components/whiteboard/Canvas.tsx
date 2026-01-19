@@ -52,9 +52,10 @@ export default function Canvas() {
     [items, selectedId],
   );
 
-  const isArrowSelected = selectedItem?.type === 'arrow';
+  const isArrowOrLineSelected =
+    selectedItem?.type === 'arrow' || selectedItem?.type === 'line';
 
-  // 화살표 훅
+  // 화살표/선 훅
   const {
     selectedHandleIndex,
     setSelectedHandleIndex,
@@ -65,7 +66,7 @@ export default function Canvas() {
     handleArrowDblClick,
     deleteControlPoint,
   } = useArrowHandles({
-    arrow: isArrowSelected ? (selectedItem as ArrowItem) : null,
+    arrow: isArrowOrLineSelected ? (selectedItem as ArrowItem) : null,
     stageRef,
     updateItem,
   });
@@ -97,7 +98,7 @@ export default function Canvas() {
   );
 
   useCanvasShortcuts({
-    isArrowSelected,
+    isArrowOrLineSelected,
     selectedHandleIndex,
     deleteControlPoint,
   });
@@ -162,20 +163,20 @@ export default function Canvas() {
               }
               onArrowDblClick={handleArrowDblClick}
               onDragStart={() => {
-                if (item.type === 'arrow') {
+                if (item.type === 'arrow' || item.type === 'line') {
                   setIsDraggingArrow(true);
                 }
               }}
               onDragEnd={() => {
-                if (item.type === 'arrow') {
+                if (item.type === 'arrow' || item.type === 'line') {
                   setIsDraggingArrow(false);
                 }
               }}
             />
           ))}
 
-          {/* 화살표 핸들 (드래그 중이 아닐 때만) */}
-          {isArrowSelected && selectedItem && !isDraggingArrow && (
+          {/* 화살표/선 핸들 (드래그 중이 아닐 때만 보임) */}
+          {isArrowOrLineSelected && selectedItem && !isDraggingArrow && (
             <ArrowHandles
               arrow={selectedItem as ArrowItem}
               selectedHandleIndex={selectedHandleIndex}

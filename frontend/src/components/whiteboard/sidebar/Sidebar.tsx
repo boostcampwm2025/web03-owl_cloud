@@ -1,43 +1,74 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo } from 'react';
 
 // 패널 컴포넌트들 임포트
 import ShapePanel from '@/components/whiteboard/sidebar/panels/ShapePanel';
+import ArrowPanel from '@/components/whiteboard/sidebar/panels/ArrowPanel';
+import LinePanel from '@/components/whiteboard/sidebar/panels/LinePanel';
 
-// TODO: 스토어 훅 임포트 필요 (추후 상태 관리 로직 교체)
-// import { useWhiteboardStore } from '@/store/useWhiteboardStore';
+import { useCanvasStore } from '@/store/useCanvasStore';
+import type { ArrowItem, LineItem, ShapeItem } from '@/types/whiteboard';
+import {
+  ARROW_SIZE_PRESETS,
+  ARROW_STYLE_PRESETS,
+} from '@/components/whiteboard/sidebar/panels/arrowPresets';
+import {
+  getArrowSize,
+  getLineSize,
+  getItemStyle,
+} from '@/utils/arrowPanelHelpers';
 
 // 사이드 바 선택된 요소 타입
-type SelectionType = 'shape' | null;
+type SelectionType = 'shape' | 'arrow' | 'line' | null;
 
 export default function Sidebar() {
-  // TODO : 상태 관리 로직 교체 필요
-  // 현재 : useState로 로컬 상태 관리 -> 테스트용도
-  const [selectionType, setSelectionType] = useState<SelectionType>('shape');
+  // 스토어에서 선택된 아이템 정보 가져오기
+  const selectedId = useCanvasStore((state) => state.selectedId);
+  const items = useCanvasStore((state) => state.items);
+  const updateItem = useCanvasStore((state) => state.updateItem);
 
-  // 추후 : Store에서 선택된 요소의 데이터 구독하는 방식으로 변경 예정
-  // const selectedId = useWhiteboardStore((state) => state.selectedElementId);
-  // const elements = useWhiteboardStore((state) => state.elements);
-  // const updateElement = useWhiteboardStore((state) => state.updateElement);
-  // const selectedElement = selectedId ? elements[selectedId] : null;
-  // const selectionType = selectedElement ? selectedElement.type : 'none';
+  // 선택된 아이템 찾기
+  const selectedItem = useMemo(
+    () => items.find((item) => item.id === selectedId),
+    [items, selectedId],
+  );
 
-  // TODO : 데이터 매핑
-  // const strokeColor = selectedElement?.strokeColor || '#000000';
-  // const backgroundColor = selectedElement?.backgroundColor || 'transparent';
-  const [strokeColor, setStrokeColor] = useState('#000000');
-  const [backgroundColor, setBackgroundColor] = useState('transparent');
+  // 선택된 아이템의 타입 결정
+  const getSelectionType = (item: typeof selectedItem): SelectionType => {
+    if (!item) return null;
+    switch (item.type) {
+      case 'shape':
+        return 'shape';
+      case 'arrow':
+        return 'arrow';
+      case 'line':
+        return 'line';
+      default:
+        return null;
+    }
+  };
+
+  const selectionType = getSelectionType(selectedItem);
 
   // 선택 타입에 따른 표시될 헤더 제목
   const getHeaderTitle = () => {
     switch (selectionType) {
       case 'shape':
         return 'Shape';
+      case 'arrow':
+        return 'Arrow';
+      case 'line':
+        return 'Line';
       default:
         return '';
     }
   };
+
+  // 선택된 아이템이 없으면 사이드바 표시 안 함
+  if (!selectedItem) {
+    return null;
+  }
 
   return (
     <aside className="absolute top-1/2 left-2 z-1 flex max-h-[calc(100vh-2rem)] w-56 -translate-y-1/2 flex-col overflow-y-auto rounded-lg border border-neutral-200 bg-white p-4 shadow-xl">
@@ -53,14 +84,66 @@ export default function Sidebar() {
         {/* shape */}
         {selectionType === 'shape' && (
           <ShapePanel
-            strokeColor={strokeColor}
-            backgroundColor={backgroundColor}
-            // TODO: 업데이트 함수 교체
-            // 변경된 값 스토어에 전달하는 방식 변경 필요
-            // onChangeStrokeColor={(newColor) => updateElement(selectedId, { strokeColor: newColor })}
-            onChangeStrokeColor={setStrokeColor}
-            // onChangeBackgroundColor={(newColor) => updateElement(selectedId, { backgroundColor: newColor })}
-            onChangeBackgroundColor={setBackgroundColor}
+            strokeColor={(selectedItem as ShapeItem).stroke}
+            backgroundColor={(selectedItem as ShapeItem).fill}
+            onChangeStrokeColor={(color) =>
+              updateItem(selectedId!, { stroke: color })
+            }
+            onChangeBackgroundColor={(color) =>
+              updateItem(selectedId!, { fill: color })
+            }
+          />
+        )}
+
+        {/* arrow */}
+        {selectionType === 'arrow' && (
+          <ArrowPanel
+            stroke={(selectedItem as ArrowItem).stroke}
+            size={getArrowSize(selectedItem as ArrowItem)}
+            style={getItemStyle(selectedItem as ArrowItem)}
+            startHeadType={(selectedItem as ArrowItem).startHeadType ?? 'none'}
+            endHeadType={(selectedItem as ArrowItem).endHeadType ?? 'triangle'}
+            onChangeStroke={(color) =>
+              updateItem(selectedId!, { stroke: color })
+            }
+            onChangeSize={(size) => {
+              const preset = ARROW_SIZE_PRESETS[size];
+              updateItem(selectedId!, {
+                strokeWidth: preset.strokeWidth,
+                pointerLength: preset.pointerSize,
+                pointerWidth: preset.pointerSize,
+              });
+            }}
+            onChangeStyle={(style) => {
+              updateItem(selectedId!, { tension: ARROW_STYLE_PRESETS[style] });
+            }}
+            onChangeStartHeadType={(type) => {
+              updateItem(selectedId!, { startHeadType: type });
+            }}
+            onChangeEndHeadType={(type) => {
+              updateItem(selectedId!, { endHeadType: type });
+            }}
+          />
+        )}
+
+        {/* line */}
+        {selectionType === 'line' && (
+          <LinePanel
+            stroke={(selectedItem as LineItem).stroke}
+            size={getLineSize(selectedItem as LineItem)}
+            style={getItemStyle(selectedItem as LineItem)}
+            onChangeStroke={(color) =>
+              updateItem(selectedId!, { stroke: color })
+            }
+            onChangeSize={(size) => {
+              const preset = ARROW_SIZE_PRESETS[size];
+              updateItem(selectedId!, {
+                strokeWidth: preset.strokeWidth,
+              });
+            }}
+            onChangeStyle={(style) => {
+              updateItem(selectedId!, { tension: ARROW_STYLE_PRESETS[style] });
+            }}
           />
         )}
       </div>

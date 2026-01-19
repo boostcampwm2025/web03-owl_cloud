@@ -2,13 +2,13 @@ import { useEffect } from 'react';
 import { useCanvasStore } from '@/store/useCanvasStore';
 
 interface UseCanvasShortcutsProps {
-  isArrowSelected: boolean;
+  isArrowOrLineSelected: boolean;
   selectedHandleIndex: number | null;
   deleteControlPoint: () => boolean;
 }
 
 export const useCanvasShortcuts = ({
-  isArrowSelected,
+  isArrowOrLineSelected,
   selectedHandleIndex,
   deleteControlPoint,
 }: UseCanvasShortcutsProps) => {
@@ -23,7 +23,7 @@ export const useCanvasShortcuts = ({
       if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
 
-        if (isArrowSelected && selectedHandleIndex !== null) {
+        if (isArrowOrLineSelected && selectedHandleIndex !== null) {
           const deleted = deleteControlPoint();
           if (deleted) return;
         }
@@ -38,7 +38,7 @@ export const useCanvasShortcuts = ({
     selectedId,
     editingTextId,
     deleteItem,
-    isArrowSelected,
+    isArrowOrLineSelected,
     selectedHandleIndex,
     deleteControlPoint,
   ]);

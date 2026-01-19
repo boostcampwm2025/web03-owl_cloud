@@ -10,6 +10,7 @@ import type {
   WhiteboardItem,
   TextItem,
   ArrowItem,
+  LineItem,
   DrawingItem,
   ShapeItem,
   ShapeType,
@@ -48,6 +49,7 @@ interface CanvasState {
   // Item Actions
   addText: (text?: Partial<Omit<TextItem, 'id' | 'type'>>) => string;
   addArrow: (payload?: Partial<Omit<ArrowItem, 'id' | 'type'>>) => void;
+  addLine: (payload?: Partial<Omit<LineItem, 'id' | 'type'>>) => void;
   addShape: (
     type: ShapeType,
     payload?: Partial<Omit<ShapeItem, 'id' | 'type' | 'shapeType'>>,
@@ -135,6 +137,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
       return {
         items: [...state.items, newText],
+        selectedId: id,
       };
     });
 
@@ -157,14 +160,39 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
           state.canvasHeight / 2,
         ],
         stroke: payload?.stroke ?? '#111827',
-        strokeWidth: payload?.strokeWidth ?? 3,
+        strokeWidth: payload?.strokeWidth ?? 4,
         pointerLength: payload?.pointerLength ?? 14,
         pointerWidth: payload?.pointerWidth ?? 14,
-        tension: payload?.tension ?? 0.6,
+        tension: payload?.tension ?? 0.4,
       };
 
       return {
         items: [...state.items, newArrow],
+        selectedId: id,
+      };
+    }),
+
+  // 선 추가
+  addLine: (payload) =>
+    set((state) => {
+      const id = uuidv4();
+      const newLine: LineItem = {
+        id,
+        type: 'line',
+        points: payload?.points ?? [
+          state.canvasWidth / 2 - 100,
+          state.canvasHeight / 2,
+          state.canvasWidth / 2 + 100,
+          state.canvasHeight / 2,
+        ],
+        stroke: payload?.stroke ?? '#111827',
+        strokeWidth: payload?.strokeWidth ?? 4,
+        tension: payload?.tension ?? 0.4,
+      };
+
+      return {
+        items: [...state.items, newLine],
+        selectedId: id,
       };
     }),
 

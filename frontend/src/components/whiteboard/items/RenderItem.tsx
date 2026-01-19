@@ -1,11 +1,12 @@
 'use client';
 
 import Konva from 'konva';
-import { Text, Arrow, Line } from 'react-konva';
+import { Text, Line } from 'react-konva';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useCursorStyle } from '@/hooks/useCursorStyle';
 import { useItemInteraction } from '@/hooks/useItemInteraction';
 import ShapeItem from '@/components/whiteboard/items/shape/ShapeItem';
+import CustomArrow from '@/components/whiteboard/items/arrow/CustomArrow';
 import ImageItem from '@/components/whiteboard/items/image/ImageItem';
 import VideoItem from '@/components/whiteboard/items/video/VideoItem';
 import YoutubeItem from '@/components/whiteboard/items/youtube/YoutubeItem';
@@ -13,6 +14,7 @@ import YoutubeItem from '@/components/whiteboard/items/youtube/YoutubeItem';
 import type {
   TextItem,
   ArrowItem,
+  LineItem,
   DrawingItem,
   ShapeItem as ShapeItemType,
   ImageItem as ImageItemType,
@@ -20,7 +22,6 @@ import type {
   YoutubeItem as YoutubeItemType,
   WhiteboardItem,
 } from '@/types/whiteboard';
-
 
 // RenderItem Props
 interface RenderItemProps {
@@ -51,7 +52,6 @@ export default function RenderItem({
   // 커서 스타일 훅
   const { handleMouseEnter, handleMouseLeave } = useCursorStyle('move');
 
-  // 텍스트 렌더링
   if (item.type === 'text') {
     const textItem = item as TextItem;
     return (
@@ -106,17 +106,30 @@ export default function RenderItem({
     );
   }
 
-  // Arrow Rendering
   if (item.type === 'arrow') {
     const arrowItem = item as ArrowItem;
+
     return (
-      <Arrow
-        {...arrowItem}
+      <CustomArrow
+        item={arrowItem}
+        onSelect={onSelect}
+        onChange={onChange}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        onArrowDblClick={onArrowDblClick}
+      />
+    );
+  }
+
+  if (item.type === 'line') {
+    const lineItem = item as LineItem;
+    return (
+      <Line
+        {...lineItem}
         id={item.id}
         draggable={isDraggable}
         listening={isListening}
         hitStrokeWidth={30}
-        tension={0.5}
         lineCap="round"
         lineJoin="round"
         onMouseDown={() => isInteractive && !isEraserMode && onSelect(item.id)}
@@ -133,7 +146,7 @@ export default function RenderItem({
         onDragEnd={(e) => {
           if (!isInteractive || isEraserMode) return;
           const pos = e.target.position();
-          const newPoints = arrowItem.points.map((p, i) =>
+          const newPoints = lineItem.points.map((p, i) =>
             i % 2 === 0 ? p + pos.x : p + pos.y,
           );
           e.target.position({ x: 0, y: 0 });
@@ -144,7 +157,6 @@ export default function RenderItem({
     );
   }
 
-  // 그리기 렌더링
   if (item.type === 'drawing') {
     const drawingItem = item as DrawingItem;
     return (
@@ -212,7 +224,6 @@ export default function RenderItem({
     );
   }
 
-  // Shape Rendering
   if (item.type === 'shape') {
     const shapeItem = item as ShapeItemType;
     return (

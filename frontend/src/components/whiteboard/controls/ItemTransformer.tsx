@@ -20,15 +20,17 @@ export default function ItemTransformer({
 
   const selectedItem = items.find((item) => item.id === selectedId);
   const isTextSelected = selectedItem?.type === 'text';
-  const isArrowSelected = selectedItem?.type === 'arrow';
+  const isArrowOrLineSelected =
+    selectedItem?.type === 'arrow' || selectedItem?.type === 'line';
   const isDrawingSelected = selectedItem?.type === 'drawing';
 
   // Transformer 연결
   useEffect(() => {
     if (transformerRef.current && stageRef.current) {
       const stage = stageRef.current;
-      // 선택된 요소가 arrow 라면 Transformer 연결 안함(arrow는 자체 핸들 사용)
-      if (selectedId && !isArrowSelected) {
+
+      if (selectedId && !isArrowOrLineSelected) {
+        // 해당 ID 노드 확인
         const selectedNode = stage.findOne('#' + selectedId);
         if (selectedNode) {
           transformerRef.current.nodes([selectedNode]);
@@ -40,7 +42,7 @@ export default function ItemTransformer({
         transformerRef.current.nodes([]);
       }
     }
-  }, [selectedId, items, stageRef, isArrowSelected]);
+  }, [selectedId, items, stageRef, isArrowOrLineSelected]);
 
   return (
     <Transformer
