@@ -22,7 +22,7 @@ import {
   ARROW_STYLE_PRESETS,
 } from '@/components/whiteboard/sidebar/panels/arrowPresets';
 import { TEXT_SIZE_PRESETS } from '@/components/whiteboard/sidebar/panels/textPresets';
-import { DRAWING_SIZE_PRESETS } from '@/components/whiteboard/sidebar/panels/drawingPresets';
+import { DRAWING_SIZE_PRESETS } from '@/constants/drawingPresets';
 import {
   getArrowSize,
   getLineSize,

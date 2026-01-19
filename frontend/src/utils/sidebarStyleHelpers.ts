@@ -9,7 +9,7 @@ import type {
   ArrowStyle,
 } from '@/components/whiteboard/sidebar/panels/arrowPresets';
 import type { TextSize } from '@/components/whiteboard/sidebar/panels/textPresets';
-import type { DrawingSize } from '@/components/whiteboard/sidebar/panels/drawingPresets';
+import type { DrawingSize } from '@/constants/drawingPresets';
 
 // 현재 Arrow 사이즈 결정
 export function getArrowSize(arrow: ArrowItem): ArrowSize {

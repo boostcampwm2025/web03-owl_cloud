@@ -2,7 +2,7 @@
 
 import StrokeColorSection from '@/components/whiteboard/sidebar/sections/StrokeColorSection';
 import ButtonGroup from '@/components/whiteboard/sidebar/ui/ButtonGroup';
-import type { DrawingSize } from './drawingPresets';
+import type { DrawingSize } from '@/constants/drawingPresets';
 
 // DrawingPanel 컴포넌트
 interface DrawingPanelProps {
