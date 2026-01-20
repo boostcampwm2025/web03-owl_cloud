@@ -24,7 +24,7 @@ interface AwarenessActions {
 type AwarenessStore = AwarenessState & AwarenessActions;
 
 // 다른 사용자의 실시간 상태 관리(커서 위치, 선택 아이템)
-export const useAwarenessStore = create<AwarenessStore>((set) => ({
+export const useWhiteboardAwarenessStore = create<AwarenessStore>((set) => ({
   // 초기값
   users: new Map(),
   myUserId: '',

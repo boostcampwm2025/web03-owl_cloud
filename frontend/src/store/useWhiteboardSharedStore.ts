@@ -21,7 +21,7 @@ interface SharedActions {
 type SharedStore = SharedState & SharedActions;
 
 // 공유 스토어 (화이트보드 아이템 목록, 캔버스 크기)
-export const useSharedStore = create<SharedStore>((set) => ({
+export const useWhiteboardSharedStore = create<SharedStore>((set) => ({
   // Whiteboard Items 초기값
   items: [],
 

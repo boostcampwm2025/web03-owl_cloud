@@ -42,7 +42,7 @@ interface LocalActions {
 type LocalStore = LocalState & LocalActions;
 
 // 개인 UI 상태(선택/편집 상태, 커서 모드, 뷰포트 (줌/팬), 임시 그리기)
-export const useLocalStore = create<LocalStore>((set, get) => ({
+export const useWhiteboardLocalStore = create<LocalStore>((set, get) => ({
   // Select 초기값
   selectedId: null,
   selectItem: (id) => set({ selectedId: id }),
