@@ -16,6 +16,7 @@ import {
 } from '@/assets/icons/meeting';
 import Modal from '@/components/common/Modal';
 import MeetingButton from '@/components/meeting/MeetingButton';
+import { useCodeEditorSocket } from '@/hooks/useCodeEditorSocket';
 import { useProduce } from '@/hooks/useProduce';
 import { useMeetingStore } from '@/store/useMeetingStore';
 import { useRouter } from 'next/navigation';
@@ -42,6 +43,8 @@ export default function MeetingMenu() {
     startScreenProduce,
     stopScreenProduce,
   } = useProduce();
+
+  const { openCodeEditor, closeCodeEditor } = useCodeEditorSocket();
 
   const toggleAudio = async () => {
     const { audioOn } = useMeetingStore.getState().media;
@@ -88,7 +91,11 @@ export default function MeetingMenu() {
   };
 
   const onCodeEditorClick = () => {
-    setIsOpen('isCodeEditorOpen', !isCodeEditorOpen);
+    if (isCodeEditorOpen) {
+      closeCodeEditor();
+      return;
+    }
+    openCodeEditor();
   };
 
   const router = useRouter();
