@@ -25,6 +25,8 @@ export const WEBSOCKET_SIGNALING_EVENT_NAME = Object.freeze({
   CONSUMES: 'signaling:ws:consumes',
   RESUMES: 'signaling:ws:resumes',
   PAUSES: 'signaling:ws:pauses',
+  PRODUCE_OFF: 'signaling:ws:produce_off', // 비디오 or 마이크 off
+  SCREEN_STOP: 'signaling:ws:screen_stop', // 화면 공유 stop -> 추가적으로
 
   // 워크 스페이스 or 코드에디터 생성을 위한 이벤트 이름
   OPEN_WHITEBOARD: 'signaling:ws:open_whiteboard',
@@ -36,7 +38,8 @@ export const WEBSOCKET_SIGNALING_EVENT_NAME = Object.freeze({
 export const WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME = Object.freeze({
   JOINED: 'room:joined',
   ADMISSION: 'room:admission',
-  NEW_PRODUCED: 'room:new_produced',
+  ALERT_PRODUCED: 'room:alert_produced', // produce 변경을 알린다.
+  SCREEN_STOP: 'room:screen_stop',
   NEW_USER: 'room:new_user',
   USER_CLOSED: 'room:user_closed',
   ERROR: 'room:error',

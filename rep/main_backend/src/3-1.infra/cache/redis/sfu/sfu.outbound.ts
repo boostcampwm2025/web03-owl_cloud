@@ -1,4 +1,8 @@
-import { DeleteDataToCache, InsertDataToCache } from '@app/ports/cache/cache.outbound';
+import {
+  DeleteDataToCache,
+  InsertDataToCache,
+  UpdateDataToCache,
+} from '@app/ports/cache/cache.outbound';
 import { Inject, Injectable } from '@nestjs/common';
 import { type RedisClientType } from 'redis';
 import {
@@ -133,6 +137,7 @@ export class InsertUserProducerDataToRedis extends InsertDataToCache<RedisClient
         [CACHE_SFU_PRODUCES_KEY_PROPS_NAME.PRODUCER_ID]: entity.producer_id,
         [CACHE_SFU_PRODUCES_KEY_PROPS_NAME.TYPE]: entity.type,
         [CACHE_SFU_PRODUCES_KEY_PROPS_NAME.KIND]: entity.kind,
+        [CACHE_SFU_PRODUCES_KEY_PROPS_NAME.STATUS]: 'on',
       };
       // 중복 방지용 함수
       const ok = await this.cache.hSetNX(userProducerNamespace, entity.kind, JSON.stringify(data));
@@ -305,6 +310,40 @@ export class InsertConsumerDatasToRedis extends InsertDataToCache<RedisClientTyp
     if (Object.keys(fields).length === 0) return true; // 없으면 그냥 반환
 
     await this.cache.hSet(insertConsumerNamespace, fields);
+
+    return true;
+  }
+}
+
+// user_producer에 상태 변화
+@Injectable()
+export class UpdateProducerStatusToRedis extends UpdateDataToCache<RedisClientType<any, any>> {
+  constructor(@Inject(REDIS_SERVER) cache: RedisClientType<any, any>) {
+    super(cache);
+  }
+
+  // namespace는 room_id:user_id로 오게 된다.  updateValue는 변경값이다.
+  async updateKey({
+    namespace,
+    keyName,
+    updateValue,
+  }: {
+    namespace: string;
+    keyName: 'audio' | 'video';
+    updateValue: 'on' | 'off';
+  }): Promise<boolean> {
+    if (updateValue !== 'on' && updateValue !== 'off') return false;
+    if (keyName !== 'audio' && keyName !== 'video') return false;
+
+    const userProducerNamespace: string = `${CACHE_SFU_NAMESPACE_NAME.PRODUCER_INFO}:${namespace}`;
+
+    const raw = await this.cache.hGet(userProducerNamespace, keyName);
+    if (!raw) return false;
+
+    const produceObject = JSON.parse(raw);
+    produceObject[CACHE_SFU_PRODUCES_KEY_PROPS_NAME.STATUS] = updateValue;
+
+    await this.cache.hSet(userProducerNamespace, keyName, JSON.stringify(produceObject));
 
     return true;
   }

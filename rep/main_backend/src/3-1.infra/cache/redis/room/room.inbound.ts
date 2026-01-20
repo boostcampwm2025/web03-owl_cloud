@@ -20,6 +20,7 @@ import {
   GetRoomMembersResult,
   MembersInfo,
   ProviderInfo,
+  ProviderToolInfo,
 } from '@app/room/queries/dto';
 import { NotAllowToolPayload, NotAllowToolTicket } from '@error/infra/infra.error';
 
@@ -70,12 +71,14 @@ type RoomProduceInfoCacheValue = {
   [CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME.TYPE]?: 'mic' | 'cam' | 'screen_video' | 'screen_audio';
   [CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME.KIND]?: 'audio' | 'video';
   [CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME.USER_ID]?: string;
+  [CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME.TOOL]?: 'whiteboard' | 'codeeditor';
 }; // cache에 저장된 방에 producer가 가진 데이터
 
 type SfuProducerInfoCacheValue = {
   [CACHE_SFU_PRODUCES_KEY_PROPS_NAME.PRODUCER_ID]?: string;
   [CACHE_SFU_PRODUCES_KEY_PROPS_NAME.TYPE]?: 'mic' | 'cam' | 'screen_video' | 'screen_audio';
   [CACHE_SFU_PRODUCES_KEY_PROPS_NAME.KIND]?: 'audio' | 'video';
+  [CACHE_SFU_PRODUCES_KEY_PROPS_NAME.STATUS]?: 'on' | 'off';
 }; // 각 유저가 producer 데이터
 
 @Injectable()
@@ -194,15 +197,27 @@ export class SelectRoomMemberInfosFromRedis extends SelectDataFromCache<RedisCli
       // mic producer를 붙힌다.
       const audioProducerId = audioInfo?.[CACHE_SFU_PRODUCES_KEY_PROPS_NAME.PRODUCER_ID];
       const audioType = audioInfo?.[CACHE_SFU_PRODUCES_KEY_PROPS_NAME.TYPE];
+      const audioStatus = audioInfo?.[CACHE_SFU_PRODUCES_KEY_PROPS_NAME.STATUS] ?? 'on';
       if (audioProducerId && audioType === 'mic') {
-        m.mic = { provider_id: audioProducerId, kind: 'audio', type: 'mic' };
+        m.mic = {
+          provider_id: audioProducerId,
+          kind: 'audio',
+          type: 'mic',
+          is_paused: audioStatus === 'off' ? true : false,
+        };
       }
 
       // cam producer를 붙힌다.
       const videoProducerId = videoInfo?.[CACHE_SFU_PRODUCES_KEY_PROPS_NAME.PRODUCER_ID];
       const videoType = videoInfo?.[CACHE_SFU_PRODUCES_KEY_PROPS_NAME.TYPE];
+      const videoStatus = videoInfo?.[CACHE_SFU_PRODUCES_KEY_PROPS_NAME.STATUS] ?? 'on';
       if (videoProducerId && videoType === 'cam') {
-        m.cam = { provider_id: videoProducerId, kind: 'video', type: 'cam' };
+        m.cam = {
+          provider_id: videoProducerId,
+          kind: 'video',
+          type: 'cam',
+          is_paused: videoStatus === 'off' ? true : false,
+        };
       }
     }
   }
@@ -227,13 +242,21 @@ export class SelectRoomMemberInfosFromRedis extends SelectDataFromCache<RedisCli
   private toProviderInfo(
     p: RoomProduceInfoCacheValue | null,
     nicknameByUserId: Map<string, string>,
-  ): ProviderInfo | null {
+  ): ProviderInfo | ProviderToolInfo | null {
     if (!p) return null;
 
     const user_id = p[CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME.USER_ID];
     const producer_id = p[CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME.PRODUCER_ID];
     const kind = p[CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME.KIND];
     const type = p[CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME.TYPE];
+    const tool = p[CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME.TOOL];
+
+    // tool이 있다면 이걸로 한다. ( 확장성을 고려해서 이러한 방식으로 진행한다. )
+    if (user_id && tool)
+      return {
+        user_id,
+        tool,
+      };
 
     if (!user_id || !producer_id || !kind || !type) return null;
 

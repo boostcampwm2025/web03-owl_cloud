@@ -21,6 +21,7 @@ import {
   OnProduceValidate,
   PauseConsumersValidate,
   pauseConsumerValidate,
+  PauseProducerValidate,
   ResumeConsumersValidate,
   ResumeConsumerValidate,
   SocketPayload,
@@ -37,10 +38,13 @@ import {
   CreateProduceResult,
   CreatePropduceDto,
   CreateTransportDto,
+  StopScreenProducerDto,
+  StopScreenProducerResult,
 } from '@app/sfu/commands/dto';
 import {
   ConnectTransportType,
   PauseConsumesDto,
+  PauseProducerDto,
   ResumeConsumerDto,
   ResumeConsumersDto,
 } from '@app/sfu/queries/dto';
@@ -149,8 +153,8 @@ export class SignalingWebsocketService {
 
   // 방에 나갈때 사용하는 함수
   async disconnectRoomService(dto: DisconnectRoomDto): Promise<void> {
-    await this.disconnectRoomUsecase.execute(dto);
-    this.sfuServer.disconnectUser(dto.user_id); // sfu 서버에 내용도 정리
+    await this.disconnectRoomUsecase.execute(dto); // 여기서 추가적으로 main이든 그러한 것들을 정리해주어야 한다.
+    await this.sfuServer.disconnectUser(dto.user_id); // sfu 서버에 내용도 정리
   }
 
   // 방에 가입할때 사용하는 함수
@@ -202,7 +206,7 @@ export class SignalingWebsocketService {
   async onProduce(
     client: Socket,
     validate: OnProduceValidate,
-  ): Promise<CreateProduceResult & { nickname: string }> {
+  ): Promise<CreateProduceResult & { nickname: string; is_paused: boolean }> {
     const room_id: string = client.data.room_id;
     const payload: SocketPayload = client.data.user;
     const dto: CreatePropduceDto = {
@@ -214,6 +218,7 @@ export class SignalingWebsocketService {
     return {
       ...result,
       nickname: payload.nickname,
+      is_paused: false,
     };
   }
 
@@ -339,5 +344,39 @@ export class SignalingWebsocketService {
       tool,
     };
     await this.disconnectToolUsecase.execute(dto);
+  }
+
+  // 특정 produce를 끄겠다는 것
+  async pauseProduce(
+    client: Socket,
+    validate: PauseProducerValidate,
+  ): Promise<CreateProduceResult & { nickname: string; is_paused: boolean }> {
+    const room_id: string = client.data.room_id;
+    const payload: SocketPayload = client.data.user;
+    const dto: PauseProducerDto = {
+      room_id,
+      user_id: payload.user_id,
+      ...validate,
+    };
+    await this.sfuServer.pauseProducers(dto);
+    return {
+      ...validate,
+      status: 'user',
+      type: validate.kind === 'video' ? 'cam' : 'mic',
+      user_id: payload.user_id,
+      nickname: payload.nickname,
+      is_paused: true,
+    };
+  }
+
+  // 화면공유를 끄겠다는 것
+  async stopScreen(client: Socket): Promise<StopScreenProducerResult> {
+    const room_id: string = client.data.room_id;
+    const payload: SocketPayload = client.data.user;
+    const dto: StopScreenProducerDto = {
+      room_id,
+      user_id: payload.user_id,
+    };
+    return this.sfuServer.stopScreen(dto);
   }
 }

@@ -10,6 +10,13 @@ export type CreatePropduceDto = {
   rtpParameters: RtpParameters;
 };
 
+export type GetProducerProps = {
+  producer_id: string;
+  type: 'mic' | 'cam';
+  kind: 'audio' | 'video';
+  status: 'on' | 'off';
+};
+
 // 반환해야 하는 데이터
 export type CreateProduceResult = {
   producer_id: string;

@@ -174,3 +174,14 @@ export class DisConnectToolTypeValidate {
   @IsIn(['whiteboard', 'codeeditor'])
   tool: 'whiteboard' | 'codeeditor';
 }
+
+// producer를 멈추기 위한 validate
+export class PauseProducerValidate {
+  @IsNotEmpty()
+  @IsString()
+  producer_id: string;
+
+  @IsString()
+  @IsIn(['audio', 'video'])
+  kind: 'audio' | 'video';
+}

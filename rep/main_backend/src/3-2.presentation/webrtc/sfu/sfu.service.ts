@@ -8,6 +8,8 @@ import {
   CreatePropduceDto,
   CreateTransportDto,
   RoomEntry,
+  StopScreenProducerDto,
+  StopScreenProducerResult,
   TransportEntry,
 } from '@app/sfu/commands/dto';
 import {
@@ -17,12 +19,14 @@ import {
   CreateRouterUsecase,
   CreateTransportUsecase,
   DisconnectUserUsecase,
+  StopScreenProducerUsecase,
 } from '@app/sfu/commands/usecase';
 import { RoomRouterRepository, TransportRepository } from '@infra/memory/sfu';
 import {
   ConnectTransportUsecase,
   PauseConsumerUsecase,
   PauseConsumesUsecase,
+  PauseProducerUsecase,
   ResumeConsumersUsecase,
   ResumeConsumerUsecase,
 } from '@app/sfu/queries/usecase';
@@ -30,6 +34,7 @@ import {
   ConnectTransportType,
   PauseConsumerDto,
   PauseConsumesDto,
+  PauseProducerDto,
   ResumeConsumerDto,
   ResumeConsumersDto,
 } from '@app/sfu/queries/dto';
@@ -49,6 +54,8 @@ export class SfuService {
     private readonly createConsumersUsecase: CreateConsumersUsecase<any>,
     private readonly resumeConsumersUsecase: ResumeConsumersUsecase<any>,
     private readonly pauseConsumersUsecase: PauseConsumesUsecase<any>,
+    private readonly pauseProducerUsecase: PauseProducerUsecase<any>, // producer를 멈추기 위한 usecase
+    private readonly stopScreenUsecase: StopScreenProducerUsecase<any>, // screen을 멈추기 위한 usecase
     // infra
     private readonly roomRouters: RoomRouterRepository,
     private readonly transports: TransportRepository,
@@ -131,5 +138,15 @@ export class SfuService {
   // 10. resumer를 멈춤
   async pauseConsumers(dto: PauseConsumesDto): Promise<void> {
     await this.pauseConsumersUsecase.execute(dto);
+  }
+
+  // 11. producer off
+  async pauseProducers(dto: PauseProducerDto): Promise<void> {
+    await this.pauseProducerUsecase.execute(dto);
+  }
+
+  // 12. 스크린 producer off
+  async stopScreen(dto: StopScreenProducerDto): Promise<StopScreenProducerResult> {
+    return this.stopScreenUsecase.execute(dto);
   }
 }

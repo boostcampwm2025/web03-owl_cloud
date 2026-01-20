@@ -36,7 +36,7 @@ export class DisconnectRoomUsecase<T, CT> {
     });
 
     // 2. socket, members, info를 수정 혹은 삭제해야 한다. ( 방에 인원이 하나도 없을때 info에 시간을 부여할수도 있다. - 나중에 추가 )
-    // room_id, socket_id, user_id ( 이 값들이 들어가야 한다. )
+    // room_id, socket_id, user_id ( 이 값들이 들어가야 한다. ) -> 여기서 유저가 만약 main_producer를 하고 있다면 그것도 삭제해야 한다.
     await this.deleteRoomDataToCache.deleteNamespaces([dto.room_id, dto.socket_id, dto.user_id]);
   }
 }

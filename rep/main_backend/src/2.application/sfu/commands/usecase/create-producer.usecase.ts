@@ -1,8 +1,17 @@
 // sfu 서버에서 produce를 생성할때 사용하는 usecase라고 할 수 있다.
 import { Injectable } from '@nestjs/common';
-import { CreateProduceResult, CreatePropduceDto, InsertProducerDto } from '../dto';
+import {
+  CreateProduceResult,
+  CreatePropduceDto,
+  GetProducerProps,
+  InsertProducerDto,
+} from '../dto';
 import { SelectDataFromCache } from '@app/ports/cache/cache.inbound';
-import { DeleteDataToCache, InsertDataToCache } from '@app/ports/cache/cache.outbound';
+import {
+  DeleteDataToCache,
+  InsertDataToCache,
+  UpdateDataToCache,
+} from '@app/ports/cache/cache.outbound';
 import type { ProducerRepositoryPort, TransportRepositoryPort } from '../../ports';
 import { RoomTransportInfo } from '../../queries/dto';
 import { SfuError, SfuErrorMessage } from '@error/application/sfu/sfu.error';
@@ -16,6 +25,7 @@ type CreateProduceUsecaseProps<T> = {
   insertMainProducerDataToCache: InsertDataToCache<T>; // main produce 데이터를 cache에 저장
   deleteUserProducerDataToCache: DeleteDataToCache<T>; // 개인 produce 데이터를 cache에 삭제
   deleteMainProducerDataToCache: DeleteDataToCache<T>; // main produce 데이터를 cache에 삭제
+  updateUserProducerDataToCache: UpdateDataToCache<T>; // 만약 이미 produce가 올라가 있으면 상태 업데이트
 };
 
 @Injectable()
@@ -27,6 +37,7 @@ export class CreateProduceUsecase<T> {
   private readonly insertMainProducerDataToCache: CreateProduceUsecaseProps<T>['insertMainProducerDataToCache'];
   private readonly deleteUserProducerDataToCache: CreateProduceUsecaseProps<T>['deleteUserProducerDataToCache'];
   private readonly deleteMainProducerDataToCache: CreateProduceUsecaseProps<T>['deleteMainProducerDataToCache'];
+  private readonly updateUserProducerDataToCache: CreateProduceUsecaseProps<T>['updateUserProducerDataToCache'];
 
   constructor(
     private readonly produceRepo: ProducerRepositoryPort,
@@ -39,6 +50,7 @@ export class CreateProduceUsecase<T> {
       insertMainProducerDataToCache,
       deleteUserProducerDataToCache,
       deleteMainProducerDataToCache,
+      updateUserProducerDataToCache,
     }: CreateProduceUsecaseProps<T>,
   ) {
     this.selectTransportDataFromCache = selectTransportDataFromCache;
@@ -48,6 +60,7 @@ export class CreateProduceUsecase<T> {
     this.insertMainProducerDataToCache = insertMainProducerDataToCache;
     this.deleteUserProducerDataToCache = deleteUserProducerDataToCache;
     this.deleteMainProducerDataToCache = deleteMainProducerDataToCache;
+    this.updateUserProducerDataToCache = updateUserProducerDataToCache;
   }
 
   async execute(dto: CreatePropduceDto): Promise<CreateProduceResult> {
@@ -70,11 +83,43 @@ export class CreateProduceUsecase<T> {
     // 중복 등록하지 않도록 확인해줘야 한다.
     if (dto.type === 'cam' || dto.type === 'mic') {
       // -> 현재 유저값이 존재하는지 확인 ( 여러번 등록하게 하면 안된다. ) -> user_id를 기준으로 찾아야 하고 kind를 기준으로 정보들이 저장될것이다.
-      const userChecked: boolean = await this.selectUserProducerDataFromCache.select({
-        namespace: `${dto.room_id.trim()}:${dto.user_id.trim()}`.trim(),
-        keyName: dto.kind,
-      });
-      if (userChecked) throw new SfuErrorMessage(`${dto.type}은 이미 실행되어 있습니다.`);
+      const userProduceProps: GetProducerProps | undefined =
+        await this.selectUserProducerDataFromCache.select({
+          namespace: `${dto.room_id.trim()}:${dto.user_id.trim()}`.trim(),
+          keyName: dto.kind,
+        });
+
+      // 만약 존재한다면 producer를 on 하고 그 정보를 전달해준다.
+      if (userProduceProps) {
+        // producer에서 producer_id에 맞는 producer를 찾고 변경
+        const prevProducer = this.produceRepo.get(userProduceProps.producer_id);
+        if (!prevProducer) {
+          // 삭제 후 아래 로직으로 간다.
+          await this.deleteUserProducerDataToCache.deleteKey({
+            namespace: `${dto.room_id.trim()}:${dto.user_id.trim()}`.trim(),
+            keyName: dto.kind,
+          });
+        }
+        // 아래는 수정 한 후 바로 반환한다.
+        else {
+          // update 한다.
+          if (prevProducer.paused) await prevProducer.resume();
+          await this.updateUserProducerDataToCache.updateKey({
+            namespace: `${dto.room_id}:${dto.user_id}`,
+            keyName: dto.kind,
+            updateValue: 'on',
+          });
+
+          // 여기서 반환
+          return {
+            producer_id: userProduceProps.producer_id,
+            user_id: dto.user_id,
+            status: 'user',
+            kind: dto.kind,
+            type: userProduceProps.type, // 찾아낸 type으로 하는게 맞는것 같다.
+          };
+        }
+      }
     } else {
       // -> main에 현재 데이터가 존재하는지 확인
       const mainChecked: boolean = await this.selectMainProducerDataFromCache.select({
