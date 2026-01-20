@@ -138,7 +138,7 @@ export default function MeetingMenu() {
             onClick={onMemberClick}
           />
           <span className="absolute top-0.5 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-neutral-600 text-xs font-bold text-neutral-50">
-            {members}
+            {members.length}
           </span>
         </div>
         <MeetingButton

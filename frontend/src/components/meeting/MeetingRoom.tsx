@@ -8,7 +8,9 @@ import MemberModal from '@/components/meeting/MemberModal';
 import MemberVideoBar from '@/components/meeting/MemberVideoBar';
 import Whiteboard from '@/components/whiteboard/Whiteboard';
 import { useProduce } from '@/hooks/useProduce';
+import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
 import { useMeetingStore } from '@/store/useMeetingStore';
+import { FetchRoomMembersResponse } from '@/types/meeting';
 import { useEffect } from 'react';
 
 export default function MeetingRoom({ meetingId }: { meetingId: string }) {
@@ -21,6 +23,8 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
     isCodeEditorOpen,
   } = useMeetingStore();
   const { startAudioProduce, startVideoProduce, isReady } = useProduce();
+  const { socket } = useMeetingSocketStore();
+  const { setMembers } = useMeetingStore();
 
   // 초기 입장 시 로비에서 설정한 미디어 Produce
   useEffect(() => {
@@ -30,6 +34,26 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
     if (audioOn) startAudioProduce();
     if (videoOn) startVideoProduce();
   }, [isReady]);
+
+  // 초기 입장 시 현재 회의에 참여 중인 참가자 정보 저장
+  useEffect(() => {
+    if (!socket) return;
+
+    const fetchRoomMembers = async () => {
+      try {
+        const { main, members } = (await socket.emitWithAck(
+          'signaling:ws:room_members',
+        )) as FetchRoomMembersResponse;
+        setMembers(members);
+
+        // main으로 화면 공유 중인 경우 처리 구현 필요
+      } catch (error) {
+        console.error('에러 발생:', error);
+      }
+    };
+
+    fetchRoomMembers();
+  }, [socket]);
 
   return (
     <main className="flex h-screen w-screen flex-col bg-neutral-900">

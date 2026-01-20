@@ -1,4 +1,4 @@
-import { MediaState } from '@/types/media';
+import { MediaState, MeetingMember } from '@/types/meeting';
 import { create } from 'zustand';
 
 const INITIAL_MEDIA_STATE: MediaState = {
@@ -12,7 +12,7 @@ const INITIAL_MEDIA_STATE: MediaState = {
 interface MeetingState {
   media: MediaState;
 
-  members: number;
+  members: MeetingMember[];
   hasNewChat: boolean;
 
   isInfoOpen: boolean;
@@ -24,7 +24,8 @@ interface MeetingState {
 
 interface MeetingActions {
   setMedia: (media: Partial<MediaState>) => void;
-  setMembers: (count: number) => void;
+  setMembers: (members: MeetingMember[]) => void;
+  setMember: (member: MeetingMember) => void;
   setHasNewChat: (state: boolean) => void;
 
   setIsOpen: (
@@ -43,7 +44,7 @@ interface MeetingActions {
 export const useMeetingStore = create<MeetingState & MeetingActions>((set) => ({
   media: INITIAL_MEDIA_STATE,
 
-  members: 0,
+  members: [],
   hasNewChat: false,
 
   isInfoOpen: false,
@@ -53,7 +54,9 @@ export const useMeetingStore = create<MeetingState & MeetingActions>((set) => ({
   isCodeEditorOpen: false,
 
   setMedia: (media) => set((prev) => ({ media: { ...prev.media, ...media } })),
-  setMembers: (count) => set({ members: count }),
+  setMembers: (members) => set({ members }),
+  setMember: (member) =>
+    set((prev) => ({ members: [...prev.members, member] })),
   setHasNewChat: (state) => set({ hasNewChat: state }),
 
   setIsOpen: (type, state) => set({ [type]: state }),

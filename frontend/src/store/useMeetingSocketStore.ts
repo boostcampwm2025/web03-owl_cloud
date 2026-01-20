@@ -1,4 +1,4 @@
-import { IsProducing, MediasoupTransports, Producers } from '@/types/media';
+import { IsProducing, MediasoupTransports, Producers } from '@/types/meeting';
 import { initSendTransport } from '@/utils/initSendTransport';
 import { Device } from 'mediasoup-client';
 import { Producer, Transport } from 'mediasoup-client/types';
