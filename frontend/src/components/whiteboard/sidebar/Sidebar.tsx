@@ -36,6 +36,7 @@ import {
   getDrawingSize,
   getItemStyle,
 } from '@/utils/sidebarStyleHelpers';
+import { LayerDirection } from '@/components/whiteboard/sidebar/sections/LayerSection';
 
 // 사이드 바 선택된 요소 타입
 type SelectionType =
@@ -51,7 +52,8 @@ export default function Sidebar() {
   // 스토어에서 선택된 아이템 정보 가져오기
   const selectedId = useWhiteboardLocalStore((state) => state.selectedId);
   const items = useWhiteboardSharedStore((state) => state.items);
-  const { updateItem, bringToFront, sendToBack } = useItemActions();
+  const { updateItem, bringToFront, sendToBack, bringForward, sendBackward } =
+    useItemActions();
 
   const cursorMode = useWhiteboardLocalStore((state) => state.cursorMode);
   const drawingStroke = useWhiteboardLocalStore((state) => state.drawingStroke);
@@ -153,12 +155,23 @@ export default function Sidebar() {
     return null;
   }
 
-  const handleLayerChange = (direction: 'front' | 'back') => {
+  // 레이어 변경 핸들러
+  const handleLayerChange = (direction: LayerDirection) => {
     if (!selectedId) return;
-    if (direction === 'front') {
-      bringToFront(selectedId);
-    } else {
-      sendToBack(selectedId);
+
+    switch (direction) {
+      case 'front':
+        bringToFront(selectedId);
+        break;
+      case 'back':
+        sendToBack(selectedId);
+        break;
+      case 'forward':
+        bringForward(selectedId);
+        break;
+      case 'backward':
+        sendBackward(selectedId);
+        break;
     }
   };
 
