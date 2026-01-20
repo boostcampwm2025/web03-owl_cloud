@@ -44,7 +44,7 @@ import { ConfigService } from '@nestjs/config';
 import { TOOL_LEFT_TOPIC_NAME } from './signaling.validate';
 import { EVENT_STREAM_NAME } from '@infra/event-stream/event-stream.constants';
 import { KafkaService } from '@infra/event-stream/kafka/event-stream-service';
-import { CheckPresignedUrlFromAwsS3, CheckUploadDatasFromAwsS3, GetCompleteMultipartTagsFromAwsS3, GetDownloadUrlFromS3Client, GetMultipartUploadIdFromS3Bucket, GetPresignedUrlFromS3Bucket, GetPresignedUrlsFromS3Bucket } from '@infra/disk/s3/adapters/disk.inbound';
+import { CheckPresignedUrlFromAwsS3, CheckUploadDatasFromAwsS3, GetCompleteMultipartTagsFromAwsS3, GetDownloadUrlFromS3Client, GetMultipartUploadIdFromS3Bucket, GetPresignedUrlFromS3Bucket, GetPresignedUrlsFromS3Bucket, GetThumnailUrlFromS3Client } from '@infra/disk/s3/adapters/disk.inbound';
 import { CompleteUploadToAwsS3 } from '@/3-1.infra/disk/s3/adapters/disk.outbound';
 
 
@@ -217,7 +217,7 @@ import { CompleteUploadToAwsS3 } from '@/3-1.infra/disk/s3/adapters/disk.outboun
         checkUploadsFromDisk : CheckUploadDatasFromAwsS3,
         completeUploadToDisk : CompleteUploadToAwsS3,
         updateFileInfoToCache : UpdateFileInfoToRedis,
-        getUploadUrlFromDisk : GetDownloadUrlFromS3Client, 
+        getUploadUrlFromDisk : GetThumnailUrlFromS3Client,
       ) => {
         return new CheckUploadFileUsecase({
           checkUserAndSelectFileInfoFromCache, checkUploadFromDisk, checkUploadsFromDisk, completeUploadToDisk, updateFileInfoToCache, getUploadUrlFromDisk
@@ -229,7 +229,7 @@ import { CompleteUploadToAwsS3 } from '@/3-1.infra/disk/s3/adapters/disk.outboun
         CheckUploadDatasFromAwsS3,
         CompleteUploadToAwsS3,
         UpdateFileInfoToRedis,
-        GetDownloadUrlFromS3Client
+        GetThumnailUrlFromS3Client
       ]
     },
 

@@ -483,7 +483,7 @@ export class GetPresingendUrlsFromAwsS3 extends GetUploadUrlsFromDisk<S3Client> 
 
 // 실제 다운로드용 url은 여기서 받는다
 @Injectable()
-export class GetDownloadUrlFromS3Client extends GetDownloadUrlFromDisk<S3Client> {
+export class GetThumnailUrlFromS3Client extends GetDownloadUrlFromDisk<S3Client> {
 
   constructor(
     @Inject(S3_DISK) disk: S3Client,
@@ -493,14 +493,14 @@ export class GetDownloadUrlFromS3Client extends GetDownloadUrlFromDisk<S3Client>
   }
 
 
-  async getUrl({ pathName, }: { pathName: Array<string>; }): Promise<string> {
+  async getUrl({ pathName, filename }: { pathName: Array<string>;  filename : undefined}): Promise<string> {
     const Bucket: string = this.config.get<string>('NODE_APP_AWS_BUCKET_NAME', 'bucket');
     const key_name: string = path.posix.join(...pathName);
     const expiresIn: number = this.config.get<number>(
       'NODE_APP_AWS_PRESIGNED_URL_EXPIRES_SEC',
       180,
     );  
-    
+
     // 다운로드용 url을 받는다. 
     const command = new GetObjectCommand({
       Bucket,
@@ -514,3 +514,37 @@ export class GetDownloadUrlFromS3Client extends GetDownloadUrlFromDisk<S3Client>
     return downloadUrl;
   }
 };
+
+// 다운로드용이고 filename을 붙여서 미리보기를 차단한다. 
+@Injectable()
+export class GetDownloadUrlFromS3Client extends GetDownloadUrlFromDisk<S3Client> {
+
+  constructor(
+    @Inject(S3_DISK) disk: S3Client,
+    private readonly config: ConfigService,
+  ) {
+    super(disk);
+  }
+
+  async getUrl({ pathName, filename }: { pathName: Array<string>; filename : string }): Promise<string> {
+    const Bucket: string = this.config.get<string>('NODE_APP_AWS_BUCKET_NAME', 'bucket');
+    const key_name: string = path.posix.join(...pathName);
+    const expiresIn: number = this.config.get<number>(
+      'NODE_APP_AWS_PRESIGNED_URL_EXPIRES_SEC',
+      180,
+    );  
+
+    // 다운로드용 url을 받는다. 
+    const command = new GetObjectCommand({
+      Bucket,
+      Key: key_name,
+      ResponseContentDisposition: `attachment; filename="${encodeURIComponent(filename)}"`
+    });
+
+    const downloadUrl = await getSignedUrl(this.disk, command, {
+      expiresIn,
+    });
+
+    return downloadUrl;
+  }
+}

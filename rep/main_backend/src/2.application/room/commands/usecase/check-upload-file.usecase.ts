@@ -74,7 +74,7 @@ export class CheckUploadFileUsecase<T, ST> {
 
     // image나 video인경우 thumnail을 가져온다. 
     if ( checkResult.category === "image" || checkResult.category === "video" ) thumnail_url = await this.getUploadUrlFromDisk.getUrl({ 
-    pathName : [ dto.room_id, dto.file_id ] });
+    pathName : [ dto.room_id, dto.file_id ], filename : undefined });
 
     if ( checkResult.status !== "completed" ) {
       // 2. 데이터 저장 

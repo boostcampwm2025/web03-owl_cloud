@@ -134,8 +134,10 @@ export class GetDownloadUrlFromDisk<T> extends InboundBaseDisk<T> {
 
   public async getUrl({
     pathName,
+    filename
   }: {
     pathName: Array<string>;
+    filename : string | undefined
   }): Promise<string> | never {
     throw new NullInterfaceError();
   }

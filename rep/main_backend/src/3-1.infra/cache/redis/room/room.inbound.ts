@@ -655,10 +655,10 @@ export class CheckRoomMemberFromRedis extends SelectDataFromCache<RedisClientTyp
     const status = obj[CACHE_ROOM_FILES_KEY_PROPS_NAME.STATUS];
     if (status !== "completed") return undefined;
 
-    const mime = obj[CACHE_ROOM_FILES_KEY_PROPS_NAME.MIME_TYPE];
-    if (typeof mime !== "string" || mime.length === 0) return undefined;
+    const fileName = obj[CACHE_ROOM_FILES_KEY_PROPS_NAME.FILENAME];
+    if (typeof fileName !== "string" || fileName.length === 0) return undefined;
 
-    return mime; // mime_type 반환
+    return fileName; // mime_type 반환
   };
 
 };
