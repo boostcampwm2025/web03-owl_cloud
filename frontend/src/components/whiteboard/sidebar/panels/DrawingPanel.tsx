@@ -22,7 +22,7 @@ export default function DrawingPanel({
     <div className="flex flex-col gap-2">
       {/* 그리기 색상 설정 섹션 */}
       <StrokeColorSection
-        title="COLOR"
+        title="color"
         color={stroke}
         onChange={onChangeStroke}
         allowTransparent={false}
@@ -30,7 +30,7 @@ export default function DrawingPanel({
 
       {/* 그리기 크기 설정 섹션 */}
       <ButtonGroup
-        label="Size"
+        label="stroke width"
         options={[
           { value: 'S' as DrawingSize, label: 'S' },
           { value: 'M' as DrawingSize, label: 'M' },

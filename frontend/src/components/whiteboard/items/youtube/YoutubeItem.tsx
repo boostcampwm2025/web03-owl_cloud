@@ -178,6 +178,8 @@ export default function YoutubeItem({
         cornerRadius={youtubeItem.cornerRadius}
         stroke={youtubeItem.stroke}
         strokeWidth={youtubeItem.strokeWidth}
+        opacity={youtubeItem.opacity}
+        dash={youtubeItem.dash}
       />
 
       {/* 썸네일 이미지 */}
@@ -191,6 +193,7 @@ export default function YoutubeItem({
           opacity={youtubeItem.opacity}
           stroke={youtubeItem.stroke}
           strokeWidth={youtubeItem.strokeWidth}
+          dash={youtubeItem.dash}
         />
       )}
 

@@ -8,6 +8,7 @@ import {
   CreateRouterUsecase,
   CreateTransportUsecase,
   DisconnectUserUsecase,
+  StopScreenProducerUsecase,
 } from '@app/sfu/commands/usecase';
 import {
   ConsumerRepository,
@@ -35,12 +36,14 @@ import {
   InsertConsumerDataToRedis,
   InsertMainProducerDataToRedis,
   InsertUserProducerDataToRedis,
+  UpdateProducerStatusToRedis,
 } from '@infra/cache/redis/sfu/sfu.outbound';
 import { MediasoupTransportFactory } from '@infra/media/mediasoup/sfu/sfu.outbound';
 import {
   ConnectTransportUsecase,
   PauseConsumerUsecase,
   PauseConsumesUsecase,
+  PauseProducerUsecase,
   ResumeConsumersUsecase,
   ResumeConsumerUsecase,
 } from '@app/sfu/queries/usecase';
@@ -48,8 +51,10 @@ import {
   SelectConsumerInfoFromRedis,
   SelectConsumerInfosFromRedis,
   SelectMainProducerDataFromRedis,
+  SelectRoomProducerDataFromRedis,
   SelectSfuTransportDataFromRedis,
   SelectUserProducerDataFromRedis,
+  SelectUserProducerInfoDataFromRedis,
   SelectUserTransportFromRedis,
 } from '@infra/cache/redis/sfu/sfu.inbound';
 
@@ -134,12 +139,13 @@ import {
         produceRepo: ProducerRepositoryPort,
         transportRepo: TransportRepositoryPort,
         selectTransportDataFromCache: SelectSfuTransportDataFromRedis,
-        selectUserProducerDataFromCache: SelectUserProducerDataFromRedis,
+        selectUserProducerDataFromCache: SelectUserProducerInfoDataFromRedis,
         selectMainProducerDataFromCache: SelectMainProducerDataFromRedis,
         insertUserProducerDataToCache: InsertUserProducerDataToRedis,
         insertMainProducerDataToCache: InsertMainProducerDataToRedis,
         deleteUserProducerDataToCache: DeleteUserProducerDataToRedis,
         deleteMainProducerDataToCache: DeleteMainProducerDataToRedis,
+        updateUserProducerDataToCache: UpdateProducerStatusToRedis,
       ) => {
         return new CreateProduceUsecase(produceRepo, transportRepo, {
           selectTransportDataFromCache,
@@ -149,18 +155,20 @@ import {
           insertMainProducerDataToCache,
           deleteUserProducerDataToCache,
           deleteMainProducerDataToCache,
+          updateUserProducerDataToCache,
         });
       },
       inject: [
         ProducerRepository,
         TransportRepository,
         SelectSfuTransportDataFromRedis,
-        SelectUserProducerDataFromRedis,
+        SelectUserProducerInfoDataFromRedis,
         SelectMainProducerDataFromRedis,
         InsertUserProducerDataToRedis,
         InsertMainProducerDataToRedis,
         DeleteUserProducerDataToRedis,
         DeleteMainProducerDataToRedis,
+        UpdateProducerStatusToRedis,
       ],
     },
 
@@ -264,6 +272,45 @@ import {
         return new PauseConsumesUsecase(consumerRepo, { selectConsumerInfosFromCache });
       },
       inject: [ConsumerRepository, SelectConsumerInfosFromRedis],
+    },
+
+    // producer를 멈추는 usecase
+    {
+      provide: PauseProducerUsecase,
+      useFactory: (
+        produceRepo: ProducerRepositoryPort,
+        selectUserProduceFromCache: SelectUserProducerDataFromRedis,
+        deleteUserProduceToCache: DeleteUserProducerDataToRedis,
+        updateUserProduceToCache: UpdateProducerStatusToRedis,
+      ) => {
+        return new PauseProducerUsecase(produceRepo, {
+          selectUserProduceFromCache,
+          deleteUserProduceToCache,
+          updateUserProduceToCache,
+        });
+      },
+      inject: [
+        ProducerRepository,
+        SelectUserProducerDataFromRedis,
+        DeleteUserProducerDataToRedis,
+        UpdateProducerStatusToRedis,
+      ],
+    },
+
+    // screen을 끄는 usecase
+    {
+      provide: StopScreenProducerUsecase,
+      useFactory: (
+        produceRepo: ProducerRepositoryPort,
+        selectMainAndSubProducerFromCache: SelectRoomProducerDataFromRedis, // producer를 찾는다.
+        deleteProducerInfoToCache: DeleteMainProducerDataToRedis, // 불량 producer는 삭제한다.
+      ) => {
+        return new StopScreenProducerUsecase(produceRepo, {
+          selectMainAndSubProducerFromCache,
+          deleteProducerInfoToCache,
+        });
+      },
+      inject: [ProducerRepository, SelectRoomProducerDataFromRedis, DeleteMainProducerDataToRedis],
     },
   ],
   exports: [SfuService],

@@ -93,6 +93,7 @@ export const CACHE_SFU_PRODUCES_KEY_PROPS_NAME = Object.freeze({
   PRODUCER_ID: 'producer_id',
   TYPE: 'type',
   KIND: 'kind',
+  STATUS: 'status', // 현재 on/off 상태 확인 상태의 종류는 on or off
 } as const);
 
 // consumer는 여러개를 사용할 수 있음 consumer_id : { 아래 데이터들 }
@@ -100,6 +101,6 @@ export const CACHE_SFU_CONSUMER_KEY_PROPS_NAME = Object.freeze({
   CONSUMER_ID: 'consumer_id',
   PRODUCER_ID: 'producer_id',
   USER_ID: 'user_id',
-  STATUS: 'status',
+  STATUS: 'status', // main or user -> main은 현재 화면에 있는 consumer를 말하고 user는 개인 화면에 consumer를 말한다.
   TRANSPORT_ID: 'transport_id',
 });

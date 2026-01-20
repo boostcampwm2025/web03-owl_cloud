@@ -21,7 +21,14 @@ export const useAddWhiteboardItem = () => {
   // Text Item 추가 핸들러
   const handleAddText = () => {
     const worldPos = getCenterWorldPos(stagePos, stageScale);
-    addText({ x: worldPos.x, y: worldPos.y });
+
+    const defaultWidth = 200;
+    const defaultFontSize = 32;
+
+    addText({
+      x: worldPos.x - defaultWidth / 2,
+      y: worldPos.y - defaultFontSize / 2,
+    });
   };
 
   // Arrow Item 추가 핸들러
@@ -101,11 +108,15 @@ export const useAddWhiteboardItem = () => {
             }
           }
 
+          const worldPos = getCenterWorldPos(stagePos, stageScale);
+
           // store 저장
           addImage({
             src,
             width: w,
             height: h,
+            x: worldPos.x - w / 2,
+            y: worldPos.y - h / 2,
           });
         };
       };
@@ -164,7 +175,7 @@ export const useAddWhiteboardItem = () => {
           }
         }
 
-        // 중앙 좌표 계산
+        // 뷰포트 중앙 좌표 계산
         const worldPos = getCenterWorldPos(stagePos, stageScale);
 
         addVideo({

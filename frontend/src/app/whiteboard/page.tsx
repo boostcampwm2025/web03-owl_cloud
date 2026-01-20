@@ -15,7 +15,7 @@ const Canvas = dynamic(() => import('@/components/whiteboard/Canvas'), {
 
 export default function Home() {
   return (
-    <div className="relative flex min-h-screen items-center justify-center">
+    <div className="relative flex h-screen w-full items-center justify-center overflow-hidden">
       <ToolbarContainer />
       <Sidebar />
       <HistoryControl />

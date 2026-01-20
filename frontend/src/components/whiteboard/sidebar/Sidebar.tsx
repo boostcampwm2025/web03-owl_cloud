@@ -6,16 +6,20 @@ import { useMemo } from 'react';
 import ShapePanel from '@/components/whiteboard/sidebar/panels/ShapePanel';
 import ArrowPanel from '@/components/whiteboard/sidebar/panels/ArrowPanel';
 import LinePanel from '@/components/whiteboard/sidebar/panels/LinePanel';
+import MediaPanel from '@/components/whiteboard/sidebar/panels/MediaPanel';
 import TextPanel from '@/components/whiteboard/sidebar/panels/TextPanel';
 import DrawingPanel from '@/components/whiteboard/sidebar/panels/DrawingPanel';
 
 import { useWhiteboardSharedStore } from '@/store/useWhiteboardSharedStore';
 import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 import { useItemActions } from '@/hooks/useItemActions';
+import { StrokeStyleType } from '@/components/whiteboard/sidebar/sections/StrokeStyleSection';
+import { EdgeType } from '@/components/whiteboard/sidebar/sections/EdgesSection';
 import type {
   ArrowItem,
   LineItem,
   ShapeItem,
+  ImageItem,
   TextItem,
   DrawingItem,
 } from '@/types/whiteboard';
@@ -34,7 +38,14 @@ import {
 } from '@/utils/sidebarStyleHelpers';
 
 // 사이드 바 선택된 요소 타입
-type SelectionType = 'shape' | 'arrow' | 'line' | 'text' | 'drawing' | null;
+type SelectionType =
+  | 'shape'
+  | 'arrow'
+  | 'line'
+  | 'text'
+  | 'drawing'
+  | 'media'
+  | null;
 
 export default function Sidebar() {
   // 스토어에서 선택된 아이템 정보 가져오기
@@ -67,6 +78,10 @@ export default function Sidebar() {
         return 'arrow';
       case 'line':
         return 'line';
+      case 'image':
+      case 'video':
+      case 'youtube':
+        return 'media';
       case 'text':
         return 'text';
       case 'drawing':
@@ -77,6 +92,36 @@ export default function Sidebar() {
   };
 
   const selectionType = getSelectionType(selectedItem);
+
+  // Dash 배열([10, 5]) -> 스타일 문자열('dashed')
+  const getStrokeStyle = (
+    dash: number[] | undefined,
+    width: number,
+  ): StrokeStyleType => {
+    if (!dash || dash.length === 0) return 'solid';
+    // 점선 패턴이 짧으면(두께와 비슷하면) dotted로 간주
+    if (dash[0] <= width * 1.5) return 'dotted';
+    return 'dashed';
+  };
+
+  // 스타일 문자열 -> Dash 배열 계산
+  const getDashArray = (style: StrokeStyleType, width: number): number[] => {
+    switch (style) {
+      case 'solid':
+        return [];
+      case 'dashed':
+        return [width * 4, width * 2];
+      case 'dotted':
+        return [width, width];
+      default:
+        return [];
+    }
+  };
+
+  // CornerRadius 숫자(20) -> 엣지 타입('round')
+  const getEdgeType = (radius: number | undefined): EdgeType => {
+    return radius && radius > 0 ? 'round' : 'sharp';
+  };
 
   // 선택 타입에 따른 표시될 헤더 제목
   const getHeaderTitle = () => {
@@ -89,6 +134,10 @@ export default function Sidebar() {
         return 'Arrow';
       case 'line':
         return 'Line';
+      case 'media':
+        if (selectedItem?.type === 'youtube') return 'Youtube';
+        if (selectedItem?.type === 'video') return 'Video';
+        return 'Image';
       case 'text':
         return 'Text';
       case 'drawing':
@@ -117,14 +166,61 @@ export default function Sidebar() {
         {/* shape */}
         {selectionType === 'shape' && (
           <ShapePanel
-            strokeColor={(selectedItem as ShapeItem).stroke}
-            backgroundColor={(selectedItem as ShapeItem).fill}
+            // 테두리 색상
+            strokeColor={(selectedItem as ShapeItem).stroke ?? '#000000'}
+            // 배경 색상
+            backgroundColor={(selectedItem as ShapeItem).fill ?? 'transparent'}
+            // 테두리 두께
+            strokeWidth={(selectedItem as ShapeItem).strokeWidth ?? 2}
+            // 선 스타일
+            strokeStyle={getStrokeStyle(
+              (selectedItem as ShapeItem).dash,
+              (selectedItem as ShapeItem).strokeWidth ?? 2,
+            )}
+            // 투명도
+            opacity={(selectedItem as ShapeItem).opacity ?? 1}
+            // 모서리 타입
+            edgeType={getEdgeType((selectedItem as ShapeItem).cornerRadius)}
+            // 테두리 색상 변경
             onChangeStrokeColor={(color) =>
               updateItem(selectedId!, { stroke: color })
             }
+            // 배경 색상 변경 핸들러 연결
             onChangeBackgroundColor={(color) =>
               updateItem(selectedId!, { fill: color })
             }
+            // 테두리 두께 변경 (두께가 바뀌면 점선 간격 비율에 맞게 재계산)
+            onChangeStrokeWidth={(width) => {
+              const currentItem = selectedItem as ShapeItem;
+              const currentStyle = getStrokeStyle(
+                currentItem.dash,
+                currentItem.strokeWidth ?? 2,
+              );
+              // 스타일 유지하면서 새로운 두께에 맞는 dash 배열 생성
+              const newDash = getDashArray(currentStyle, width);
+
+              updateItem(selectedId!, {
+                strokeWidth: width,
+                dash: newDash,
+              });
+            }}
+            // 선 스타일 변경 (solid, dashed, dotted)
+            onChangeStrokeStyle={(style) => {
+              const width = (selectedItem as ShapeItem).strokeWidth ?? 2;
+              updateItem(selectedId!, { dash: getDashArray(style, width) });
+            }}
+            // 모서리 변경 (sharp, round)
+            onChangeEdgeType={(type) => {
+              // round : 20
+              // sharp : 0
+              updateItem(selectedId!, {
+                cornerRadius: type === 'round' ? 20 : 0,
+              });
+            }}
+            // 투명도 변경
+            onChangeOpacity={(opacity) => {
+              updateItem(selectedId!, { opacity });
+            }}
           />
         )}
 
@@ -176,6 +272,66 @@ export default function Sidebar() {
             }}
             onChangeStyle={(style) => {
               updateItem(selectedId!, { tension: ARROW_STYLE_PRESETS[style] });
+            }}
+          />
+        )}
+
+        {/* media (image/video/youtube) */}
+        {selectionType === 'media' && (
+          <MediaPanel
+            strokeColor={(selectedItem as ImageItem).stroke ?? 'transparent'}
+            strokeWidth={(selectedItem as ImageItem).strokeWidth ?? 0}
+            strokeStyle={getStrokeStyle(
+              (selectedItem as ImageItem).dash,
+              (selectedItem as ImageItem).strokeWidth ?? 0,
+            )}
+            edgeType={getEdgeType((selectedItem as ImageItem).cornerRadius)}
+            opacity={(selectedItem as ImageItem).opacity ?? 1}
+            onChangeStrokeColor={(color) =>
+              updateItem(selectedId!, { stroke: color })
+            }
+            onChangeStrokeWidth={(width) => {
+              const currentWidth = (selectedItem as ImageItem).strokeWidth ?? 0;
+              const currentDash = (selectedItem as ImageItem).dash;
+
+              const currentStyle = getStrokeStyle(
+                currentDash,
+                currentWidth || 2,
+              );
+
+              const newDash = getDashArray(currentStyle, width);
+
+              updateItem(selectedId!, {
+                strokeWidth: width,
+                dash: newDash,
+                stroke: (selectedItem as ImageItem).stroke ?? '#000000',
+              });
+            }}
+            onChangeStrokeStyle={(style) => {
+              const currentWidth = (selectedItem as ImageItem).strokeWidth ?? 0;
+
+              // 보정된 두께
+              // 두께가 0이면 내부적으로 2로 간주하여 dash 배열 계산
+              const effectiveWidth = currentWidth === 0 ? 2 : currentWidth;
+
+              updateItem(selectedId!, {
+                // effectiveWidth로 dash 배열 계산
+                dash: getDashArray(style, effectiveWidth),
+
+                // 두께가 0이었다면 2px로 업데이트
+                strokeWidth: effectiveWidth,
+
+                // 색상이 없었다면 기본 색상 검정으로 설정
+                stroke: (selectedItem as ImageItem).stroke ?? '#000000',
+              });
+            }}
+            onChangeEdgeType={(type) => {
+              updateItem(selectedId!, {
+                cornerRadius: type === 'round' ? 20 : 0,
+              });
+            }}
+            onChangeOpacity={(opacity) => {
+              updateItem(selectedId!, { opacity });
             }}
           />
         )}

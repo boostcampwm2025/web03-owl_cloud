@@ -3,15 +3,21 @@ import { Inject, Injectable } from '@nestjs/common';
 import { type RedisClientType } from 'redis';
 import {
   CACHE_ROOM_INFO_KEY_NAME,
+  CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME,
   CACHE_ROOM_NAMESPACE_NAME,
   CACHE_ROOM_SUB_NAMESPACE_NAME,
   CACHE_SFU_NAMESPACE_NAME,
+  CACHE_SFU_PRODUCES_KEY_PROPS_NAME,
   CACHE_SFU_TRANSPORTS_KEY_NAME,
   CACHE_SFU_USER_KEY_NAME,
   REDIS_SERVER,
 } from '../../cache.constants';
 import { RoomTransportInfo } from '@app/sfu/queries/dto';
-import { DisconnectUserTransportInfos } from '@/2.application/sfu/commands/dto';
+import {
+  DisconnectUserTransportInfos,
+  GetProducerProps,
+  StopScreenProducerCacheInfoResult,
+} from '@app/sfu/commands/dto';
 
 @Injectable()
 export class SelectSfuTransportDataFromRedis extends SelectDataFromCache<
@@ -189,5 +195,112 @@ export class SelectConsumerInfosFromRedis extends SelectDatasFromCache<RedisClie
       if (values[i]) consumerExisted.push(keyNames[i]); // 값이 있으면 있고 없으면 null이기 때문에 이런식으로 처리
     }
     return consumerExisted;
+  }
+}
+
+// user에 produce 정보를 가져오는 로직
+@Injectable()
+export class SelectUserProducerInfoDataFromRedis extends SelectDataFromCache<
+  RedisClientType<any, any>
+> {
+  constructor(@Inject(REDIS_SERVER) cache: RedisClientType<any, any>) {
+    super(cache);
+  }
+
+  // namespace는 room_id:user_id 이다.
+  async select({
+    namespace,
+    keyName,
+  }: {
+    namespace: string;
+    keyName: 'audio' | 'video';
+  }): Promise<GetProducerProps | undefined> {
+    const userProducerNamespace: string = `${CACHE_SFU_NAMESPACE_NAME.PRODUCER_INFO}:${namespace}`;
+
+    const userProducerData = await this.cache.hGet(userProducerNamespace, keyName);
+    if (!userProducerData) return undefined;
+
+    try {
+      const parseData = JSON.parse(userProducerData);
+
+      // 파싱 후 데이터 가져오기
+      const producer_id: string = parseData[CACHE_SFU_PRODUCES_KEY_PROPS_NAME.PRODUCER_ID];
+      const type: 'mic' | 'cam' = parseData[CACHE_SFU_PRODUCES_KEY_PROPS_NAME.TYPE];
+      const kind: 'audio' | 'video' = parseData[CACHE_SFU_PRODUCES_KEY_PROPS_NAME.KIND];
+      const status: 'on' | 'off' = parseData[CACHE_SFU_PRODUCES_KEY_PROPS_NAME.STATUS];
+
+      if (
+        !producer_id ||
+        (type !== 'mic' && type !== 'cam') ||
+        (kind !== 'audio' && kind !== 'video') ||
+        (status !== 'on' && status !== 'off')
+      )
+        return undefined;
+
+      return {
+        producer_id,
+        type,
+        kind,
+        status,
+      };
+    } catch (err) {
+      return undefined;
+    }
+  }
+}
+
+// user가 켜놓은 producer를 확인 -> 화면공유
+@Injectable()
+export class SelectRoomProducerDataFromRedis extends SelectDataFromCache<
+  RedisClientType<any, any>
+> {
+  constructor(@Inject(REDIS_SERVER) cache: RedisClientType<any, any>) {
+    super(cache);
+  }
+
+  // namespace는 room_id, keyname은 user_id 이다.
+  async select({
+    namespace,
+    keyName,
+  }: {
+    namespace: string;
+    keyName: string;
+  }): Promise<StopScreenProducerCacheInfoResult> {
+    const room_id: string = namespace;
+    const user_id: string = keyName;
+
+    const roomInfoNamespace: string = `${CACHE_ROOM_NAMESPACE_NAME.CACHE_ROOM}:${room_id}:${CACHE_ROOM_SUB_NAMESPACE_NAME.INFO}`;
+
+    const res = await this.cache
+      .multi()
+      .hGet(roomInfoNamespace, CACHE_ROOM_INFO_KEY_NAME.MAIN_PRODUCER)
+      .hGet(roomInfoNamespace, CACHE_ROOM_INFO_KEY_NAME.SUB_PRODUCER)
+      .exec();
+
+    if (!res) return { main_producer_id: null, sub_producer_id: null };
+
+    const [mainRaw, subRaw] = res as unknown as Array<string | null>;
+
+    const main_producer_id: string | null = this.safeParseProducerInfo(mainRaw, user_id);
+    const sub_producer_id: string | null = this.safeParseProducerInfo(subRaw, user_id);
+
+    return { main_producer_id, sub_producer_id };
+  }
+
+  private safeParseProducerInfo(raw: string | null, owner_id: string): string | null {
+    // 없는 경우
+    if (!raw) return null;
+
+    try {
+      const obj = JSON.parse(raw);
+
+      const user_id = obj?.[CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME.USER_ID] ?? obj?.user_id;
+      if (typeof user_id !== 'string' || user_id.length === 0 || user_id.trim() !== owner_id.trim())
+        return null;
+
+      return obj?.[CACHE_ROOM_INFO_PRODUCE_KEY_PROPS_NAME.PRODUCER_ID] ?? null; // producer_id만 ( tool일 수 있음 그럴때는 스킵 )
+    } catch (err) {
+      return null;
+    }
   }
 }

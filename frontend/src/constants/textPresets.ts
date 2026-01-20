@@ -5,6 +5,6 @@ export type TextSize = 'S' | 'M' | 'L' | 'XL';
 export const TEXT_SIZE_PRESETS = {
   S: { fontSize: 16 },
   M: { fontSize: 32 },
-  L: { fontSize: 65 },
+  L: { fontSize: 64 },
   XL: { fontSize: 100 },
 } as const;

@@ -30,11 +30,13 @@ export const screenToWorld = (
 export const getCenterWorldPos = (
   stagePos: { x: number; y: number },
   stageScale: number,
+  viewportWidth?: number,
+  viewportHeight?: number,
 ) => {
   if (typeof window === 'undefined') return { x: 0, y: 0 };
 
-  const centerX = window.innerWidth / 2;
-  const centerY = window.innerHeight / 2;
+  const centerX = (viewportWidth ?? window.innerWidth) / 2;
+  const centerY = (viewportHeight ?? window.innerHeight) / 2;
 
   return screenToWorld(centerX, centerY, stagePos, stageScale);
 };

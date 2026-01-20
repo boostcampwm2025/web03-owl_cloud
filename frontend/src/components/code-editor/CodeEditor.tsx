@@ -1,10 +1,12 @@
 'use client';
 
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import * as Y from 'yjs';
-import { WebsocketProvider } from 'y-websocket';
+import * as awarenessProtocol from 'y-protocols/awareness';
+import { io, Socket } from 'socket.io-client';
+
 import { colorFromClientId, injectCursorStyles } from '@/utils/code-editor';
 import { AwarenessState, LanguageState } from '@/types/code-editor';
 import CodeEditorToolbar from './CodeEditorToolbar';
@@ -15,20 +17,27 @@ type CodeEditorProps = {
   minimap?: boolean;
 };
 
+// TODO: 모듈로 빼서 가져오기
+const SERVER_URL = process.env.NEXT_PUBLIC_TOOL_BACKEND_URL;
+const NAMESPACE = process.env.NEXT_PUBLIC_TOOL_BACKEND_WEBSOCKET_PREFIX;
+const SOCKET_PATH = process.env.NEXT_PUBLIC_TOOL_BACKEND_WEBSOCKET_CODEEDITOR;
+
 export default function CodeEditor({
   autoComplete = true,
   minimap = true,
 }: CodeEditorProps) {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const providerRef = useRef<WebsocketProvider | null>(null);
   const monacoRef = useRef<typeof import('monaco-editor') | null>(null);
+  const socketRef = useRef<Socket | null>(null);
+  const providerRef = useRef<{
+    ydoc: Y.Doc;
+    awareness: awarenessProtocol.Awareness;
+  } | null>(null);
 
   const cursorCollectionsRef = useRef<
     Map<number, monaco.editor.IEditorDecorationsCollection>
   >(new Map()); // clientId -> 1 decoration collection
-
   const onlyMyCursorRef = useRef(false);
-
   const cleanupRef = useRef<(() => void) | null>(null);
 
   const [isAutoCompleted, setIsAutoCompleted] = useState<boolean>(autoComplete);
@@ -37,10 +46,6 @@ export default function CodeEditor({
   const [codeLanguage, setCodeLanguage] =
     useState<EditorLanguage>('typescript');
   const [onlyMyCursor, setOnlyMyCursor] = useState<boolean>(false);
-
-  useEffect(() => {
-    onlyMyCursorRef.current = onlyMyCursor;
-  }, [onlyMyCursor]);
 
   const handleMount = async (
     editor: monaco.editor.IStandaloneCodeEditor,
@@ -51,53 +56,74 @@ export default function CodeEditor({
 
     const ydoc = new Y.Doc();
     const yLanguage = ydoc.getMap<LanguageState>('language');
-    const { MonacoBinding } = await import('y-monaco');
+    const yText = ydoc.getText('monaco');
+    const awareness = new awarenessProtocol.Awareness(ydoc);
 
-    const provider = new WebsocketProvider(
-      'ws://localhost:1234',
-      'room-1',
-      ydoc,
-    );
-    providerRef.current = provider;
+    providerRef.current = { ydoc, awareness };
 
-    // 사용자 정보 동적 설정 > TODO: 실제 사용자 닉네임 가져오기
-    const userName = `User-${Math.floor(Math.random() * 100)}`;
-
-    provider.awareness.setLocalState({
-      user: {
-        name: userName,
-        role: 'viewer',
-      },
-      cursor: null,
+    const socket = io(`${SERVER_URL}${NAMESPACE}`, {
+      path: SOCKET_PATH,
+      transports: ['websocket'],
+      auth: { token: 'test-token' }, // TODO: 실제 토큰으로 교체
     });
 
-    const yText = ydoc.getText('monaco');
+    socketRef.current = socket;
+
+    socket.on('init-user', ({ userId }: { userId: string }) => {
+      awareness.setLocalState({
+        user: {
+          name: userId,
+          role: 'viewer',
+          color: colorFromClientId(ydoc.clientID).cursor,
+        },
+        cursor: null,
+      });
+    });
+
+    // Yjs -> Socket
+    ydoc.on('update', (update: Uint8Array) => {
+      socket.emit('yjs-update', update);
+    });
+
+    // Awareness -> Socket
+    awareness.on('update', () => {
+      const update = awarenessProtocol.encodeAwarenessUpdate(awareness, [
+        ydoc.clientID,
+      ]);
+      socket.emit('awareness-update', update);
+    });
+
+    // Socket -> Yjs
+    socket.on('yjs-update', (update: ArrayBuffer) => {
+      Y.applyUpdate(ydoc, new Uint8Array(update));
+    });
+
+    // Socket -> Awareness
+    socket.on('awareness-update', (update: ArrayBuffer) => {
+      awarenessProtocol.applyAwarenessUpdate(
+        awareness,
+        new Uint8Array(update),
+        socket,
+      );
+    });
+
+    // 초기 동기화 로직 (새 유저 진입 시)
+    socket.on('request-sync', () => {
+      const fullUpdate = Y.encodeStateAsUpdate(ydoc);
+      socket.emit('yjs-update', fullUpdate);
+    });
 
     const model = editor.getModel();
     if (!model) return;
 
+    const { MonacoBinding } = await import('y-monaco');
     // 양방향 바인딩 해주기
     const binding = new MonacoBinding(
       yText, // 원본 데이터
       model, // 실제 에디터에 보이는 코드
       new Set([editor]), // 바인딩할 에디터 인스턴스들
-      provider.awareness, // 여기서 다른 유저들의 위치 정보를 받아온다.
+      awareness, // 여기서 다른 유저들의 위치 정보를 받아온다.
     );
-
-    // 커서 위치 전송
-    let cursorFrame: number | null = null;
-
-    editor.onDidChangeCursorPosition((e) => {
-      if (cursorFrame) return;
-
-      cursorFrame = requestAnimationFrame(() => {
-        provider.awareness.setLocalStateField('cursor', {
-          lineNumber: e.position.lineNumber,
-          column: e.position.column,
-        });
-        cursorFrame = null;
-      });
-    });
 
     // 커서 렌더링만 담당
     const updateRemoteDecorations = (states: Map<number, AwarenessState>) => {
@@ -105,7 +131,7 @@ export default function CodeEditor({
 
       const onlyMine = onlyMyCursorRef.current;
       const collections = cursorCollectionsRef.current;
-      const myId = provider.awareness.clientID;
+      const myId = awareness.clientID;
 
       states.forEach((state, clientId) => {
         if (clientId === myId) return;
@@ -170,11 +196,26 @@ export default function CodeEditor({
       });
     };
 
-    provider.awareness.on('change', () => {
-      const states = provider.awareness.getStates();
+    awareness.on('change', () => {
+      const states = awareness.getStates();
 
       updateRemoteDecorations(states);
       updatePresenterState(states);
+    });
+
+    // 커서 위치 전송
+    let cursorFrame: number | null = null;
+
+    editor.onDidChangeCursorPosition((e) => {
+      if (cursorFrame) return;
+
+      cursorFrame = requestAnimationFrame(() => {
+        awareness.setLocalStateField('cursor', {
+          lineNumber: e.position.lineNumber,
+          column: e.position.column,
+        });
+        cursorFrame = null;
+      });
     });
 
     yLanguage.observe(() => {
@@ -189,11 +230,10 @@ export default function CodeEditor({
 
     cleanupRef.current = () => {
       binding.destroy();
-      provider.destroy();
+      socket.disconnect();
       ydoc.destroy();
 
       cursorCollectionsRef.current.forEach((c) => c.clear());
-      cursorCollectionsRef.current.clear();
 
       document
         .querySelectorAll('style[data-client-id]')
@@ -209,9 +249,7 @@ export default function CodeEditor({
   useEffect(() => {
     onlyMyCursorRef.current = onlyMyCursor;
 
-    if (providerRef.current) {
-      if (!editorRef.current) return;
-
+    if (editorRef.current) {
       cursorCollectionsRef.current.forEach((c) => c.clear());
     }
   }, [onlyMyCursor]);
@@ -262,7 +300,7 @@ export default function CodeEditor({
     monaco.editor.setModelLanguage(model, lang);
     setCodeLanguage(lang);
 
-    const yLanguage = provider.doc.getMap<LanguageState>('language');
+    const yLanguage = provider.ydoc.getMap<LanguageState>('language');
 
     yLanguage.set('current', {
       value: lang,
