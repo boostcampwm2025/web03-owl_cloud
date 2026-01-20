@@ -55,7 +55,7 @@ export class UploadFileUsecase<T, ST> {
     let result : UploadFileResult | undefined = undefined;
 
     // 이미 다운받고 있었던 파일이 존재한다는 의미이다. ( 그 순간에 두번할 수 있으니까 나중에 정합성 체크도 해줘야 겠다. )
-    if ( (dto.size > standardSize) && prevFileInfo ) {
+    if ( (dto.size > standardSize) && (prevFileInfo && prevFileInfo.status === "uploading" ) ) {
       const completeParts : MultipartUploadCompleteInfo = await this.getCompleteUploadUrlFromDisk.getCompleteMultiId({ 
         pathName : [ dto.room_id, prevFileInfo.file_id ], mime_type : dto.mime_type });
       
@@ -68,8 +68,23 @@ export class UploadFileUsecase<T, ST> {
         multipart_complete : completeParts
       }
 
-      // 나중에 completed같은 경우는 그대로 준다던지 그러한 로직을 한번 작성해서 안정성을 높여야 할 것 같다. 
     }   
+    // 이미 같은 파일을 올린적이 있다면 그 파일을 다시 업로드할 필요없이 그대로 주면된다. ( 10mb 이상만 )
+    else if ( 
+      (prevFileInfo && prevFileInfo.status === "completed" && prevFileInfo.upload_id ) && ( dto.size > standardSize ) ) 
+    {
+      result = {
+        file_id : prevFileInfo.file_id,
+        type : "multipart",
+        direct : null,
+        multipart : {
+          upload_id : prevFileInfo.upload_id,
+          part_size : standardSize
+        },
+        multipart_complete : null
+      }
+      return result;
+    }
     else {
       // 2. upload용 url을 받아야 함 ( 총 3가지 10mb 이하 10mb 초과 100mb이하 이미 받던 파일 ) 
       const file_id : string = this.makeFileId.make();

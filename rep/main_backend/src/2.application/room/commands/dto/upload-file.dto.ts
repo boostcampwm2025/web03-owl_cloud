@@ -59,7 +59,7 @@ export type InsertUploadFileInfoDto = {
 };
 
 export type UploadFileResult = {
-  type : "direct" | "multipart" | "multipart_complete";
+  type : "direct" | "multipart" | "multipart_complete"; // multipart_complete가 upload 남은거
 
   file_id : string;
 
