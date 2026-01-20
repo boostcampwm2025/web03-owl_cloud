@@ -7,6 +7,7 @@ import { SelectHsetDataFromRedis } from './user/user.inbound';
 import {
   DeleteMainProducerFromRedis,
   DeleteRoomDatasToRedis,
+  InsertFileInfoToRedis,
   InsertRoomDatasToRedis,
   InsertRoomDataToRedis,
   InsertToolTicketToRedis,
@@ -104,6 +105,7 @@ import {
     SelectUserProducerInfoDataFromRedis, // user에 producer 관련 데이터를 가져와야 한다.
     SelectRoomProducerDataFromRedis, // producer에 대한 데이터를 가져오는 로직 구현
     CheckUserAndSelectPrevFileInfoFromRedis, // 방에 유저가 있는지 그리고 저장중인 다른 파일이 있는지 확인
+    InsertFileInfoToRedis, // 파일의 정보를 redis에 저장하는 로직
   ],
   exports: [
     REDIS_SERVER,
@@ -139,7 +141,8 @@ import {
     UpdateProducerStatusToRedis,
     SelectUserProducerInfoDataFromRedis,
     SelectRoomProducerDataFromRedis,
-    CheckUserAndSelectPrevFileInfoFromRedis
+    CheckUserAndSelectPrevFileInfoFromRedis,
+    InsertFileInfoToRedis,
   ],
 })
 export class RedisModule {}
