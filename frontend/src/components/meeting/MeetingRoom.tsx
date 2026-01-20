@@ -10,6 +10,7 @@ import Whiteboard from '@/components/whiteboard/Whiteboard';
 import { useProduce } from '@/hooks/useProduce';
 import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
 import { useMeetingStore } from '@/store/useMeetingStore';
+import { useUserStore } from '@/store/useUserStore';
 import { FetchRoomMembersResponse } from '@/types/meeting';
 import { useEffect } from 'react';
 
@@ -25,26 +26,23 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
   const { startAudioProduce, startVideoProduce, isReady } = useProduce();
   const { socket } = useMeetingSocketStore();
   const { setMembers } = useMeetingStore();
+  const { userId } = useUserStore();
 
   // 초기 입장 시 로비에서 설정한 미디어 Produce
   useEffect(() => {
-    if (!isReady) return;
+    if (!isReady || !socket || !userId) return;
 
     const { audioOn, videoOn } = media;
-    if (audioOn) startAudioProduce();
-    if (videoOn) startVideoProduce();
-  }, [isReady]);
 
-  // 초기 입장 시 현재 회의에 참여 중인 참가자 정보 저장
-  useEffect(() => {
-    if (!socket) return;
-
-    const fetchRoomMembers = async () => {
+    const initRoom = async () => {
       try {
+        if (audioOn) await startAudioProduce();
+        if (videoOn) await startVideoProduce();
+
         const { main, members } = (await socket.emitWithAck(
           'signaling:ws:room_members',
         )) as FetchRoomMembersResponse;
-        setMembers(members);
+        setMembers(members.filter((member) => member.user_id !== userId));
 
         // main으로 화면 공유 중인 경우 처리 구현 필요
       } catch (error) {
@@ -52,7 +50,12 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
       }
     };
 
-    fetchRoomMembers();
+    initRoom();
+  }, [isReady, socket]);
+
+  // 초기 입장 시 현재 회의에 참여 중인 참가자 정보 저장
+  useEffect(() => {
+    if (!socket) return;
   }, [socket]);
 
   return (

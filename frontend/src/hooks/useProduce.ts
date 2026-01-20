@@ -97,7 +97,7 @@ export const useProduce = () => {
     if (socket && videoProducer) {
       socket.emit('signaling:ws:produce_off', {
         producer_id: videoProducer.id,
-        kind: 'audio',
+        kind: 'video',
       });
       videoProducer.close();
       videoProducer.track?.stop();

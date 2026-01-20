@@ -6,6 +6,8 @@ import MeetingLobby from '@/components/meeting/MeetingLobby';
 import MeetingRoom from '@/components/meeting/MeetingRoom';
 import { useMeetingSocket } from '@/hooks/useMeetingSocket';
 import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
+import { useMeetingStore } from '@/store/useMeetingStore';
+import { useUserStore } from '@/store/useUserStore';
 import { initMediasoupTransports } from '@/utils/initMediasoupTransports';
 import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -18,6 +20,8 @@ interface JoinError {
 export default function MeetingPage() {
   const { socket } = useMeetingSocket();
   const { setMediasoupTransports } = useMeetingSocketStore();
+  const { members } = useMeetingStore();
+  const { isLoggedIn, nickname, setTempUser } = useUserStore();
 
   // 이후 실제 회의 정보 API 호출로 수정 필요
   const { password } = DUMMY_MEETING_INFO;
@@ -30,9 +34,8 @@ export default function MeetingPage() {
   const [joinError, setJoinError] = useState<JoinError | null>(null);
   const [isJoined, setIsJoined] = useState<boolean>(false);
 
-  const [nickname, setNickname] = useState('');
   const onJoin = (nickname: string) => {
-    setNickname(nickname);
+    setTempUser({ nickname });
     validateJoin();
   };
 
@@ -57,9 +60,10 @@ export default function MeetingPage() {
   };
 
   // 회의실 참여 로직
-  const handleJoin = (password?: string) => {
+  const handleJoin = async (password?: string) => {
     if (!socket) return;
 
+    // 회의실 참여
     socket.emitWithAck('signaling:ws:join_room', {
       code: meetingId,
       password,
@@ -70,8 +74,17 @@ export default function MeetingPage() {
   useEffect(() => {
     if (!socket) return;
 
-    const onRoomJoined = async ({ ok }: { ok: boolean }) => {
+    const onRoomJoined = async ({
+      ok,
+      user_id,
+    }: {
+      ok: boolean;
+      user_id: string;
+    }) => {
       if (ok) {
+        // 비회원인 경우 임시 id 저장
+        if (!isLoggedIn) setTempUser({ userId: user_id });
+
         // SDP / ICE / DTLS 초기화 진행
         const transports = await initMediasoupTransports(socket);
         setMediasoupTransports(socket, transports);
@@ -93,6 +106,8 @@ export default function MeetingPage() {
   if (!meetingId) {
     return <div>잘못된 회의 접근입니다. 다시 시도해주세요.</div>;
   }
+
+  console.log(members);
 
   return (
     <main className="min-h-screen">

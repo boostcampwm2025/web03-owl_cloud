@@ -1,22 +1,18 @@
 'use client';
 
-import { DUMMY_DATA } from '@/app/[meetingId]/dummy';
 import { ChevronLeftIcon, ChevronRightIcon } from '@/assets/icons/common';
+import MyVideo from '@/components/meeting/MyVideo';
 import SmVideo from '@/components/meeting/SmVideo';
 import { useMeetingStore } from '@/store/useMeetingStore';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 export default function MemberVideoBar() {
-  // 이후 WebRTC로 수정 필요
-  const { lastPage, membersPerPage, totalMemberCount, members } = DUMMY_DATA;
-
-  const { setMembers } = useMeetingStore();
+  const { members } = useMeetingStore();
   const [currentPage, setCurrentPage] = useState(1);
-  const [hasPrevPage, hasNextPage] = [currentPage > 1, currentPage < lastPage];
-
-  useEffect(() => {
-    setMembers(totalMemberCount);
-  }, [setMembers, totalMemberCount]);
+  const [hasPrevPage, hasNextPage] = [
+    currentPage > 1,
+    currentPage < members.length,
+  ];
 
   const onPrevClick = () => {
     if (!hasPrevPage) return;
@@ -28,9 +24,9 @@ export default function MemberVideoBar() {
     setCurrentPage((prev) => prev + 1);
   };
 
-  // (프로토타입용) 이후 WebRTC나 API 호출 시 불필요
-  const start = (currentPage - 1) * membersPerPage;
-  const end = (currentPage - 1) * membersPerPage + membersPerPage;
+  const MEMBERS_PER_PAGE = 6;
+  const start = Math.max((currentPage - 1) * MEMBERS_PER_PAGE, 1);
+  const end = (currentPage - 1) * MEMBERS_PER_PAGE + MEMBERS_PER_PAGE;
 
   return (
     <header className="flex w-full justify-between px-4 py-2">
@@ -43,8 +39,9 @@ export default function MemberVideoBar() {
 
       <section className="flex gap-4">
         {/* 이후 백엔드 연동 시 pagination으로 수정, 수동 slice는 불필요 */}
+        {start === 1 && <MyVideo />}
         {members.slice(start, end).map((member) => (
-          <SmVideo key={member.id} {...member} />
+          <SmVideo key={member.user_id} {...member} />
         ))}
       </section>
 

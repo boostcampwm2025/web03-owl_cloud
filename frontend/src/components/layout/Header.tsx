@@ -10,6 +10,7 @@ interface UserResponse {
   email: string;
   nickname: string;
   user_id: string;
+  profile_path: string | null;
 }
 
 export default function Header() {
@@ -19,9 +20,14 @@ export default function Header() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const { email, nickname, user_id } =
+        const { email, nickname, user_id, profile_path } =
           await apiWithToken.get<UserResponse>('/auth/me');
-        setUser({ email, nickname, userId: user_id });
+        setUser({
+          email,
+          nickname,
+          userId: user_id,
+          profilePath: profile_path,
+        });
       } catch {
         setIsLoaded();
       }
