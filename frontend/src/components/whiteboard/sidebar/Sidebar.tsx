@@ -6,24 +6,32 @@ import { useMemo } from 'react';
 import ShapePanel from '@/components/whiteboard/sidebar/panels/ShapePanel';
 import ArrowPanel from '@/components/whiteboard/sidebar/panels/ArrowPanel';
 import LinePanel from '@/components/whiteboard/sidebar/panels/LinePanel';
+import TextPanel from '@/components/whiteboard/sidebar/panels/TextPanel';
 
 import { StrokeStyleType } from '@/components/whiteboard/sidebar/sections/StrokeStyleSection';
 import { EdgeType } from '@/components/whiteboard/sidebar/sections/EdgesSection';
 
 import { useCanvasStore } from '@/store/useCanvasStore';
-import type { ArrowItem, LineItem, ShapeItem } from '@/types/whiteboard';
+import type {
+  ArrowItem,
+  LineItem,
+  ShapeItem,
+  TextItem,
+} from '@/types/whiteboard';
 import {
   ARROW_SIZE_PRESETS,
   ARROW_STYLE_PRESETS,
 } from '@/components/whiteboard/sidebar/panels/arrowPresets';
+import { TEXT_SIZE_PRESETS } from '@/constants/textPresets';
 import {
   getArrowSize,
   getLineSize,
+  getTextSize,
   getItemStyle,
-} from '@/utils/arrowPanelHelpers';
+} from '@/utils/sidebarStyleHelpers';
 
 // 사이드 바 선택된 요소 타입
-type SelectionType = 'shape' | 'arrow' | 'line' | null;
+type SelectionType = 'shape' | 'arrow' | 'line' | 'text' | null;
 
 export default function Sidebar() {
   // 스토어에서 선택된 아이템 정보 가져오기
@@ -47,6 +55,8 @@ export default function Sidebar() {
         return 'arrow';
       case 'line':
         return 'line';
+      case 'text':
+        return 'text';
       default:
         return null;
     }
@@ -93,6 +103,8 @@ export default function Sidebar() {
         return 'Arrow';
       case 'line':
         return 'Line';
+      case 'text':
+        return 'Text';
       default:
         return '';
     }
@@ -224,6 +236,29 @@ export default function Sidebar() {
             onChangeStyle={(style) => {
               updateItem(selectedId!, { tension: ARROW_STYLE_PRESETS[style] });
             }}
+          />
+        )}
+
+        {/* text */}
+        {selectionType === 'text' && (
+          <TextPanel
+            fill={(selectedItem as TextItem).fill}
+            size={getTextSize(selectedItem as TextItem)}
+            align={(selectedItem as TextItem).align}
+            fontStyle={(selectedItem as TextItem).fontStyle ?? 'normal'}
+            textDecoration={(selectedItem as TextItem).textDecoration ?? 'none'}
+            onChangeFill={(color) => updateItem(selectedId!, { fill: color })}
+            onChangeSize={(size) => {
+              const preset = TEXT_SIZE_PRESETS[size];
+              updateItem(selectedId!, { fontSize: preset.fontSize });
+            }}
+            onChangeAlign={(align) => updateItem(selectedId!, { align })}
+            onChangeFontStyle={(fontStyle) =>
+              updateItem(selectedId!, { fontStyle })
+            }
+            onChangeTextDecoration={(textDecoration) =>
+              updateItem(selectedId!, { textDecoration })
+            }
           />
         )}
       </div>
