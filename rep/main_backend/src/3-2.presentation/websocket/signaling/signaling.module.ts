@@ -9,6 +9,7 @@ import { Module } from '@nestjs/common';
 import { SelectRoomDataFromMysql } from '@infra/db/mysql/room/room.inbound';
 import { CompareRoomArgonHash, MakeFileIdGenerator, MakeIssueToolTicket } from './signaling.interface';
 import {
+  CheckRoomMemberFromRedis,
   CheckRoomUserFromRedis,
   CheckUserAndSelectFileInfoFromRedis,
   CheckUserAndSelectPrevFileInfoFromRedis,
@@ -36,6 +37,7 @@ import { SfuModule } from '@present/webrtc/sfu/sfu.module';
 import {
   ConnectToolUsecase,
   DisconnectToolUsecase,
+  DownLoadFileUsecase,
   GetRoomMembersUsecase,
 } from '@app/room/queries/usecase';
 import { ConfigService } from '@nestjs/config';
@@ -229,7 +231,23 @@ import { CompleteUploadToAwsS3 } from '@/3-1.infra/disk/s3/adapters/disk.outboun
         UpdateFileInfoToRedis,
         GetPresignedUrlFromS3Bucket,
       ]
+    },
+
+    // 파일 자체를 업로드할 수 있는 usecase
+    {
+      provide : DownLoadFileUsecase,
+      useFactory : (
+        checkRoomMemberFromCache : CheckRoomMemberFromRedis,
+        getUploadUrlFromDisk : GetPresignedUrlFromS3Bucket,
+      ) => {
+        return new DownLoadFileUsecase({ checkRoomMemberFromCache, getUploadUrlFromDisk })
+      },
+      inject : [
+        CheckRoomMemberFromRedis,
+        GetPresignedUrlFromS3Bucket
+      ]
     }
+
   ],
 })
 export class SignalingWebsocketModule {}

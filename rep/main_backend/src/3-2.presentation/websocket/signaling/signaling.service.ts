@@ -22,6 +22,7 @@ import {
 import { v7 as uuidV7 } from 'uuid';
 import {
   CheckFileValidate,
+  DownloadFileValidate,
   DtlsHandshakeValidate,
   OnConsumesValidate,
   OnConsumeValidate,
@@ -56,10 +57,11 @@ import {
   ResumeConsumerDto,
   ResumeConsumersDto,
 } from '@app/sfu/queries/dto';
-import { DisConnectToolDto, GetRoomMembersResult, MembersInfo } from '@app/room/queries/dto';
+import { DisConnectToolDto, DownLoadFileDto, GetRoomMembersResult, MembersInfo } from '@app/room/queries/dto';
 import {
   ConnectToolUsecase,
   DisconnectToolUsecase,
+  DownLoadFileUsecase,
   GetRoomMembersUsecase,
 } from '@app/room/queries/usecase';
 import { ConnectToolDto } from '@app/room/queries/dto';
@@ -75,6 +77,7 @@ export class SignalingWebsocketService {
     private readonly disconnectToolUsecase: DisconnectToolUsecase<any>,
     private readonly uploadFileUsecase : UploadFileUsecase<any, any>,
     private readonly checkFileUsecase : CheckUploadFileUsecase<any, any>,
+    private readonly downloadFileUsecase : DownLoadFileUsecase<any, any>,
     private readonly sfuServer: SfuService,
   ) {}
 
@@ -408,5 +411,13 @@ export class SignalingWebsocketService {
       ...payload, room_id, ...validate
     };
     return this.checkFileUsecase.execute(dto);
+  };
+
+  // 다운로드 할 수 있는 url을 받는 로직
+  async downloadFile(client : Socket, validate : DownloadFileValidate) : Promise<string> {
+    const room_id: string = client.data.room_id;
+    const payload: SocketPayload = client.data.user;
+    const dto : DownLoadFileDto = { ...payload, room_id, ...validate };
+    return this.downloadFileUsecase.execute(dto);
   };
 }

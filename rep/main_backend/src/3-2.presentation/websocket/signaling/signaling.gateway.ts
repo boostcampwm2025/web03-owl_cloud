@@ -27,6 +27,7 @@ import {
   CheckFileValidate,
   ConnectToolTypeValidate,
   DisConnectToolTypeValidate,
+  DownloadFileValidate,
   DtlsHandshakeValidate,
   JoinRoomValidate,
   MessageResultProps,
@@ -39,6 +40,7 @@ import {
   PauseProducerValidate,
   ResumeConsumersValidate,
   ResumeConsumerValidate,
+  SendMessageValidate,
   SocketPayload,
   UploadFileValidate,
 } from './signaling.validate';
@@ -524,7 +526,7 @@ export class SignalingWebsocketGateway
       const roomMessage : MessageResultProps = { ...result, message : undefined, type : "file" };
       const room_id: string = client.data.room_id;
       const namespace: string = `${CHANNEL_NAMESPACE.SIGNALING}:${room_id}`;
-      client.to(namespace).emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.SEND_MESSAGE, roomMessage); // 방에 파일을 전달한다. 
+      client.to(namespace).emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.RECV_MESSAGE, roomMessage); // 방에 파일을 전달한다. 
 
       return result;
     } catch (err) {
@@ -534,9 +536,31 @@ export class SignalingWebsocketGateway
   };
 
   // 파일을 다운 받을때 사용하는 로직
-
+  @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.FILE_DOWNLOAD)
+  async downloadFileGateway(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() validate: DownloadFileValidate
+  ) : Promise<string> {
+    try {
+      return this.signalingService.downloadFile(client, validate);
+    } catch (err) {
+      this.logger.error(err);
+      throw new WsException({ message: err.message ?? '에러 발생', status: err.status ?? 500 });   
+    };
+  };
 
   // 메시지를 보낼때 사용하는 로직 
-
+  @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.SEND_MESSAGE)
+  async sendMessageGateway(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() validate: SendMessageValidate
+  ) {
+    try {
+      
+    } catch (err) {
+      this.logger.error(err);
+      throw new WsException({ message: err.message ?? '에러 발생', status: err.status ?? 500 });         
+    };
+  };
 
 }

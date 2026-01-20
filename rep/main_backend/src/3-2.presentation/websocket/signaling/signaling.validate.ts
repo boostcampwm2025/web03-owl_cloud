@@ -273,11 +273,23 @@ export class CheckFileValidate {
 export type MessageResultProps = {
   type : "message" | "file";
   message : string | undefined; // message가 들어간다. 
-  filename: string;
-  size: number;
-  category: "audio" | "video" | "image" | "text" | "binary";
-  thumnail_url: string | undefined;
-  file_id: string;
+  filename?: string;
+  size?: number;
+  category?: "audio" | "video" | "image" | "text" | "binary";
+  thumnail_url?: string | undefined;
+  file_id?: string;
   nickname: string;
   user_id: string;
 }
+
+export class DownloadFileValidate {
+  @IsNotEmpty()
+  @IsString()
+  file_id : string;
+};
+
+export class SendMessageValidate {
+  @IsNotEmpty()
+  @MaxLength(1000)
+  message : string;
+};
