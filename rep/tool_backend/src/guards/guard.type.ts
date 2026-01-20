@@ -10,4 +10,5 @@ export type ToolBackendPayload = {
   socket_id: string;
   ticket: string;
   clientType: 'main' | 'sub';
+  nickname: string;
 };
