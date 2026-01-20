@@ -30,7 +30,7 @@ import {
   DownloadFileValidate,
   DtlsHandshakeValidate,
   JoinRoomValidate,
-  MessageResultProps,
+  type MessageResultProps,
   NegotiateIceValidate,
   OnConsumesValidate,
   OnConsumeValidate,
@@ -44,7 +44,7 @@ import {
   SocketPayload,
   UploadFileValidate,
 } from './signaling.validate';
-import { CheckUploadFileResult, ConnectResult, ConnectRoomDto, UploadFileResult } from '@app/room/commands/dto';
+import { ConnectResult, ConnectRoomDto, UploadFileResult } from '@app/room/commands/dto';
 import { CHANNEL_NAMESPACE } from '@infra/channel/channel.constants';
 import { GetRoomMembersResult } from '@app/room/queries/dto';
 import { SIGNALING_WEBSOCKET } from '@infra/websocket/websocket.constants';
@@ -518,7 +518,7 @@ export class SignalingWebsocketGateway
   async checkFileUploadGateway(
     @ConnectedSocket() client: Socket,
     @MessageBody() validate: CheckFileValidate
-  ) : Promise<CheckUploadFileResult> {
+  ) : Promise<MessageResultProps> {
     try {
       const result = await this.signalingService.checkFileUpload(client, validate);
 
@@ -528,7 +528,7 @@ export class SignalingWebsocketGateway
       const namespace: string = `${CHANNEL_NAMESPACE.SIGNALING}:${room_id}`;
       client.to(namespace).emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.RECV_MESSAGE, roomMessage); // 방에 파일을 전달한다. 
 
-      return result;
+      return roomMessage;
     } catch (err) {
       this.logger.error(err);
       throw new WsException({ message: err.message ?? '에러 발생', status: err.status ?? 500 });         
@@ -551,12 +551,18 @@ export class SignalingWebsocketGateway
 
   // 메시지를 보낼때 사용하는 로직 
   @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.SEND_MESSAGE)
-  async sendMessageGateway(
+  sendMessageGateway(
     @ConnectedSocket() client: Socket,
     @MessageBody() validate: SendMessageValidate
-  ) {
+  ) : MessageResultProps {
     try {
-      
+      const result = this.signalingService.makeMessage(client, validate);
+
+      const room_id: string = client.data.room_id;
+      const namespace: string = `${CHANNEL_NAMESPACE.SIGNALING}:${room_id}`;
+      client.to(namespace).emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.RECV_MESSAGE, result); 
+
+      return result;
     } catch (err) {
       this.logger.error(err);
       throw new WsException({ message: err.message ?? '에러 발생', status: err.status ?? 500 });         

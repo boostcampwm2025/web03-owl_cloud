@@ -24,6 +24,7 @@ import {
   CheckFileValidate,
   DownloadFileValidate,
   DtlsHandshakeValidate,
+  MessageResultProps,
   OnConsumesValidate,
   OnConsumeValidate,
   OnProduceValidate,
@@ -32,6 +33,7 @@ import {
   PauseProducerValidate,
   ResumeConsumersValidate,
   ResumeConsumerValidate,
+  SendMessageValidate,
   SocketPayload,
   UploadFileValidate,
 } from './signaling.validate';
@@ -419,5 +421,16 @@ export class SignalingWebsocketService {
     const payload: SocketPayload = client.data.user;
     const dto : DownLoadFileDto = { ...payload, room_id, ...validate };
     return this.downloadFileUsecase.execute(dto);
+  };
+
+  // 메시지 제작
+  makeMessage( client : Socket, validate: SendMessageValidate ) : MessageResultProps {
+    const payload: SocketPayload = client.data.user;
+    return {
+      message : validate.message,
+      user_id : payload.user_id,
+      nickname : payload.nickname,
+      type : "message"
+    };
   };
 }
