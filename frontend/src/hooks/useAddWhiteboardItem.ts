@@ -15,16 +15,34 @@ export const useAddWhiteboardItem = () => {
   // Canvas Store 상태
   const stagePos = useCanvasStore((state) => state.stagePos);
   const stageScale = useCanvasStore((state) => state.stageScale);
+  const viewportWidth = useCanvasStore((state) => state.viewportWidth);
+  const viewportHeight = useCanvasStore((state) => state.viewportHeight);
+
+  const getViewportCenter = () => {
+    return getCenterWorldPos(
+      stagePos,
+      stageScale,
+      viewportWidth,
+      viewportHeight,
+    );
+  };
 
   // Text Item 추가 핸들러
   const handleAddText = () => {
-    const worldPos = getCenterWorldPos(stagePos, stageScale);
-    addText({ x: worldPos.x, y: worldPos.y });
+    const worldPos = getViewportCenter();
+
+    const defaultWidth = 200;
+    const defaultFontSize = 32;
+
+    addText({
+      x: worldPos.x - defaultWidth / 2,
+      y: worldPos.y - defaultFontSize / 2,
+    });
   };
 
   // Arrow Item 추가 핸들러
   const handleAddArrow = () => {
-    const worldPos = getCenterWorldPos(stagePos, stageScale);
+    const worldPos = getViewportCenter();
     addArrow({
       points: [worldPos.x - 100, worldPos.y, worldPos.x + 100, worldPos.y],
     });
@@ -32,7 +50,7 @@ export const useAddWhiteboardItem = () => {
 
   // Line Item 추가 핸들러
   const handleAddLine = () => {
-    const worldPos = getCenterWorldPos(stagePos, stageScale);
+    const worldPos = getViewportCenter();
     addLine({
       points: [worldPos.x - 100, worldPos.y, worldPos.x + 100, worldPos.y],
     });
@@ -40,7 +58,7 @@ export const useAddWhiteboardItem = () => {
 
   // Shape Item 추가 핸들러
   const handleAddShape = (type: ShapeType) => {
-    const worldPos = getCenterWorldPos(stagePos, stageScale);
+    const worldPos = getViewportCenter();
 
     const width = 100;
     const height = 100;
@@ -99,11 +117,15 @@ export const useAddWhiteboardItem = () => {
             }
           }
 
+          const worldPos = getViewportCenter();
+
           // store 저장
           addImage({
             src,
             width: w,
             height: h,
+            x: worldPos.x - w / 2,
+            y: worldPos.y - h / 2,
           });
         };
       };
@@ -162,8 +184,8 @@ export const useAddWhiteboardItem = () => {
           }
         }
 
-        // 중앙 좌표 계산
-        const worldPos = getCenterWorldPos(stagePos, stageScale);
+        // 뷰포트 중앙 좌표 계산
+        const worldPos = getViewportCenter();
 
         addVideo({
           src: videoSrc,
@@ -183,7 +205,9 @@ export const useAddWhiteboardItem = () => {
     const targetUrl = url ?? prompt('유튜브 URL을 입력하세요');
     if (!targetUrl) return;
 
-    addYoutube(targetUrl);
+    const worldPos = getViewportCenter();
+
+    addYoutube(targetUrl, worldPos);
   };
 
   return {

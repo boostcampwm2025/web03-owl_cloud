@@ -3,13 +3,13 @@
 import { DUMMY_MEMBERS } from '@/app/[meetingId]/dummy';
 import { CloseIcon } from '@/assets/icons/common';
 import MemberListItem from '@/components/meeting/MemberListItem';
-import { useMeeingStore } from '@/store/useMeetingStore';
+import { useMeetingStore } from '@/store/useMeetingStore';
 
 export default function MemberModal() {
   // 이후 API로 수정 필요
   const members = DUMMY_MEMBERS;
 
-  const { setIsOpen } = useMeeingStore();
+  const { setIsOpen } = useMeetingStore();
 
   const onCloseClick = () => setIsOpen('isMemberOpen', false);
 

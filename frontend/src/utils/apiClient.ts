@@ -10,7 +10,7 @@ const baseApi = async <T>(
   const { params, headers, ...rest } = options;
 
   // URL 및 쿼리 스트링 설정
-  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_API_SERVER_URL;
   const queryString = params
     ? `?${new URLSearchParams(params).toString()}`
     : '';
@@ -32,7 +32,7 @@ const baseApi = async <T>(
 
   const config: RequestInit = {
     ...rest,
-    credentials: withToken ? 'include' : 'same-origin',
+    credentials: rest.credentials ?? (withToken ? 'include' : 'same-origin'),
     headers: {
       'Content-Type': 'application/json',
       ...(withToken && token && { Authorization: `Bearer ${token}` }),

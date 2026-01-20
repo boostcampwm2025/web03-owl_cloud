@@ -2,13 +2,13 @@ import { DUMMY_CHATS } from '@/app/[meetingId]/dummy';
 import { CloseIcon, ImageIcon } from '@/assets/icons/common';
 import { FileIcon, SendIcon } from '@/assets/icons/meeting';
 import ChatListItem from '@/components/meeting/ChatListItem';
-import { useMeeingStore } from '@/store/useMeetingStore';
+import { useMeetingStore } from '@/store/useMeetingStore';
 import { MouseEvent, useState } from 'react';
 
 export default function ChatModal() {
   const chats = DUMMY_CHATS;
 
-  const { setIsOpen } = useMeeingStore();
+  const { setIsOpen } = useMeetingStore();
   const [value, setValue] = useState('');
   const [files, setFiles] = useState([]);
 

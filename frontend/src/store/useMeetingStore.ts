@@ -1,10 +1,17 @@
+import { MediaState } from '@/types/media';
 import { create } from 'zustand';
 
-type AVState = 'ON' | 'OFF' | 'DISABLED';
+const INITIAL_MEDIA_STATE: MediaState = {
+  videoOn: false,
+  audioOn: false,
+  screenShareOn: false,
+  cameraPermission: 'unknown',
+  micPermission: 'unknown',
+};
 
 interface MeetingState {
-  audio: AVState;
-  video: AVState;
+  media: MediaState;
+
   members: number;
   hasNewChat: boolean;
 
@@ -16,8 +23,7 @@ interface MeetingState {
 }
 
 interface MeetingActions {
-  setAudio: (state: AVState) => void;
-  setVideo: (state: AVState) => void;
+  setMedia: (media: Partial<MediaState>) => void;
   setMembers: (count: number) => void;
   setHasNewChat: (state: boolean) => void;
 
@@ -34,9 +40,9 @@ interface MeetingActions {
   ) => void;
 }
 
-export const useMeeingStore = create<MeetingState & MeetingActions>((set) => ({
-  audio: 'OFF',
-  video: 'OFF',
+export const useMeetingStore = create<MeetingState & MeetingActions>((set) => ({
+  media: INITIAL_MEDIA_STATE,
+
   members: 0,
   hasNewChat: false,
 
@@ -46,8 +52,7 @@ export const useMeeingStore = create<MeetingState & MeetingActions>((set) => ({
   isWorkspaceOpen: false,
   isCodeEditorOpen: false,
 
-  setAudio: (state) => set({ audio: state }),
-  setVideo: (state) => set({ video: state }),
+  setMedia: (media) => set((prev) => ({ media: { ...prev.media, ...media } })),
   setMembers: (count) => set({ members: count }),
   setHasNewChat: (state) => set({ hasNewChat: state }),
 

@@ -1,20 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Konva from 'konva';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { getWorldPointerPosition } from '@/utils/coordinate';
 
 export function useDrawing() {
-  const cursorMode = useCanvasStore((state) => state.cursorMode);
   const currentDrawing = useCanvasStore((state) => state.currentDrawing);
   const startDrawing = useCanvasStore((state) => state.startDrawing);
   const continueDrawing = useCanvasStore((state) => state.continueDrawing);
   const finishDrawing = useCanvasStore((state) => state.finishDrawing);
 
   const [isDrawing, setIsDrawing] = useState(false);
+  const stageRef = useRef<Konva.Stage | null>(null);
 
   const handleDrawingMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
-    if (cursorMode !== 'draw') return;
-
     // 기존 아이템 클릭 시 그리기 시작 안 함
     const clickedOnEmpty =
       e.target === e.target.getStage() || e.target.hasName('bg-rect');
@@ -23,31 +21,47 @@ export function useDrawing() {
     const stage = e.target.getStage();
     if (!stage) return;
 
+    stageRef.current = stage;
     const pos = getWorldPointerPosition(stage);
     setIsDrawing(true);
     startDrawing(pos.x, pos.y);
   };
 
-  const handleDrawingMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
-    if (!isDrawing || cursorMode !== 'draw') return;
+  // window 레벨에서 마우스 이벤트 처리 (Stage 밖에서도 그리기 유지)
+  useEffect(() => {
+    if (!isDrawing || !stageRef.current) return;
 
-    const stage = e.target.getStage();
-    if (!stage) return;
+    const stage = stageRef.current;
+    const container = stage.container();
+    const rect = container.getBoundingClientRect();
 
-    const pos = getWorldPointerPosition(stage);
-    continueDrawing(pos.x, pos.y);
-  };
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      // 브라우저 좌표를 캔버스 좌표로 변환
+      const screenX = e.clientX - rect.left;
+      const screenY = e.clientY - rect.top;
+      const x = (screenX - stage.x()) / stage.scaleX();
+      const y = (screenY - stage.y()) / stage.scaleY();
 
-  const handleDrawingMouseUp = () => {
-    if (!isDrawing) return;
-    setIsDrawing(false);
-    finishDrawing();
-  };
+      continueDrawing(x, y);
+    };
+
+    const handleGlobalMouseUp = () => {
+      setIsDrawing(false);
+      finishDrawing();
+      stageRef.current = null;
+    };
+
+    window.addEventListener('mousemove', handleGlobalMouseMove);
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleGlobalMouseMove);
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isDrawing, continueDrawing, finishDrawing]);
 
   return {
     handleDrawingMouseDown,
-    handleDrawingMouseMove,
-    handleDrawingMouseUp,
     currentDrawing,
   };
 }

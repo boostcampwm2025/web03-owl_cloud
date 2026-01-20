@@ -48,7 +48,7 @@ function CodeEditorToolbar({
             <button
               onClick={onBecomePresenter}
               disabled={disabledPresenter}
-              className={`rounded px-3 py-1 text-sm ${disabledPresenter ? 'bg-neutral-100 text-neutral-400' : 'bg-blue-600 text-white'}`}
+              className={`rounded px-3 py-1 text-sm ${disabledPresenter ? 'bg-neutral-200 text-neutral-400' : 'bg-blue-600 text-white'}`}
             >
               스포트라이트
             </button>
@@ -81,7 +81,7 @@ function CodeEditorToolbar({
             value={language}
             disabled={disabledPresenter}
             onChange={(e) => onLanguageChange(e.target.value as EditorLanguage)}
-            className={`appearance-none rounded-md px-3 py-1 pr-9 text-sm focus:outline-none ${disabledPresenter ? 'bg-neutral-100 text-neutral-400' : 'bg-neutral-800 text-white'}`}
+            className={`appearance-none rounded-md px-3 py-1 pr-9 text-sm focus:outline-none ${disabledPresenter ? 'bg-neutral-200 text-neutral-400' : 'bg-neutral-800 text-white'}`}
           >
             {LANGUAGE_OPTIONS.map((lang) => (
               <option key={lang.value} value={lang.value}>

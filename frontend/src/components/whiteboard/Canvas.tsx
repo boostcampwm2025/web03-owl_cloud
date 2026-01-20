@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo, useEffect } from 'react';
 
 import Konva from 'konva';
 import { Stage, Layer, Rect, Line } from 'react-konva';
@@ -8,8 +8,10 @@ import { Stage, Layer, Rect, Line } from 'react-konva';
 import type { WhiteboardItem, TextItem, ArrowItem } from '@/types/whiteboard';
 
 import { useCanvasStore } from '@/store/useCanvasStore';
+import { cn } from '@/utils/cn';
 
-import { useWindowSize } from '@/hooks/useWindowSize';
+import { useElementSize } from '@/hooks/useElementSize';
+import { useClickOutside } from '@/hooks/useClickOutside';
 import { useCanvasInteraction } from '@/hooks/useCanvasInteraction';
 import { useCanvasShortcuts } from '@/hooks/useCanvasShortcuts';
 import { useArrowHandles } from '@/hooks/useArrowHandles';
@@ -31,11 +33,23 @@ export default function Canvas() {
   const selectItem = useCanvasStore((state) => state.selectItem);
   const updateItem = useCanvasStore((state) => state.updateItem);
   const setEditingTextId = useCanvasStore((state) => state.setEditingTextId);
+  const setViewportSize = useCanvasStore((state) => state.setViewportSize);
+  const cursorMode = useCanvasStore((state) => state.cursorMode);
 
   const stageRef = useRef<Konva.Stage | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isDraggingArrow, setIsDraggingArrow] = useState(false);
+  const [isDraggingCanvas, setIsDraggingCanvas] = useState(false);
 
-  const size = useWindowSize();
+  const size = useElementSize(containerRef);
+
+  // viewport 크기를 store에 업데이트
+  useEffect(() => {
+    if (size.width > 0 && size.height > 0) {
+      setViewportSize(size.width, size.height);
+    }
+  }, [size.width, size.height, setViewportSize]);
+
   const { handleWheel, handleDragMove, handleDragEnd } = useCanvasInteraction(
     size.width,
     size.height,
@@ -86,11 +100,34 @@ export default function Canvas() {
     }
   };
 
+  // 외부 클릭 시 선택 해제
+  useClickOutside(
+    containerRef,
+    (e) => {
+      const target = e.target as HTMLElement;
+      // 사이드바 클릭은 무시
+      if (target.closest('aside')) {
+        return;
+      }
+
+      if (selectedId) {
+        selectItem(null);
+        setSelectedHandleIndex(null);
+      }
+    },
+    !editingTextId && !!selectedId,
+  );
+
   // 마우스 이벤트 통합 훅
-  const { handleMouseDown, handleMouseMove, handleMouseUp, currentDrawing } =
-    useCanvasMouseEvents({
-      onDeselect: handleCheckDeselect,
-    });
+  const {
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    handleMouseLeave,
+    currentDrawing,
+  } = useCanvasMouseEvents({
+    onDeselect: handleCheckDeselect,
+  });
 
   // 캔버스 드래그 가능 여부
   const isDraggable = useCanvasStore((state) => state.cursorMode === 'move');
@@ -108,10 +145,28 @@ export default function Canvas() {
     updateItem(id, newAttributes);
   };
 
-  if (size.width === 0 || size.height === 0) return null;
+  // width={0} height={0}으로 canvas 렌더링 방지
+  if (size.width === 0 || size.height === 0) {
+    return (
+      <div
+        ref={containerRef}
+        className="flex h-full w-full items-center justify-center"
+      ></div>
+    );
+  }
 
   return (
-    <div className="h-full w-full overflow-hidden bg-neutral-100">
+    <div
+      ref={containerRef}
+      className={cn(
+        'h-full w-full overflow-hidden bg-neutral-100',
+        cursorMode === 'select' && 'cursor-default',
+        cursorMode === 'move' && !isDraggingCanvas && 'cursor-grab',
+        cursorMode === 'move' && isDraggingCanvas && 'cursor-grabbing',
+        cursorMode === 'draw' && 'cursor-crosshair',
+        cursorMode === 'eraser' && 'cursor-cell',
+      )}
+    >
       <Stage
         ref={stageRef}
         width={size.width}
@@ -122,12 +177,16 @@ export default function Canvas() {
         scaleX={stageScale}
         scaleY={stageScale}
         onWheel={handleWheel}
+        onDragStart={() => setIsDraggingCanvas(true)}
         onDragMove={handleDragMove}
-        onDragEnd={handleDragEnd}
+        onDragEnd={(e) => {
+          handleDragEnd(e);
+          setIsDraggingCanvas(false);
+        }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
         onTouchStart={handleCheckDeselect}
       >
         <Layer

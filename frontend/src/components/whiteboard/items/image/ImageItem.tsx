@@ -65,6 +65,9 @@ export default function ImageItem({
     // 투명도
     opacity: imageItem.opacity,
 
+    // 테두리 스타일
+    dash: imageItem.dash,
+
     draggable: true,
     onMouseDown: onSelect,
     onTouchStart: onSelect,

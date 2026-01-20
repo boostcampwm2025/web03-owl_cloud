@@ -3,7 +3,7 @@
 import ArrowStrokeSection from '@/components/whiteboard/sidebar/sections/ArrowStrokeSection';
 import ArrowStyleSection from '@/components/whiteboard/sidebar/sections/ArrowStyleSection';
 import ButtonGroup from '@/components/whiteboard/sidebar/ui/ButtonGroup';
-import type { ArrowSize, ArrowStyle } from './arrowPresets';
+import type { ArrowSize, ArrowStyle } from '@/constants/arrowPresets';
 import type { ArrowHeadType } from '@/types/whiteboard';
 
 // ArrowPanel 컴포넌트

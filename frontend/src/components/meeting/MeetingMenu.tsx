@@ -16,16 +16,14 @@ import {
 } from '@/assets/icons/meeting';
 import Modal from '@/components/common/Modal';
 import MeetingButton from '@/components/meeting/MeetingButton';
-import { useMeeingStore } from '@/store/useMeetingStore';
+import { useProduce } from '@/hooks/useProduce';
+import { useMeetingStore } from '@/store/useMeetingStore';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export default function MeetingMenu() {
   const {
-    audio,
-    setAudio,
-    video,
-    setVideo,
+    media,
     members,
     hasNewChat,
     setHasNewChat,
@@ -35,11 +33,33 @@ export default function MeetingMenu() {
     isWorkspaceOpen,
     isCodeEditorOpen,
     setIsOpen,
-  } = useMeeingStore();
+  } = useMeetingStore();
+  const {
+    startAudioProduce,
+    stopAudioProduce,
+    startVideoProduce,
+    stopVideoProduce,
+    startScreenProduce,
+    stopScreenProduce,
+  } = useProduce();
 
-  const toggleAudio = () => setAudio(audio === 'ON' ? 'OFF' : 'ON');
+  const toggleAudio = async () => {
+    const { audioOn } = useMeetingStore.getState().media;
+    if (audioOn) {
+      stopAudioProduce();
+    } else {
+      await startAudioProduce();
+    }
+  };
 
-  const toggleVideo = () => setVideo(video === 'ON' ? 'OFF' : 'ON');
+  const toggleVideo = async () => {
+    const { videoOn } = useMeetingStore.getState().media;
+    if (videoOn) {
+      stopVideoProduce();
+    } else {
+      await startVideoProduce();
+    }
+  };
 
   const onInfoClick = () => {
     setIsOpen('isInfoOpen', !isInfoOpen);
@@ -52,6 +72,15 @@ export default function MeetingMenu() {
   const onChatClick = () => {
     setHasNewChat(false);
     setIsOpen('isChatOpen', !isChatOpen);
+  };
+
+  const onScreenShareClick = async () => {
+    const { screenShareOn } = useMeetingStore.getState().media;
+    if (screenShareOn) {
+      stopScreenProduce();
+    } else {
+      await startScreenProduce();
+    }
   };
 
   const onWorkspaceClick = () => {
@@ -73,7 +102,7 @@ export default function MeetingMenu() {
       <section className="flex gap-2">
         <MeetingButton
           icon={
-            audio === 'ON' ? (
+            media.audioOn ? (
               <MicOnIcon className="h-8 w-8" />
             ) : (
               <MicOffIcon className="h-8 w-8" />
@@ -84,7 +113,7 @@ export default function MeetingMenu() {
         />
         <MeetingButton
           icon={
-            video === 'ON' ? (
+            media.videoOn ? (
               <CamOnIcon className="h-8 w-8" />
             ) : (
               <CamOffIcon className="h-8 w-8" />
@@ -126,6 +155,8 @@ export default function MeetingMenu() {
         <MeetingButton
           icon={<ShareIcon className="h-8 w-8" />}
           text="화면 공유"
+          isActive={useMeetingStore.getState().media.screenShareOn}
+          onClick={onScreenShareClick}
         />
         <MeetingButton
           icon={<WorkspaceIcon className="h-8 w-8" />}

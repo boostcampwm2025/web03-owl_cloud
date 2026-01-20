@@ -9,14 +9,14 @@ import {
 } from '@/assets/icons/common';
 import Modal from '@/components/common/Modal';
 import ToastMessage from '@/components/common/ToastMessage';
-import { useMeeingStore } from '@/store/useMeetingStore';
+import { useMeetingStore } from '@/store/useMeetingStore';
 import { hidePassword } from '@/utils/security';
 import { MouseEvent, useEffect, useState } from 'react';
 
 export default function InfoModal() {
   const { id, host, password } = DUMMY_MEETING_INFO;
 
-  const { setIsOpen } = useMeeingStore();
+  const { setIsOpen } = useMeetingStore();
   const [currentPassword, setCurrentPassword] = useState(password || '');
   const [currentModal, setCurrentModal] = useState<'INFO' | 'PASSWORD'>('INFO');
   const [isPasswordHidden, setIsPasswordHidden] = useState(true);

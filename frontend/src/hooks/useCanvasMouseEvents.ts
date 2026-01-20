@@ -12,12 +12,7 @@ export function useCanvasMouseEvents({
 }: UseCanvasMouseEventsProps) {
   const cursorMode = useCanvasStore((state) => state.cursorMode);
 
-  const {
-    handleDrawingMouseDown,
-    handleDrawingMouseMove,
-    handleDrawingMouseUp,
-    currentDrawing,
-  } = useDrawing();
+  const { handleDrawingMouseDown, currentDrawing } = useDrawing();
 
   const { handleEraserMouseDown, handleEraserMouseMove, handleEraserMouseUp } =
     useEraser();
@@ -33,17 +28,24 @@ export function useCanvasMouseEvents({
   };
 
   const handleMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
-    if (cursorMode === 'draw') {
-      handleDrawingMouseMove(e);
-    } else if (cursorMode === 'eraser') {
+    if (cursorMode === 'eraser') {
       handleEraserMouseMove(e);
     }
   };
 
   const handleMouseUp = () => {
+    if (cursorMode === 'eraser') {
+      handleEraserMouseUp();
+    }
+  };
+
+  const handleMouseLeave = () => {
+    // 펜 그리기 중에는 Stage를 벗어나도 계속 그리기
     if (cursorMode === 'draw') {
-      handleDrawingMouseUp();
-    } else if (cursorMode === 'eraser') {
+      return;
+    }
+
+    if (cursorMode === 'eraser') {
       handleEraserMouseUp();
     }
   };
@@ -52,6 +54,7 @@ export function useCanvasMouseEvents({
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
+    handleMouseLeave,
     currentDrawing,
   };
 }

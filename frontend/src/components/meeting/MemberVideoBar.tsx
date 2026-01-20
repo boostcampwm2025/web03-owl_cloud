@@ -3,14 +3,14 @@
 import { DUMMY_DATA } from '@/app/[meetingId]/dummy';
 import { ChevronLeftIcon, ChevronRightIcon } from '@/assets/icons/common';
 import SmVideo from '@/components/meeting/SmVideo';
-import { useMeeingStore } from '@/store/useMeetingStore';
+import { useMeetingStore } from '@/store/useMeetingStore';
 import { useEffect, useState } from 'react';
 
 export default function MemberVideoBar() {
   // 이후 WebRTC로 수정 필요
   const { lastPage, membersPerPage, totalMemberCount, members } = DUMMY_DATA;
 
-  const { setMembers } = useMeeingStore();
+  const { setMembers } = useMeetingStore();
   const [currentPage, setCurrentPage] = useState(1);
   const [hasPrevPage, hasNextPage] = [currentPage > 1, currentPage < lastPage];
 

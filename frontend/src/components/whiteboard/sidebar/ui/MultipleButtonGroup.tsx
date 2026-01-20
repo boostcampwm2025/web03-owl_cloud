@@ -2,25 +2,32 @@
 
 import { ComponentType, SVGProps } from 'react';
 
-interface ButtonGroupOption<T> {
+interface MultipleButtonGroupOption<T> {
   value: T;
   label?: string;
   icon?: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
-interface ButtonGroupProps<T> {
+interface MultipleButtonGroupProps<T> {
   label: string;
-  options: ButtonGroupOption<T>[];
-  value: T;
-  onChange: (value: T) => void;
+  options: MultipleButtonGroupOption<T>[];
+  value: T[];
+  onChange: (value: T[]) => void;
 }
 
-export default function ButtonGroup<T extends string | number>({
+export default function MultipleButtonGroup<T extends string | number>({
   label,
   options,
   value,
   onChange,
-}: ButtonGroupProps<T>) {
+}: MultipleButtonGroupProps<T>) {
+  const handleClick = (optionValue: T) => {
+    const newValues = value.includes(optionValue)
+      ? value.filter((v) => v !== optionValue)
+      : [...value, optionValue];
+    onChange(newValues);
+  };
+
   return (
     <div className="flex flex-col gap-1">
       <span className="text-xs font-bold tracking-wide text-black uppercase select-none">
@@ -29,14 +36,13 @@ export default function ButtonGroup<T extends string | number>({
       <div className="flex gap-1 text-neutral-700">
         {options.map((option) => {
           const Icon = option.icon;
+          const selected = value.includes(option.value);
           return (
             <button
               key={option.value}
-              onClick={() => onChange(option.value)}
+              onClick={() => handleClick(option.value)}
               className={`flex h-7 flex-1 items-center justify-center gap-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-                value === option.value
-                  ? 'bg-sky-200'
-                  : 'bg-neutral-100 hover:bg-neutral-200'
+                selected ? 'bg-sky-200' : 'bg-neutral-100 hover:bg-neutral-200'
               }`}
             >
               {Icon ? <Icon className="h-5 w-5" /> : option.label}

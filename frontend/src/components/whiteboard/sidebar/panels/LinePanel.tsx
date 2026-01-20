@@ -2,7 +2,7 @@
 
 import ArrowStrokeSection from '@/components/whiteboard/sidebar/sections/ArrowStrokeSection';
 import ArrowStyleSection from '@/components/whiteboard/sidebar/sections/ArrowStyleSection';
-import type { ArrowSize, ArrowStyle } from './arrowPresets';
+import type { ArrowSize, ArrowStyle } from '@/constants/arrowPresets';
 
 // LinePanel 컴포넌트
 interface LinePanelProps {

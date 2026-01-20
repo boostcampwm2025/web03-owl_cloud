@@ -6,30 +6,49 @@ import { useMemo } from 'react';
 import ShapePanel from '@/components/whiteboard/sidebar/panels/ShapePanel';
 import ArrowPanel from '@/components/whiteboard/sidebar/panels/ArrowPanel';
 import LinePanel from '@/components/whiteboard/sidebar/panels/LinePanel';
+import MediaPanel from '@/components/whiteboard/sidebar/panels/MediaPanel';
+import TextPanel from '@/components/whiteboard/sidebar/panels/TextPanel';
+import DrawingPanel from '@/components/whiteboard/sidebar/panels/DrawingPanel';
 
 import { StrokeStyleType } from '@/components/whiteboard/sidebar/sections/StrokeStyleSection';
 import { EdgeType } from '@/components/whiteboard/sidebar/sections/EdgesSection';
 
 import { useCanvasStore } from '@/store/useCanvasStore';
-import type { ArrowItem, LineItem, ShapeItem } from '@/types/whiteboard';
+import type {
+  ArrowItem,
+  LineItem,
+  ShapeItem,
+  ImageItem,
+  TextItem,
+  DrawingItem,
+} from '@/types/whiteboard';
 import {
   ARROW_SIZE_PRESETS,
   ARROW_STYLE_PRESETS,
-} from '@/components/whiteboard/sidebar/panels/arrowPresets';
+} from '@/constants/arrowPresets';
+import { TEXT_SIZE_PRESETS } from '@/constants/textPresets';
+import { DRAWING_SIZE_PRESETS } from '@/constants/drawingPresets';
 import {
   getArrowSize,
   getLineSize,
+  getTextSize,
+  getDrawingSize,
   getItemStyle,
-} from '@/utils/arrowPanelHelpers';
+} from '@/utils/sidebarStyleHelpers';
 
 // 사이드 바 선택된 요소 타입
-type SelectionType = 'shape' | 'arrow' | 'line' | null;
+type SelectionType = 'shape' | 'arrow' | 'line' | 'text' | 'drawing' | 'media' | null;
 
 export default function Sidebar() {
   // 스토어에서 선택된 아이템 정보 가져오기
   const selectedId = useCanvasStore((state) => state.selectedId);
   const items = useCanvasStore((state) => state.items);
   const updateItem = useCanvasStore((state) => state.updateItem);
+  const cursorMode = useCanvasStore((state) => state.cursorMode);
+  const drawingStroke = useCanvasStore((state) => state.drawingStroke);
+  const drawingSize = useCanvasStore((state) => state.drawingSize);
+  const setDrawingStroke = useCanvasStore((state) => state.setDrawingStroke);
+  const setDrawingSize = useCanvasStore((state) => state.setDrawingSize);
 
   // 선택된 아이템 찾기
   const selectedItem = useMemo(
@@ -47,6 +66,14 @@ export default function Sidebar() {
         return 'arrow';
       case 'line':
         return 'line';
+      case 'image':
+      case 'video':
+      case 'youtube':
+        return 'media';
+      case 'text':
+        return 'text';
+      case 'drawing':
+        return 'drawing';
       default:
         return null;
     }
@@ -86,6 +113,8 @@ export default function Sidebar() {
 
   // 선택 타입에 따른 표시될 헤더 제목
   const getHeaderTitle = () => {
+    if (cursorMode === 'draw') return 'Drawing';
+
     switch (selectionType) {
       case 'shape':
         return 'Shape';
@@ -93,13 +122,21 @@ export default function Sidebar() {
         return 'Arrow';
       case 'line':
         return 'Line';
+      case 'media':
+        if (selectedItem?.type === 'youtube') return 'Youtube';
+        if (selectedItem?.type === 'video') return 'Video';
+        return 'Image';
+      case 'text':
+        return 'Text';
+      case 'drawing':
+        return 'Drawing';
       default:
         return '';
     }
   };
 
-  // 선택된 아이템이 없거나 지원하지 않는 타입이면 사이드바 표시 안 함
-  if (!selectedItem || !selectionType) {
+  // 사이드바 표시 여부
+  if (!(selectedItem && selectionType) && cursorMode !== 'draw') {
     return null;
   }
 
@@ -223,6 +260,119 @@ export default function Sidebar() {
             }}
             onChangeStyle={(style) => {
               updateItem(selectedId!, { tension: ARROW_STYLE_PRESETS[style] });
+            }}
+          />
+        )}
+
+        {/* media (image/video/youtube) */}
+        {selectionType === 'media' && (
+          <MediaPanel
+            strokeColor={(selectedItem as ImageItem).stroke ?? 'transparent'}
+            strokeWidth={(selectedItem as ImageItem).strokeWidth ?? 0}
+            strokeStyle={getStrokeStyle(
+              (selectedItem as ImageItem).dash,
+              (selectedItem as ImageItem).strokeWidth ?? 0,
+            )}
+            edgeType={getEdgeType((selectedItem as ImageItem).cornerRadius)}
+            opacity={(selectedItem as ImageItem).opacity ?? 1}
+            onChangeStrokeColor={(color) =>
+              updateItem(selectedId!, { stroke: color })
+            }
+            onChangeStrokeWidth={(width) => {
+              const currentWidth = (selectedItem as ImageItem).strokeWidth ?? 0;
+              const currentDash = (selectedItem as ImageItem).dash;
+
+              const currentStyle = getStrokeStyle(
+                currentDash,
+                currentWidth || 2,
+              );
+
+              const newDash = getDashArray(currentStyle, width);
+
+              updateItem(selectedId!, {
+                strokeWidth: width,
+                dash: newDash,
+                stroke: (selectedItem as ImageItem).stroke ?? '#000000',
+              });
+            }}
+            onChangeStrokeStyle={(style) => {
+              const currentWidth = (selectedItem as ImageItem).strokeWidth ?? 0;
+
+              // 보정된 두께
+              // 두께가 0이면 내부적으로 2로 간주하여 dash 배열 계산
+              const effectiveWidth = currentWidth === 0 ? 2 : currentWidth;
+
+              updateItem(selectedId!, {
+                // effectiveWidth로 dash 배열 계산
+                dash: getDashArray(style, effectiveWidth),
+
+                // 두께가 0이었다면 2px로 업데이트
+                strokeWidth: effectiveWidth,
+
+                // 색상이 없었다면 기본 색상 검정으로 설정
+                stroke: (selectedItem as ImageItem).stroke ?? '#000000',
+              });
+            }}
+            onChangeEdgeType={(type) => {
+              updateItem(selectedId!, {
+                cornerRadius: type === 'round' ? 20 : 0,
+              });
+            }}
+            onChangeOpacity={(opacity) => {
+              updateItem(selectedId!, { opacity });
+            }}
+          />
+        )}
+
+        {/* text */}
+        {selectionType === 'text' && (
+          <TextPanel
+            fill={(selectedItem as TextItem).fill}
+            size={getTextSize(selectedItem as TextItem)}
+            align={(selectedItem as TextItem).align}
+            fontStyle={(selectedItem as TextItem).fontStyle ?? 'normal'}
+            textDecoration={(selectedItem as TextItem).textDecoration ?? 'none'}
+            onChangeFill={(color) => updateItem(selectedId!, { fill: color })}
+            onChangeSize={(size) => {
+              const preset = TEXT_SIZE_PRESETS[size];
+              updateItem(selectedId!, { fontSize: preset.fontSize });
+            }}
+            onChangeAlign={(align) => updateItem(selectedId!, { align })}
+            onChangeFontStyle={(fontStyle) =>
+              updateItem(selectedId!, { fontStyle })
+            }
+            onChangeTextDecoration={(textDecoration) =>
+              updateItem(selectedId!, { textDecoration })
+            }
+          />
+        )}
+        {/* drawing */}
+        {(cursorMode === 'draw' || selectionType === 'drawing') && (
+          <DrawingPanel
+            stroke={
+              selectedItem && selectionType === 'drawing'
+                ? (selectedItem as DrawingItem).stroke
+                : drawingStroke
+            }
+            size={
+              selectedItem && selectionType === 'drawing'
+                ? getDrawingSize(selectedItem as DrawingItem)
+                : drawingSize
+            }
+            onChangeStroke={(color) => {
+              if (selectedItem && selectionType === 'drawing') {
+                updateItem(selectedId!, { stroke: color });
+              } else {
+                setDrawingStroke(color);
+              }
+            }}
+            onChangeSize={(size) => {
+              if (selectedItem && selectionType === 'drawing') {
+                const preset = DRAWING_SIZE_PRESETS[size];
+                updateItem(selectedId!, { strokeWidth: preset.strokeWidth });
+              } else {
+                setDrawingSize(size);
+              }
             }}
           />
         )}

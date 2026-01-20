@@ -176,6 +176,7 @@ export default function VideoItem({
         opacity={videoItem.opacity}
         x={0}
         y={0}
+        dash={videoItem.dash}
       />
 
       {/* 소리 조절 버튼 */}

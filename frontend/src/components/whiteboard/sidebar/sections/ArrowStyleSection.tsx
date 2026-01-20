@@ -2,7 +2,7 @@
 
 import Section from '@/components/whiteboard/sidebar/ui/Section';
 import ButtonGroup from '@/components/whiteboard/sidebar/ui/ButtonGroup';
-import type { ArrowSize, ArrowStyle } from '../panels/arrowPresets';
+import type { ArrowSize, ArrowStyle } from '@/constants/arrowPresets';
 
 // Arrow 스타일 설정 section
 interface ArrowStyleSectionProps {
