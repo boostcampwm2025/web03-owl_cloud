@@ -11,7 +11,7 @@ import { useProduce } from '@/hooks/useProduce';
 import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
 import { useMeetingStore } from '@/store/useMeetingStore';
 import { useUserStore } from '@/store/useUserStore';
-import { FetchRoomMembersResponse } from '@/types/meeting';
+import { FetchRoomMembersResponse, MeetingMemberInfo } from '@/types/meeting';
 import { useEffect } from 'react';
 
 export default function MeetingRoom({ meetingId }: { meetingId: string }) {
@@ -25,7 +25,7 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
   } = useMeetingStore();
   const { startAudioProduce, startVideoProduce, isReady } = useProduce();
   const { socket } = useMeetingSocketStore();
-  const { setMembers } = useMeetingStore();
+  const { members, setMembers, addMember, removeMember } = useMeetingStore();
   const { userId } = useUserStore();
 
   // 초기 입장 시 로비에서 설정한 미디어 Produce
@@ -39,6 +39,7 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
         if (audioOn) await startAudioProduce();
         if (videoOn) await startVideoProduce();
 
+        // 현재 회의에 참여 중인 참가자 정보 저장
         const { main, members } = (await socket.emitWithAck(
           'signaling:ws:room_members',
         )) as FetchRoomMembersResponse;
@@ -53,9 +54,22 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
     initRoom();
   }, [isReady, socket]);
 
-  // 초기 입장 시 현재 회의에 참여 중인 참가자 정보 저장
+  // 입장, 퇴장하는 사용자 처리
   useEffect(() => {
     if (!socket) return;
+
+    const onNewUser = async (userInfo: MeetingMemberInfo) => {
+      addMember(userInfo);
+    };
+    socket.on('room:new_user', onNewUser);
+    const onUserClosed = async (userId: string) => {
+      removeMember(userId);
+    };
+    socket.on('room:user_closed', onUserClosed);
+    return () => {
+      socket.off('room:new_user', onNewUser);
+      socket.off('room:user_closed', onUserClosed);
+    };
   }, [socket]);
 
   return (
