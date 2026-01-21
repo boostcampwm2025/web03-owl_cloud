@@ -6,14 +6,11 @@ export class CodeeditorWebsocket {
 
   bindServer(server: Server) {
     this.server = server;
-  }
+  };
 
   async disconnectCodeeditorRoom(room_id: string) {
     const room = `${CODEEDITOR_GROUP.CODEEDITOR}:${room_id}`;
 
-    const sockets = await this.server.in(room).fetchSockets();
-    for (const socket of sockets) {
-      socket.disconnect(true);
-    }
-  }
-}
+    this.server.in(room).disconnectSockets(true);
+  };
+};

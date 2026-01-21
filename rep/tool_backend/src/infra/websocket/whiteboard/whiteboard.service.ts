@@ -28,9 +28,6 @@ export class WhiteboardWebsocket {
   async disconnectWhiteboardRoom(room_id: string) {
     const room = `${WHITEBOARD_GROUP.WHITEBOARD}:${room_id}`;
 
-    const sockets = await this.server.in(room).fetchSockets();
-    for (const socket of sockets) {
-      socket.disconnect(true);
-    }
-  }
-}
+    this.server.in(room).disconnectSockets(true);
+  };
+};
