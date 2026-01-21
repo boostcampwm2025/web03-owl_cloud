@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 // 환경변수 및 상수 설정
 const TOOL_BACKEND_URL = process.env.NEXT_PUBLIC_TOOL_BACKEND_URL;
 const SOCKET_PATH = process.env.NEXT_PUBLIC_TOOL_BACKEND_WEBSOCKET_PREFIX;
-const NAMESPACE = '/whiteboard';
+const NAMESPACE = process.env.NEXT_PUBLIC_TOOL_BACKEND_WEBSOCKET_WHITEBOARD;
 
 export const useWhiteboardSocket = () => {
   const { setWhiteboardSocket } = useToolSocketStore();
