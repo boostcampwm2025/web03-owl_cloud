@@ -23,6 +23,8 @@ const UNMUTE_PATHS = [
 
 interface VideoItemProps {
   videoItem: VideoItemType;
+  isDraggable: boolean;
+  isListening: boolean;
   onSelect: () => void;
   onChange: (newAttrs: Partial<VideoItemType>) => void;
   onMouseEnter: (e: Konva.KonvaEventObject<MouseEvent>) => void;
@@ -33,6 +35,8 @@ interface VideoItemProps {
 
 export default function VideoItem({
   videoItem,
+  isDraggable,
+  isListening,
   onSelect,
   onChange,
   onMouseEnter,
@@ -129,7 +133,8 @@ export default function VideoItem({
       // 회전
       rotation={videoItem.rotation}
       // 액션
-      draggable
+      draggable={isDraggable}
+      listening={isListening}
       onMouseDown={onSelect}
       onTouchStart={onSelect}
       onMouseEnter={onMouseEnter}

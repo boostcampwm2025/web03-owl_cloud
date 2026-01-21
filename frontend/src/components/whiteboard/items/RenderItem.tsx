@@ -258,7 +258,9 @@ export default function RenderItem({
     return (
       <ImageItem
         imageItem={imageItem}
-        onSelect={() => onSelect(item.id)}
+        isDraggable={isDraggable}
+        isListening={isListening}
+        onSelect={() => isInteractive && onSelect(item.id)}
         onChange={onChange}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -274,7 +276,9 @@ export default function RenderItem({
     return (
       <VideoItem
         videoItem={videoItem}
-        onSelect={() => onSelect(item.id)}
+        isDraggable={isDraggable}
+        isListening={isListening}
+        onSelect={() => isInteractive && onSelect(item.id)}
         onChange={onChange}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -290,7 +294,9 @@ export default function RenderItem({
     return (
       <YoutubeItem
         youtubeItem={youtubeItem}
-        onSelect={() => onSelect(item.id)}
+        isDraggable={isDraggable}
+        isListening={isListening}
+        onSelect={() => isInteractive && onSelect(item.id)}
         onChange={onChange}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}

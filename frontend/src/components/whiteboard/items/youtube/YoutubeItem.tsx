@@ -11,6 +11,8 @@ import { getMaxResThumbnailUrl, getHqThumbnailUrl } from '@/utils/youtube';
 
 interface YoutubeItemProps {
   youtubeItem: YoutubeItemType;
+  isDraggable: boolean;
+  isListening: boolean;
   onSelect: () => void;
   onChange: (newAttrs: Partial<YoutubeItemType>) => void;
   onMouseEnter: (e: Konva.KonvaEventObject<MouseEvent>) => void;
@@ -21,6 +23,8 @@ interface YoutubeItemProps {
 
 export default function YoutubeItem({
   youtubeItem,
+  isDraggable,
+  isListening,
   onSelect,
   onChange,
   onMouseEnter,
@@ -139,7 +143,8 @@ export default function YoutubeItem({
       // 회전
       rotation={youtubeItem.rotation}
       // 액션
-      draggable
+      draggable={isDraggable}
+      listening={isListening}
       onMouseDown={onSelect}
       onTouchStart={onSelect}
       onMouseEnter={onMouseEnter}

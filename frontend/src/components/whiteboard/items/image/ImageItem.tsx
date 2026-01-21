@@ -10,6 +10,8 @@ import { ImageItem as ImageItemType } from '@/types/whiteboard';
 
 interface ImageItemProps {
   imageItem: ImageItemType;
+  isDraggable: boolean;
+  isListening: boolean;
   onSelect: () => void;
   onChange: (newAttrs: Partial<ImageItemType>) => void;
   onMouseEnter: (e: Konva.KonvaEventObject<MouseEvent>) => void;
@@ -20,6 +22,8 @@ interface ImageItemProps {
 
 export default function ImageItem({
   imageItem,
+  isDraggable,
+  isListening,
   onSelect,
   onChange,
   onMouseEnter,
@@ -68,7 +72,8 @@ export default function ImageItem({
     // 테두리 스타일
     dash: imageItem.dash,
 
-    draggable: true,
+    draggable: isDraggable,
+    listening: isListening,
     onMouseDown: onSelect,
     onTouchStart: onSelect,
     onMouseEnter: onMouseEnter,
