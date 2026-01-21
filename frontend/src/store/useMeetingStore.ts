@@ -60,22 +60,31 @@ export const useMeetingStore = create<MeetingState & MeetingActions>((set) => ({
 
   setMedia: (media) => set((prev) => ({ media: { ...prev.media, ...media } })),
   setMembers: (members) =>
-    set({
-      members: members.reduce(
+    set(() => {
+      const newMembersMap = members.reduce(
         (acc, cur) => ({ ...acc, [cur.user_id]: cur }),
         {},
-      ),
+      );
+
+      return {
+        members: newMembersMap,
+      };
     }),
   addMember: (member) =>
-    set((state) => ({
-      members: {
-        ...state.members,
-        [member.user_id]: member,
-      },
-      memberStreams: {
-        [member.user_id]: {},
-      },
-    })),
+    set((state) => {
+      const existingStream = state.memberStreams[member.user_id] || {};
+
+      return {
+        members: {
+          ...state.members,
+          [member.user_id]: member,
+        },
+        memberStreams: {
+          ...state.memberStreams,
+          [member.user_id]: existingStream,
+        },
+      };
+    }),
   removeMember: (userId) =>
     set((state) => {
       const nextMembers = { ...state.members };
