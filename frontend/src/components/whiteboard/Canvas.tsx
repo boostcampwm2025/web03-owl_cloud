@@ -7,7 +7,9 @@ import { Stage, Layer, Rect, Line } from 'react-konva';
 
 import type { WhiteboardItem, TextItem, ArrowItem } from '@/types/whiteboard';
 
-import { useCanvasStore } from '@/store/useCanvasStore';
+import { useWhiteboardSharedStore } from '@/store/useWhiteboardSharedStore';
+import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
+import { useItemActions } from '@/hooks/useItemActions';
 import { cn } from '@/utils/cn';
 
 import { useElementSize } from '@/hooks/useElementSize';
@@ -23,18 +25,22 @@ import ItemTransformer from '@/components/whiteboard/controls/ItemTransformer';
 import ArrowHandles from '@/components/whiteboard/items/arrow/ArrowHandles';
 
 export default function Canvas() {
-  const stageScale = useCanvasStore((state) => state.stageScale);
-  const stagePos = useCanvasStore((state) => state.stagePos);
-  const canvasWidth = useCanvasStore((state) => state.canvasWidth);
-  const canvasHeight = useCanvasStore((state) => state.canvasHeight);
-  const items = useCanvasStore((state) => state.items);
-  const selectedId = useCanvasStore((state) => state.selectedId);
-  const editingTextId = useCanvasStore((state) => state.editingTextId);
-  const selectItem = useCanvasStore((state) => state.selectItem);
-  const updateItem = useCanvasStore((state) => state.updateItem);
-  const setEditingTextId = useCanvasStore((state) => state.setEditingTextId);
-  const setViewportSize = useCanvasStore((state) => state.setViewportSize);
-  const cursorMode = useCanvasStore((state) => state.cursorMode);
+  const stageScale = useWhiteboardLocalStore((state) => state.stageScale);
+  const stagePos = useWhiteboardLocalStore((state) => state.stagePos);
+  const canvasWidth = useWhiteboardSharedStore((state) => state.canvasWidth);
+  const canvasHeight = useWhiteboardSharedStore((state) => state.canvasHeight);
+  const items = useWhiteboardSharedStore((state) => state.items);
+  const selectedId = useWhiteboardLocalStore((state) => state.selectedId);
+  const editingTextId = useWhiteboardLocalStore((state) => state.editingTextId);
+  const selectItem = useWhiteboardLocalStore((state) => state.selectItem);
+  const { updateItem } = useItemActions();
+  const setEditingTextId = useWhiteboardLocalStore(
+    (state) => state.setEditingTextId,
+  );
+  const setViewportSize = useWhiteboardLocalStore(
+    (state) => state.setViewportSize,
+  );
+  const cursorMode = useWhiteboardLocalStore((state) => state.cursorMode);
 
   const stageRef = useRef<Konva.Stage | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -130,7 +136,9 @@ export default function Canvas() {
   });
 
   // 캔버스 드래그 가능 여부
-  const isDraggable = useCanvasStore((state) => state.cursorMode === 'move');
+  const isDraggable = useWhiteboardLocalStore(
+    (state) => state.cursorMode === 'move',
+  );
 
   useCanvasShortcuts({
     isArrowOrLineSelected,

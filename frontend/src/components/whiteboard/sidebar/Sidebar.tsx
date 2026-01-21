@@ -10,10 +10,11 @@ import MediaPanel from '@/components/whiteboard/sidebar/panels/MediaPanel';
 import TextPanel from '@/components/whiteboard/sidebar/panels/TextPanel';
 import DrawingPanel from '@/components/whiteboard/sidebar/panels/DrawingPanel';
 
+import { useWhiteboardSharedStore } from '@/store/useWhiteboardSharedStore';
+import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
+import { useItemActions } from '@/hooks/useItemActions';
 import { StrokeStyleType } from '@/components/whiteboard/sidebar/sections/StrokeStyleSection';
 import { EdgeType } from '@/components/whiteboard/sidebar/sections/EdgesSection';
-
-import { useCanvasStore } from '@/store/useCanvasStore';
 import type {
   ArrowItem,
   LineItem,
@@ -37,18 +38,29 @@ import {
 } from '@/utils/sidebarStyleHelpers';
 
 // 사이드 바 선택된 요소 타입
-type SelectionType = 'shape' | 'arrow' | 'line' | 'text' | 'drawing' | 'media' | null;
+type SelectionType =
+  | 'shape'
+  | 'arrow'
+  | 'line'
+  | 'text'
+  | 'drawing'
+  | 'media'
+  | null;
 
 export default function Sidebar() {
   // 스토어에서 선택된 아이템 정보 가져오기
-  const selectedId = useCanvasStore((state) => state.selectedId);
-  const items = useCanvasStore((state) => state.items);
-  const updateItem = useCanvasStore((state) => state.updateItem);
-  const cursorMode = useCanvasStore((state) => state.cursorMode);
-  const drawingStroke = useCanvasStore((state) => state.drawingStroke);
-  const drawingSize = useCanvasStore((state) => state.drawingSize);
-  const setDrawingStroke = useCanvasStore((state) => state.setDrawingStroke);
-  const setDrawingSize = useCanvasStore((state) => state.setDrawingSize);
+  const selectedId = useWhiteboardLocalStore((state) => state.selectedId);
+  const items = useWhiteboardSharedStore((state) => state.items);
+  const { updateItem } = useItemActions();
+  const cursorMode = useWhiteboardLocalStore((state) => state.cursorMode);
+  const drawingStroke = useWhiteboardLocalStore((state) => state.drawingStroke);
+  const drawingSize = useWhiteboardLocalStore((state) => state.drawingSize);
+  const setDrawingStroke = useWhiteboardLocalStore(
+    (state) => state.setDrawingStroke,
+  );
+  const setDrawingSize = useWhiteboardLocalStore(
+    (state) => state.setDrawingSize,
+  );
 
   // 선택된 아이템 찾기
   const selectedItem = useMemo(

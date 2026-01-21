@@ -2,7 +2,7 @@
 
 import Konva from 'konva';
 import { Text, Line } from 'react-konva';
-import { useCanvasStore } from '@/store/useCanvasStore';
+import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 import { useCursorStyle } from '@/hooks/useCursorStyle';
 import { useItemInteraction } from '@/hooks/useItemInteraction';
 import ShapeItem from '@/components/whiteboard/items/shape/ShapeItem';
@@ -43,7 +43,9 @@ export default function RenderItem({
   onDragEnd,
   onArrowDblClick,
 }: RenderItemProps) {
-  const setEditingTextId = useCanvasStore((state) => state.setEditingTextId);
+  const setEditingTextId = useWhiteboardLocalStore(
+    (state) => state.setEditingTextId,
+  );
 
   // 아이템 인터랙션 상태
   const { isInteractive, isDraggable, isListening } = useItemInteraction();
