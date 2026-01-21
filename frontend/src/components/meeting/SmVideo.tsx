@@ -1,6 +1,5 @@
 import { MoreHoriIcon } from '@/assets/icons/common';
 import { MicOffIcon } from '@/assets/icons/meeting';
-import AudioPlayer from '@/components/meeting/media/AudioPlayer';
 import VideoView from '@/components/meeting/media/VideoView';
 import { useMeetingStore } from '@/store/useMeetingStore';
 import { MeetingMemberInfo } from '@/types/meeting';
@@ -49,9 +48,6 @@ export default function SmVideo({
           {nickname}
         </span>
       </div>
-
-      {/* 음성 */}
-      {streams?.audio && <AudioPlayer stream={streams.audio} />}
 
       {/* 더보기 메뉴 */}
       <div
