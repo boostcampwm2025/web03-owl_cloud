@@ -20,10 +20,18 @@ import type {
 
 import { extractYoutubeId } from '@/utils/youtube';
 
-// 아이템 액션 훅 / Yjs 연동 시 이 훅을 useYjsWebSocket에서 사용
+// 아이템 액션 훅
 export function useItemActions() {
+  // Store에서 Yjs 인스턴스 가져옴
+  const yItems = useWhiteboardSharedStore((state) => state.yItems);
+
   // 텍스트 추가
   const addText = (payload?: Partial<Omit<TextItem, 'id' | 'type'>>) => {
+    if (!yItems) {
+      console.warn('[useItemActions] Yjs not initialized');
+      return;
+    }
+
     const id = uuidv4();
     const newText: TextItem = {
       id,
@@ -41,15 +49,14 @@ export function useItemActions() {
       parentPolygonId: payload?.parentPolygonId,
     };
 
-    // TODO: Yjs Doc에 추가
-    const items = useWhiteboardSharedStore.getState().items;
-    useWhiteboardSharedStore.setState({ items: [...items, newText] });
-
+    yItems.push([newText]);
     return id;
   };
 
   // 화살표 추가
   const addArrow = (payload?: Partial<Omit<ArrowItem, 'id' | 'type'>>) => {
+    if (!yItems) return;
+
     const id = uuidv4();
     const newArrow: ArrowItem = {
       id,
@@ -67,13 +74,13 @@ export function useItemActions() {
       tension: payload?.tension ?? 0.4,
     };
 
-    // TODO: Yjs Doc에 추가
-    const items = useWhiteboardSharedStore.getState().items;
-    useWhiteboardSharedStore.setState({ items: [...items, newArrow] });
+    yItems.push([newArrow]);
   };
 
   // 선 추가
   const addLine = (payload?: Partial<Omit<LineItem, 'id' | 'type'>>) => {
+    if (!yItems) return;
+
     const id = uuidv4();
     const newLine: LineItem = {
       id,
@@ -89,9 +96,7 @@ export function useItemActions() {
       tension: payload?.tension ?? 0.4,
     };
 
-    // TODO: Yjs Doc에 추가
-    const items = useWhiteboardSharedStore.getState().items;
-    useWhiteboardSharedStore.setState({ items: [...items, newLine] });
+    yItems.push([newLine]);
   };
 
   // 도형 추가
@@ -99,6 +104,8 @@ export function useItemActions() {
     type: ShapeType,
     payload?: Partial<Omit<ShapeItem, 'id' | 'type' | 'shapeType'>>,
   ) => {
+    if (!yItems) return;
+
     const id = uuidv4();
     const newShape: ShapeItem = {
       id,
@@ -114,9 +121,7 @@ export function useItemActions() {
       rotation: payload?.rotation ?? 0,
     };
 
-    // TODO: Yjs Doc에 추가
-    const items = useWhiteboardSharedStore.getState().items;
-    useWhiteboardSharedStore.setState({ items: [...items, newShape] });
+    yItems.push([newShape]);
   };
 
   // 이미지 추가
@@ -127,6 +132,8 @@ export function useItemActions() {
     width?: number;
     height?: number;
   }) => {
+    if (!yItems) return;
+
     const id = uuidv4();
     const newImage: ImageItem = {
       id,
@@ -143,9 +150,7 @@ export function useItemActions() {
       opacity: 1,
     };
 
-    // TODO: Yjs Doc에 추가
-    const items = useWhiteboardSharedStore.getState().items;
-    useWhiteboardSharedStore.setState({ items: [...items, newImage] });
+    yItems.push([newImage]);
   };
 
   // 비디오 추가
@@ -156,6 +161,8 @@ export function useItemActions() {
     width?: number;
     height?: number;
   }) => {
+    if (!yItems) return;
+
     const id = uuidv4();
     const newVideo: VideoItem = {
       id,
@@ -172,16 +179,15 @@ export function useItemActions() {
       opacity: 1,
     };
 
-    // TODO: Yjs Doc에 추가
-    const items = useWhiteboardSharedStore.getState().items;
-    useWhiteboardSharedStore.setState({ items: [...items, newVideo] });
+    yItems.push([newVideo]);
   };
 
   // 유튜브 추가
   const addYoutube = (payload: { url: string; x?: number; y?: number }) => {
+    if (!yItems) return;
+
     const videoId = extractYoutubeId(payload.url);
 
-    // 유효하지 않은 URL 입력시 alert 띄우고 중단
     if (!videoId) {
       alert('올바른 유튜브 URL이 아닙니다.');
       return;
@@ -207,94 +213,116 @@ export function useItemActions() {
       opacity: 1,
     };
 
-    // TODO: Yjs Doc에 추가
-    const items = useWhiteboardSharedStore.getState().items;
-    useWhiteboardSharedStore.setState({ items: [...items, newYoutube] });
+    yItems.push([newYoutube]);
   };
 
   // 그리기 완료 후 추가
   const addDrawing = (drawing: WhiteboardItem) => {
-    // TODO: Yjs Doc에 추가
-    const items = useWhiteboardSharedStore.getState().items;
-    useWhiteboardSharedStore.setState({ items: [...items, drawing] });
+    if (!yItems) return;
+    yItems.push([drawing]);
   };
 
   // 아이템 업데이트
   const updateItem = (id: string, changes: Partial<WhiteboardItem>) => {
-    // TODO: Yjs Doc 수정
-    const items = useWhiteboardSharedStore.getState().items;
-    const newItems = items.map((item) =>
-      item.id === id ? ({ ...item, ...changes } as WhiteboardItem) : item,
-    );
-    useWhiteboardSharedStore.setState({ items: newItems });
+    if (!yItems) return;
+
+    const items = yItems.toArray();
+    const index = items.findIndex((item) => item.id === id);
+    if (index === -1) return;
+
+    const updatedItem = { ...items[index], ...changes } as WhiteboardItem;
+
+    // 트랜잭션 적용 (delete + insert를 하나의 업데이트로)
+    const doc = yItems.doc;
+    if (!doc) return;
+
+    doc.transact(() => {
+      yItems.delete(index, 1);
+      yItems.insert(index, [updatedItem]);
+    });
   };
 
   // 아이템 삭제
   const deleteItem = (id: string) => {
-    // TODO: Yjs Doc에서 삭제
-    const items = useWhiteboardSharedStore.getState().items;
-    const newItems = items.filter((item) => item.id !== id);
-    useWhiteboardSharedStore.setState({ items: newItems });
+    if (!yItems) return;
+
+    const items = yItems.toArray();
+    const index = items.findIndex((item) => item.id === id);
+    if (index === -1) return;
+
+    yItems.delete(index, 1);
   };
 
   // 맨 앞으로
   const bringToFront = (id: string) => {
-    const items = useWhiteboardSharedStore.getState().items;
+    if (!yItems) return;
+
+    const items = yItems.toArray();
     const index = items.findIndex((item) => item.id === id);
     if (index === -1 || index === items.length - 1) return;
 
-    const newItems = [...items];
-    const [item] = newItems.splice(index, 1);
-    newItems.push(item);
+    const item = items[index];
+    const doc = yItems.doc;
+    if (!doc) return;
 
-    // TODO: Yjs Doc 수정
-    useWhiteboardSharedStore.setState({ items: newItems });
+    doc.transact(() => {
+      yItems.delete(index, 1);
+      yItems.push([item]);
+    });
   };
 
   // 맨 뒤로
   const sendToBack = (id: string) => {
-    const items = useWhiteboardSharedStore.getState().items;
+    if (!yItems) return;
+
+    const items = yItems.toArray();
     const index = items.findIndex((item) => item.id === id);
     if (index === -1 || index === 0) return;
 
-    const newItems = [...items];
-    const [item] = newItems.splice(index, 1);
-    newItems.unshift(item);
+    const item = items[index];
+    const doc = yItems.doc;
+    if (!doc) return;
 
-    // TODO: Yjs Doc 수정
-    useWhiteboardSharedStore.setState({ items: newItems });
+    doc.transact(() => {
+      yItems.delete(index, 1);
+      yItems.insert(0, [item]);
+    });
   };
 
   // 한 단계 앞으로
   const bringForward = (id: string) => {
-    const items = useWhiteboardSharedStore.getState().items;
+    if (!yItems) return;
+
+    const items = yItems.toArray();
     const currentIndex = items.findIndex((item) => item.id === id);
     if (currentIndex === -1 || currentIndex === items.length - 1) return;
 
-    const newItems = [...items];
-    [newItems[currentIndex], newItems[currentIndex + 1]] = [
-      newItems[currentIndex + 1],
-      newItems[currentIndex],
-    ];
+    const item = items[currentIndex];
+    const doc = yItems.doc;
+    if (!doc) return;
 
-    // TODO: Yjs Doc 수정
-    useWhiteboardSharedStore.setState({ items: newItems });
+    doc.transact(() => {
+      yItems.delete(currentIndex, 1);
+      yItems.insert(currentIndex + 1, [item]);
+    });
   };
 
   // 한 단계 뒤로
   const sendBackward = (id: string) => {
-    const items = useWhiteboardSharedStore.getState().items;
+    if (!yItems) return;
+
+    const items = yItems.toArray();
     const currentIndex = items.findIndex((item) => item.id === id);
     if (currentIndex <= 0) return;
 
-    const newItems = [...items];
-    [newItems[currentIndex], newItems[currentIndex - 1]] = [
-      newItems[currentIndex - 1],
-      newItems[currentIndex],
-    ];
+    const item = items[currentIndex];
+    const doc = yItems.doc;
+    if (!doc) return;
 
-    // TODO: Yjs Doc 수정
-    useWhiteboardSharedStore.setState({ items: newItems });
+    doc.transact(() => {
+      yItems.delete(currentIndex, 1);
+      yItems.insert(currentIndex - 1, [item]);
+    });
   };
 
   return {
