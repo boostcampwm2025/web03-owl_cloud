@@ -38,7 +38,7 @@ export default function YoutubeItem({
   );
 
   // 재생 아이콘 가져오기
-  const [playIconBitmap] = useImage('/icons/youtubeIcon.svg');
+  const [playIconBitmap] = useImage('/icons/youtube/youtubeIcon.svg');
 
   // 이미지 로딩 및 Fallback 처리 로직
   useEffect(() => {
