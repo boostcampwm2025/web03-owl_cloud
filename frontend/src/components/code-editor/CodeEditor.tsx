@@ -5,7 +5,7 @@ import Editor from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import * as Y from 'yjs';
 import * as awarenessProtocol from 'y-protocols/awareness';
-import { io, Socket } from 'socket.io-client';
+import { Socket } from 'socket.io-client';
 
 import { colorFromClientId, injectCursorStyles } from '@/utils/code-editor';
 import { AwarenessState, LanguageState } from '@/types/code-editor';
@@ -94,13 +94,6 @@ export default function CodeEditor({
       });
     });
 
-    // Yjs -> Socket
-    ydoc.on('update', (update: Uint8Array, origin) => {
-      if (origin === remoteOrigin) return;
-
-      socket.emit('yjs-update', update);
-    });
-
     // Awareness -> Socket
     awareness.on('update', () => {
       const update = awarenessProtocol.encodeAwarenessUpdate(awareness, [
@@ -131,6 +124,21 @@ export default function CodeEditor({
       const fullUpdate = Y.encodeStateAsUpdate(ydoc);
       socket.emit('yjs-update', fullUpdate);
     });
+
+    // Yjs -> Socket
+    ydoc.on('update', (update: Uint8Array, origin) => {
+      if (origin === remoteOrigin) return;
+
+      socket.emit('yjs-update', update);
+    });
+
+    if (socket.connected) {
+      socket.emit('request-sync');
+    } else {
+      socket.once('connect', () => {
+        socket.emit('request-sync');
+      });
+    }
 
     // 모나코 에디터 단축키 오버라이딩
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, () => {

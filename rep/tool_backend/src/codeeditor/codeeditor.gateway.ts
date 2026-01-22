@@ -17,6 +17,9 @@ import { KafkaService } from '@/infra/event-stream/kafka/event-stream.service';
 import { EVENT_STREAM_NAME } from '@/infra/event-stream/event-stream.constants';
 import { CODEEDITOR_WEBSOCKET } from '@/infra/websocket/websocket.constants';
 import { CodeeditorWebsocket } from '@/infra/websocket/codeeditor/codeeditor.service';
+import * as Y from 'yjs';
+
+const roomDocs = new Map<string, Y.Doc>();
 
 @WebSocketGateway({
   namespace: process.env.NODE_BACKEND_WEBSOCKET_CODEEDITOR,
@@ -74,18 +77,23 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
       client.disconnect(true);
       return;
     }
-
     const roomName = this.codeeditorService.makeNamespace(payload.room_id); // 방가입
-    client.join(roomName);
-
+    await client.join(roomName);
     client.data.roomName = roomName;
 
     client.emit('init-user', {
       userId: payload.user_id,
     });
 
-    // 방에 이미 사람이 있다면, 그중 한 명에게 최신 상태(Sync Step)를 요청
-    client.to(roomName).emit('request-sync');
+    const doc = roomDocs.get(roomName);
+    if (doc) {
+      this.logger.log(`[Sync] 서버에서 신규 유저 ${payload.user_id}에게 직접 데이터 전송`);
+      const fullUpdate = Y.encodeStateAsUpdate(doc);
+      client.emit('yjs-update', fullUpdate); // 방 전체가 아닌 '나'에게만 전송
+    } else {
+      // 아무도 없어서 Doc이 없다면, 다른 사람에게 요청 (최초 생성 시나리오)
+      client.to(roomName).emit('request-sync');
+    }
 
     if (payload.clientType === 'main') {
       this.kafkaService.emit(EVENT_STREAM_NAME.CODEEDITOR_ENTER, {
@@ -99,6 +107,13 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
     }
 
     client.emit(CODEEDITOR_CLIENT_EVENT_NAME.PERMISSION, { ok: true });
+  }
+
+  async handleDisconnect(client: Socket) {
+    const roomName = client.data.roomName;
+    if (!roomName) return;
+
+    // TODO: 방에 아무도 없을 때 삭제
   }
 
   @SubscribeMessage(CODEEDITOR_EVENT_NAME.HEALTH_CHECK)
@@ -123,17 +138,37 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
     @MessageBody() update: Buffer, // Yjs 데이터는 바이너리
   ) {
     try {
-      if (!update || update.length === 0) return;
+      if (!update) return;
 
       // 캐싱된 룸 이름 사용
       const roomName = client.data.roomName;
 
+      let doc = roomDocs.get(roomName);
+      if (!doc) {
+        doc = new Y.Doc();
+        roomDocs.set(roomName, doc);
+      }
+
+      Y.applyUpdate(doc, new Uint8Array(update));
+
       // 브로드캐스트
-      // volatile을 붙이면 전송 실패 시 재시도하지 않아 실시간 성능에 유리
       client.to(roomName).volatile.emit('yjs-update', update);
     } catch (error) {
       this.logger.error(`Yjs Update Error: ${error.message}`);
     }
+  }
+
+  @SubscribeMessage('request-sync')
+  handleRequestSync(@ConnectedSocket() client: Socket) {
+    const roomName = client.data.roomName;
+    const doc = roomDocs.get(roomName);
+
+    if (!doc) return;
+
+    const fullUpdate = Y.encodeStateAsUpdate(doc);
+    client.emit('yjs-update', fullUpdate);
+
+    this.logger.log('doc length', doc?.getText('monaco').length);
   }
 
   @SubscribeMessage('awareness-update')
