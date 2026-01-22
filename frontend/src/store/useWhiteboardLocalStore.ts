@@ -9,7 +9,7 @@ import {
   DRAWING_SIZE_PRESETS,
   type DrawingSize,
 } from '@/constants/drawingPresets';
-
+import { PanelType } from '@/types/whiteboard/whiteboardUI';
 import type { CursorMode, DrawingItem } from '@/types/whiteboard';
 
 interface LocalState {
@@ -23,6 +23,8 @@ interface LocalState {
   currentDrawing: DrawingItem | null;
   drawingStroke: string;
   drawingSize: DrawingSize;
+  activePanel: PanelType;
+  setActivePanel: (panel: PanelType) => void;
 }
 
 interface LocalActions {
@@ -54,6 +56,10 @@ export const useWhiteboardLocalStore = create<LocalStore>((set, get) => ({
   // 커서 모드 초기값
   cursorMode: 'select',
   setCursorMode: (mode) => set({ cursorMode: mode }),
+
+  // 패널 상태 초기값
+  activePanel: null,
+  setActivePanel: (panel) => set({ activePanel: panel }),
 
   // Stage State 초기값
   // StageScale : 줌 배율 / stagePos : 카메라 위치, 중앙 정렬
