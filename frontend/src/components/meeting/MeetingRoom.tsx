@@ -56,7 +56,10 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
         const { main, members } = (await socket.emitWithAck(
           'signaling:ws:room_members',
         )) as FetchRoomMembersResponse;
-        setMembers(members.filter((member) => member.user_id !== userId));
+        const filteredMembers = members.filter(
+          (member) => member.user_id !== userId,
+        );
+        setMembers(filteredMembers);
 
         // main으로 화면 공유 중인 경우 처리 구현 필요
       } catch (error) {
