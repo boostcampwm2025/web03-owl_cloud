@@ -11,10 +11,9 @@ export default function MemberVideoBar() {
 
   const { members } = useMeetingStore();
   const [currentPage, setCurrentPage] = useState(1);
+  const memberCount = Object.values(members).length;
   const totalPages =
-    Object.values(members).length <= 5
-      ? 1
-      : 1 + Math.ceil((Object.values(members).length - 5) / MEMBERS_PER_PAGE);
+    memberCount <= 5 ? 1 : 1 + Math.ceil((memberCount - 5) / MEMBERS_PER_PAGE);
   const [hasPrevPage, hasNextPage] = [
     currentPage > 1,
     currentPage < totalPages,
