@@ -20,16 +20,12 @@ export default function RemoteSelectionIndicator({
 }: RemoteSelectionIndicatorProps) {
   const transformerRef = useRef<Konva.Transformer | null>(null);
 
-  const selectedItem = items.find((item) => item.id === selectedId);
-  const isArrowOrLineSelected =
-    selectedItem?.type === 'arrow' || selectedItem?.type === 'line';
-
   // Transformer 연결
   useEffect(() => {
     if (transformerRef.current && stageRef.current) {
       const stage = stageRef.current;
 
-      if (selectedId && !isArrowOrLineSelected) {
+      if (selectedId) {
         const selectedNode = stage.findOne('#' + selectedId);
         if (selectedNode) {
           transformerRef.current.nodes([selectedNode]);
@@ -41,17 +37,16 @@ export default function RemoteSelectionIndicator({
         transformerRef.current.nodes([]);
       }
     }
-  }, [selectedId, items, stageRef, isArrowOrLineSelected]);
+  }, [selectedId, items, stageRef]);
 
   return (
     <Transformer
       ref={transformerRef}
-      // 핸들 없이 테두리만 표시
       enabledAnchors={[]}
       rotateEnabled={false}
       borderStroke={userColor}
       borderStrokeWidth={3}
-      padding={2}
+      padding={8}
     />
   );
 }
