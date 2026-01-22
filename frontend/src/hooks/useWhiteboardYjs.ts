@@ -91,6 +91,24 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
       .getState()
       .setAwarenessCallback(updateAwarenessSelection);
 
+    // 커서 업데이트 (스로틀링 50ms)
+    let lastCursorUpdate = 0;
+    const updateAwarenessCursor = (x: number, y: number) => {
+      const now = Date.now();
+      if (now - lastCursorUpdate < 50) return;
+      lastCursorUpdate = now;
+
+      const currentState = awareness.getLocalState();
+      if (currentState) {
+        awareness.setLocalState({
+          ...currentState,
+          cursor: { x, y },
+        });
+      }
+    };
+
+    useWhiteboardLocalStore.getState().setCursorCallback(updateAwarenessCursor);
+
     // Yjs → Socket
     ydoc.on(
       'update',
@@ -199,6 +217,7 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
         .getState()
         .setYjsInstances(null, null, null, null);
       useWhiteboardLocalStore.getState().setAwarenessCallback(null);
+      useWhiteboardLocalStore.getState().setCursorCallback(null);
       yItems.unobserveDeep(handleYjsChange);
       socket.off('yjs-update');
       socket.off('awareness-update');

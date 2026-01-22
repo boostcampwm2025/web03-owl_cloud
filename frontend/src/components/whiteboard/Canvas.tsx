@@ -24,6 +24,7 @@ import RenderItem from '@/components/whiteboard/items/RenderItem';
 import TextArea from '@/components/whiteboard/items/text/TextArea';
 import ItemTransformer from '@/components/whiteboard/controls/ItemTransformer';
 import RemoteSelectionIndicator from '@/components/whiteboard/controls/RemoteSelectionIndicator';
+import RemoteCursor from '@/components/whiteboard/controls/RemoteCursor';
 import ArrowHandles from '@/components/whiteboard/items/arrow/ArrowHandles';
 
 export default function Canvas() {
@@ -47,6 +48,7 @@ export default function Canvas() {
   // 다른 사용자들의 선택 상태
   const users = useWhiteboardAwarenessStore((state) => state.users);
   const myUserId = useWhiteboardAwarenessStore((state) => state.myUserId);
+  const updateCursor = useWhiteboardLocalStore((state) => state.updateCursor);
 
   const stageRef = useRef<Konva.Stage | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -141,6 +143,23 @@ export default function Canvas() {
     onDeselect: handleCheckDeselect,
   });
 
+  // 커서 위치 추적
+  const handleCursorMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    handleMouseMove(e);
+
+    const stage = e.target.getStage();
+    if (!stage) return;
+
+    const pointerPos = stage.getPointerPosition();
+    if (!pointerPos) return;
+
+    // Stage transform 적용하여 Canvas 좌표로 변환
+    const transform = stage.getAbsoluteTransform().copy().invert();
+    const canvasPos = transform.point(pointerPos);
+
+    updateCursor(canvasPos.x, canvasPos.y);
+  };
+
   // 캔버스 드래그 가능 여부
   const isDraggable = useWhiteboardLocalStore(
     (state) => state.cursorMode === 'move',
@@ -198,7 +217,7 @@ export default function Canvas() {
           setIsDraggingCanvas(false);
         }}
         onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
+        onMouseMove={handleCursorMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
         onTouchStart={handleCheckDeselect}
@@ -270,7 +289,7 @@ export default function Canvas() {
             />
           )}
 
-          {/* 다른 사용자들의 선택 표시 */}
+          {/* 다른 사용자의 선택 표시 */}
           {(() => {
             const displayedItemIds = new Set<string>();
             return Array.from(users.values())
@@ -321,6 +340,25 @@ export default function Canvas() {
           }}
         />
       )}
+
+      {/* 다른 사용자의 커서 */}
+      {Array.from(users.values()).map((user) => {
+        if (user.id === myUserId || !user.cursor) return null;
+
+        // Canvas 좌표를 화면 좌표로 변환
+        const screenX = user.cursor.x * stageScale + stagePos.x;
+        const screenY = user.cursor.y * stageScale + stagePos.y;
+
+        return (
+          <RemoteCursor
+            key={user.id}
+            x={screenX}
+            y={screenY}
+            color={user.color}
+            name={user.name}
+          />
+        );
+      })}
     </div>
   );
 }

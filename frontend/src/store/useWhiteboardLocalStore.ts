@@ -24,6 +24,7 @@ interface LocalState {
   drawingStroke: string;
   drawingSize: DrawingSize;
   awarenessCallback: ((selectedId: string | null) => void) | null;
+  cursorCallback: ((x: number, y: number) => void) | null;
 }
 
 interface LocalActions {
@@ -38,7 +39,13 @@ interface LocalActions {
   startDrawing: (x: number, y: number) => void;
   continueDrawing: (x: number, y: number) => void;
   finishDrawing: () => void;
-  setAwarenessCallback: (callback: ((selectedId: string | null) => void) | null) => void;
+  setAwarenessCallback: (
+    callback: ((selectedId: string | null) => void) | null,
+  ) => void;
+  setCursorCallback: (
+    callback: ((x: number, y: number) => void) | null,
+  ) => void;
+  updateCursor: (x: number, y: number) => void;
 }
 
 type LocalStore = LocalState & LocalActions;
@@ -48,6 +55,7 @@ export const useWhiteboardLocalStore = create<LocalStore>((set, get) => ({
   // Select 초기값
   selectedId: null,
   awarenessCallback: null,
+  cursorCallback: null,
   selectItem: (id) => {
     set({ selectedId: id });
     // Awareness 업데이트
@@ -57,6 +65,13 @@ export const useWhiteboardLocalStore = create<LocalStore>((set, get) => ({
     }
   },
   setAwarenessCallback: (callback) => set({ awarenessCallback: callback }),
+  setCursorCallback: (callback) => set({ cursorCallback: callback }),
+  updateCursor: (x, y) => {
+    const callback = get().cursorCallback;
+    if (callback) {
+      callback(x, y);
+    }
+  },
 
   // Text Editing 초기값
   editingTextId: null,
