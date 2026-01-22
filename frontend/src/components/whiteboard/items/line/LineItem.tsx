@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { Line } from 'react-konva';
 import Konva from 'konva';
 import { useItemInteraction } from '@/hooks/useItemInteraction';
+import { usePointsAnimation } from '@/hooks/useItemAnimation';
 import type { LineItem as LineItemType } from '@/types/whiteboard';
 
 interface LineItemProps {
@@ -23,6 +25,7 @@ export default function LineItem({
   lineItem,
   isDraggable,
   isListening,
+  isSelected,
   onSelect,
   onChange,
   onMouseEnter,
@@ -33,9 +36,18 @@ export default function LineItem({
 }: LineItemProps) {
   const { isInteractive } = useItemInteraction();
 
+  const [isDragging, setIsDragging] = useState(false);
+
+  const ref = usePointsAnimation({
+    points: lineItem.points,
+    isDragging,
+    isSelected,
+  });
+
   return (
     <Line
       {...lineItem}
+      ref={ref as React.RefObject<Konva.Line>}
       id={lineItem.id}
       draggable={isDraggable}
       listening={isListening}
@@ -51,10 +63,12 @@ export default function LineItem({
       }}
       onDragStart={() => {
         if (!isInteractive) return;
+        setIsDragging(true);
         onDragStart?.();
       }}
       onDragEnd={(e) => {
         if (!isInteractive) return;
+        setIsDragging(false);
         const pos = e.target.position();
         const newPoints = lineItem.points.map((p, i) =>
           i % 2 === 0 ? p + pos.x : p + pos.y,

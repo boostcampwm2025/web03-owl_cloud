@@ -8,11 +8,13 @@ import useImage from 'use-image';
 
 import { YoutubeItem as YoutubeItemType } from '@/types/whiteboard';
 import { getMaxResThumbnailUrl, getHqThumbnailUrl } from '@/utils/youtube';
+import { useItemAnimation } from '@/hooks/useItemAnimation';
 
 interface YoutubeItemProps {
   youtubeItem: YoutubeItemType;
   isDraggable: boolean;
   isListening: boolean;
+  isSelected: boolean;
   onSelect: () => void;
   onChange: (newAttrs: Partial<YoutubeItemType>) => void;
   onMouseEnter: (e: Konva.KonvaEventObject<MouseEvent>) => void;
@@ -25,6 +27,7 @@ export default function YoutubeItem({
   youtubeItem,
   isDraggable,
   isListening,
+  isSelected,
   onSelect,
   onChange,
   onMouseEnter,
@@ -32,13 +35,21 @@ export default function YoutubeItem({
   onDragStart,
   onDragEnd,
 }: YoutubeItemProps) {
-  // 유튜브 썸네일 이미지 로딩 상태 관리
   const [thumbnailImage, setThumbnailImage] = useState<HTMLImageElement | null>(
     null,
   );
-
-  // 재생 아이콘 가져오기
   const [playIconBitmap] = useImage('/icons/youtubeIcon.svg');
+  const [isDragging, setIsDragging] = useState(false);
+
+  // 애니메이션 훅
+  const groupRef = useItemAnimation({
+    x: youtubeItem.x,
+    y: youtubeItem.y,
+    width: youtubeItem.width,
+    height: youtubeItem.height,
+    isSelected,
+    isDragging,
+  });
 
   // 이미지 로딩 및 Fallback 처리 로직
   useEffect(() => {
@@ -133,26 +144,26 @@ export default function YoutubeItem({
 
   return (
     <Group
+      ref={groupRef as React.RefObject<Konva.Group>}
       id={youtubeItem.id}
-      // 위치
       x={youtubeItem.x}
       y={youtubeItem.y}
-      // 크기
       width={youtubeItem.width}
       height={youtubeItem.height}
-      // 회전
       rotation={youtubeItem.rotation}
-      // 액션
       draggable={isDraggable}
       listening={isListening}
       onMouseDown={onSelect}
       onTouchStart={onSelect}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      onDragStart={onDragStart}
+      onDragStart={() => {
+        setIsDragging(true);
+        onDragStart?.();
+      }}
       onDblClick={handleOpenLink}
-      // 이동
       onDragEnd={(e) => {
+        setIsDragging(false);
         onChange({ x: e.target.x(), y: e.target.y() });
         onDragEnd?.();
       }}

@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { Text } from 'react-konva';
 import Konva from 'konva';
 import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 import { useItemInteraction } from '@/hooks/useItemInteraction';
+import { useItemAnimation } from '@/hooks/useItemAnimation';
 import type { TextItem as TextItemType } from '@/types/whiteboard';
 
 interface TextItemProps {
@@ -23,6 +25,7 @@ export default function TextItem({
   textItem,
   isDraggable,
   isListening,
+  isSelected,
   onSelect,
   onChange,
   onMouseEnter,
@@ -35,9 +38,21 @@ export default function TextItem({
   );
   const { isInteractive } = useItemInteraction();
 
+  const [isDragging, setIsDragging] = useState(false);
+
+  const ref = useItemAnimation({
+    x: textItem.x,
+    y: textItem.y,
+    width: textItem.width,
+    height: undefined,
+    isSelected,
+    isDragging,
+  });
+
   return (
     <Text
       {...textItem}
+      ref={ref as React.RefObject<Konva.Text>}
       id={textItem.id}
       draggable={isDraggable}
       listening={isListening}
@@ -52,10 +67,12 @@ export default function TextItem({
       }}
       onDragStart={() => {
         if (!isInteractive) return;
+        setIsDragging(true);
         onDragStart?.();
       }}
       onDragEnd={(e) => {
         if (!isInteractive) return;
+        setIsDragging(false);
         onChange({
           x: e.target.x(),
           y: e.target.y(),
