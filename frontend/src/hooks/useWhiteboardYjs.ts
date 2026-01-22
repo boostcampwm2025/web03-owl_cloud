@@ -3,7 +3,9 @@ import * as Y from 'yjs';
 import * as awarenessProtocol from 'y-protocols/awareness';
 import { Socket } from 'socket.io-client';
 import { useWhiteboardSharedStore } from '@/store/useWhiteboardSharedStore';
+import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 import { useWhiteboardAwarenessStore } from '@/store/useWhiteboardAwarenessStore';
+import { NO_TRANSPARENT_PALETTE } from '@/constants/colors';
 import type { WhiteboardItem } from '@/types/whiteboard';
 import type { YMapValue } from '@/types/whiteboard/yjs';
 
@@ -53,16 +55,41 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
     // Backend에서 사용자 ID 받기
     socket.on('init-user', ({ userId }: { userId: string }) => {
       setMyUserId(userId);
+
+      // 팔레트에서 랜덤 색상 선택 (흰색, 검정, 회색 제외)
+      const colorPalette = NO_TRANSPARENT_PALETTE.filter(
+        (color) =>
+          color !== '#ffffff' && color !== '#343a40' && color !== '#adb5bd',
+      );
+      const randomColor =
+        colorPalette[Math.floor(Math.random() * colorPalette.length)];
+
       awareness.setLocalState({
         user: {
           id: userId,
           name: userId,
-          color: '#' + Math.floor(Math.random() * 16777215).toString(16),
+          color: randomColor,
         },
         cursor: null,
         selectedId: null,
       });
     });
+
+    // selectItem 시 awareness 업데이트
+    const updateAwarenessSelection = (selectedId: string | null) => {
+      const currentState = awareness.getLocalState();
+      if (currentState) {
+        awareness.setLocalState({
+          ...currentState,
+          selectedId,
+        });
+      }
+    };
+
+    // LocalStore에 콜백 등록
+    useWhiteboardLocalStore
+      .getState()
+      .setAwarenessCallback(updateAwarenessSelection);
 
     // Yjs → Socket
     ydoc.on(
@@ -171,6 +198,7 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
       useWhiteboardSharedStore
         .getState()
         .setYjsInstances(null, null, null, null);
+      useWhiteboardLocalStore.getState().setAwarenessCallback(null);
       yItems.unobserveDeep(handleYjsChange);
       socket.off('yjs-update');
       socket.off('awareness-update');
