@@ -41,7 +41,7 @@ export default function MemberListItem({
           width={32}
           height={32}
           className="h-8 w-8 rounded-full bg-white"
-          src={profileImg}
+          src={profileImg || 'https://picsum.photos/id/237/200/100'}
           alt={`${name}의 프로필 사진`}
         />
         <span className="ellipsis w-full text-neutral-50">{name}</span>
