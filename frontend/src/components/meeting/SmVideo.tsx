@@ -1,10 +1,11 @@
 import { MoreHoriIcon } from '@/assets/icons/common';
 import { MicOffIcon } from '@/assets/icons/meeting';
 import VideoView from '@/components/meeting/media/VideoView';
+import { useClickOutside } from '@/hooks/useClickOutside';
 import { useMeetingStore } from '@/store/useMeetingStore';
 import { MeetingMemberInfo } from '@/types/meeting';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 export default function SmVideo({
   user_id,
@@ -14,7 +15,13 @@ export default function SmVideo({
   mic,
 }: MeetingMemberInfo) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const ref = useRef<HTMLDivElement>(null);
+
+  useClickOutside(ref, () => setIsDropdownOpen(false), isDropdownOpen);
+
   const onMoreClick = () => setIsDropdownOpen((prev) => !prev);
+  const closeDropdown = () => setIsDropdownOpen(false);
 
   const streams = useMeetingStore((state) => state.memberStreams[user_id]);
 
@@ -51,16 +58,24 @@ export default function SmVideo({
 
       {/* 더보기 메뉴 */}
       <div
+        ref={ref}
         className={`absolute top-2 right-2 group-hover:flex ${isDropdownOpen ? 'flex' : 'hidden'}`}
       >
         <button className="rounded-sm bg-sky-700 p-0.5" onClick={onMoreClick}>
           <MoreHoriIcon className="h-4 w-4 text-neutral-50" />
         </button>
+
         {isDropdownOpen && (
           <menu className="absolute top-[calc(100%+8px)] right-0 z-100 w-40 rounded-sm border border-neutral-500 bg-neutral-600">
-            <button className="dropdown-btn">드롭다운 메뉴1</button>
-            <button className="dropdown-btn">드롭다운 메뉴2</button>
-            <button className="dropdown-btn">드롭다운 메뉴3</button>
+            <button className="dropdown-btn" onClick={closeDropdown}>
+              드롭다운 메뉴1
+            </button>
+            <button className="dropdown-btn" onClick={closeDropdown}>
+              드롭다운 메뉴2
+            </button>
+            <button className="dropdown-btn" onClick={closeDropdown}>
+              드롭다운 메뉴3
+            </button>
           </menu>
         )}
       </div>
