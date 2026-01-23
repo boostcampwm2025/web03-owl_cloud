@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tool-backend
+  namespace: devmeet
+spec:
+  # node 3개를 유지한다는 것이다. 
+  replicas: 3
+  selector:
+    matchLabels:
+      app: tool-backend
+  template:
+    metadata:
+      labels:
+        app: tool-backend
+    spec:
+      nodeSelector:
+        node-role: tool
+
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "tool"
+          effect: "NoSchedule"
+
+      containers:
+        - name: tool-backend
+          image: docker.io/logankimdoing/tool-backend-deploy-server-img:latest
+          # pod 시작할때 당겨오는 규칙
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8000
+
+          envFrom:
+            - configMapRef:
+                name: tool-backend-config
+            - secretRef:
+                name: tool-backend-secret
+
+          readinessProbe:
+            httpGet:
+              path: /tool/health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /tool/health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 20
