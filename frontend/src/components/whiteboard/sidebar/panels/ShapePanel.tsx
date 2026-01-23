@@ -10,7 +10,9 @@ import EdgesSection, {
   EdgeType,
 } from '@/components/whiteboard/sidebar/sections/EdgesSection';
 import OpacitySection from '@/components/whiteboard/sidebar/sections/OpacitySection';
-
+import LayerSection, {
+  LayerDirection,
+} from '@/components/whiteboard/sidebar/sections/LayerSection';
 interface ShapePanelProps {
   strokeColor: string;
   backgroundColor: string;
@@ -25,6 +27,7 @@ interface ShapePanelProps {
   onChangeStrokeStyle: (style: StrokeStyleType) => void;
   onChangeEdgeType: (type: EdgeType) => void;
   onChangeOpacity: (opacity: number) => void;
+  onChangeLayer: (direction: LayerDirection) => void;
 }
 
 export default function ShapePanel({
@@ -40,6 +43,7 @@ export default function ShapePanel({
   onChangeStrokeStyle,
   onChangeEdgeType,
   onChangeOpacity,
+  onChangeLayer,
 }: ShapePanelProps) {
   return (
     <div className="flex flex-col gap-5">
@@ -68,6 +72,9 @@ export default function ShapePanel({
 
       {/* 투명도 (Opacity) */}
       <OpacitySection opacity={opacity} onChange={onChangeOpacity} />
+
+      {/* 레이어 (Layer) */}
+      <LayerSection onChangeLayer={onChangeLayer} />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import NavButton from '../common/NavButton';
 import { ZoomOutIcon, ZoomInIcon } from '@/assets/icons/whiteboard';
-import { useCanvasStore } from '@/store/useCanvasStore';
+import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 import {
   MIN_SCALE,
   MAX_SCALE,
@@ -10,10 +10,10 @@ import {
 } from '@/components/whiteboard/constants/canvas';
 
 export default function ZoomControls() {
-  const stageScale = useCanvasStore((state) => state.stageScale);
-  const stagePos = useCanvasStore((state) => state.stagePos);
-  const setStageScale = useCanvasStore((state) => state.setStageScale);
-  const setStagePos = useCanvasStore((state) => state.setStagePos);
+  const stageScale = useWhiteboardLocalStore((state) => state.stageScale);
+  const stagePos = useWhiteboardLocalStore((state) => state.stagePos);
+  const setStageScale = useWhiteboardLocalStore((state) => state.setStageScale);
+  const setStagePos = useWhiteboardLocalStore((state) => state.setStagePos);
 
   // 줌 인
   const handleZoomIn = () => {
@@ -53,11 +53,11 @@ export default function ZoomControls() {
   const zoomPercentage = Math.round(stageScale * 100);
 
   return (
-    <div className="absolute right-4 bottom-4 z-50">
-      <div className="flex items-center gap-2 rounded bg-neutral-800 p-2">
+    <div className="absolute right-4 bottom-4 z-1">
+      <div className="flex items-center gap-2 rounded-lg border border-neutral-200 bg-white p-2 shadow-sm">
         <NavButton icon={ZoomOutIcon} label="축소" onClick={handleZoomOut} />
 
-        <div className="flex h-8 w-20 items-center justify-center rounded bg-neutral-700 text-sm text-white">
+        <div className="flex h-8 w-20 items-center justify-center rounded text-sm text-neutral-700">
           {zoomPercentage}%
         </div>
 

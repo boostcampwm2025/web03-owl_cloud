@@ -21,6 +21,7 @@ import { useProduce } from '@/hooks/useProduce';
 import { useMeetingStore } from '@/store/useMeetingStore';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useWhiteboardSocket } from '@/hooks/useWhiteboardSocket';
 
 export default function MeetingMenu() {
   const {
@@ -36,6 +37,7 @@ export default function MeetingMenu() {
     setIsOpen,
     screenSharer,
   } = useMeetingStore();
+
   const {
     startAudioProduce,
     stopAudioProduce,
@@ -46,6 +48,9 @@ export default function MeetingMenu() {
   } = useProduce();
 
   const { openCodeEditor, closeCodeEditor } = useCodeEditorSocket();
+  
+  // 화이트보드 연결 / 해제 함수 가져오기
+  const { connectWhiteboard, disconnectWhiteboard } = useWhiteboardSocket();
 
   const isMeSharing = media.screenShareOn;
   const isSomeoneSharing = screenSharer !== null;
@@ -91,7 +96,15 @@ export default function MeetingMenu() {
     }
   };
 
+  // 워크스페이스(화이트보드) 버튼 클릭 핸들러
   const onWorkspaceClick = () => {
+    if (isWhiteboardOpen) {
+      // 이미 열려있으면 -> 연결 끊고 닫기
+      disconnectWhiteboard();
+    } else {
+      // 닫혀있으면 -> 연결 시도
+      connectWhiteboard();
+    }
     setIsOpen('isWhiteboardOpen', !isWhiteboardOpen);
   };
 
@@ -171,6 +184,7 @@ export default function MeetingMenu() {
           onClick={onScreenShareClick}
           disabled={isDisabledSharing}
         />
+        {/* 워크스페이스 버튼 */}
         <MeetingButton
           icon={<WorkspaceIcon className="h-8 w-8" />}
           text="워크스페이스"

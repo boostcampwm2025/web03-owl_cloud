@@ -1,22 +1,26 @@
-import { useCanvasStore } from '@/store/useCanvasStore';
+import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
+import { useItemActions } from '@/hooks/useItemActions';
 import { getCenterWorldPos } from '@/utils/coordinate';
 import { ShapeType } from '@/types/whiteboard';
 
 export const useAddWhiteboardItem = () => {
-  // Canvas Store 액션
-  const addText = useCanvasStore((state) => state.addText);
-  const addArrow = useCanvasStore((state) => state.addArrow);
-  const addLine = useCanvasStore((state) => state.addLine);
-  const addShape = useCanvasStore((state) => state.addShape);
-  const addImage = useCanvasStore((state) => state.addImage);
-  const addVideo = useCanvasStore((state) => state.addVideo);
-  const addYoutube = useCanvasStore((state) => state.addYoutube);
+  const {
+    addText,
+    addArrow,
+    addLine,
+    addShape,
+    addImage,
+    addVideo,
+    addYoutube,
+  } = useItemActions();
 
-  // Canvas Store 상태
-  const stagePos = useCanvasStore((state) => state.stagePos);
-  const stageScale = useCanvasStore((state) => state.stageScale);
-  const viewportWidth = useCanvasStore((state) => state.viewportWidth);
-  const viewportHeight = useCanvasStore((state) => state.viewportHeight);
+  // Local Store 상태
+  const stagePos = useWhiteboardLocalStore((state) => state.stagePos);
+  const stageScale = useWhiteboardLocalStore((state) => state.stageScale);
+  const viewportWidth = useWhiteboardLocalStore((state) => state.viewportWidth);
+  const viewportHeight = useWhiteboardLocalStore(
+    (state) => state.viewportHeight,
+  );
 
   const getViewportCenter = () => {
     return getCenterWorldPos(
@@ -206,8 +210,14 @@ export const useAddWhiteboardItem = () => {
     if (!targetUrl) return;
 
     const worldPos = getViewportCenter();
+    const width = 640;
+    const height = 360;
 
-    addYoutube(targetUrl, worldPos);
+    addYoutube({
+      url: targetUrl,
+      x: worldPos.x - width / 2,
+      y: worldPos.y - height / 2,
+    });
   };
 
   return {

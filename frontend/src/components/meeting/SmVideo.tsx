@@ -30,9 +30,9 @@ export default function SmVideo({
       className={`group flex-center relative aspect-video w-40 rounded-lg bg-neutral-700`}
     >
       {/* 영상 */}
-      {streams?.video ? (
+      {streams?.cam ? (
         <div className="flex-center h-full w-full overflow-hidden rounded-lg">
-          <VideoView stream={streams.video} />
+          <VideoView stream={streams.cam} />
         </div>
       ) : profile_path ? (
         <Image
@@ -50,7 +50,7 @@ export default function SmVideo({
 
       {/* 이름표 */}
       <div className="absolute bottom-2 left-2 flex max-w-[calc(100%-16px)] items-center gap-1 rounded-sm bg-neutral-900 p-1">
-        {!streams?.audio && <MicOffIcon className="h-3 w-3 shrink-0" />}
+        {!streams?.mic && <MicOffIcon className="h-3 w-3 shrink-0" />}
         <span className="ellipsis w-full text-xs font-bold text-neutral-200">
           {nickname}
         </span>

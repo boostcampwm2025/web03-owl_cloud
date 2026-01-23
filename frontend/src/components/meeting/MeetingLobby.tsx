@@ -4,22 +4,14 @@ import Header from '@/components/layout/Header';
 import MediaSettingSection from '@/components/meeting/media/MediaSettingSection';
 import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
 import { useUserStore } from '@/store/useUserStore';
-import { useEffect, useState } from 'react';
-import { api } from '@/utils/apiClient';
-
-interface MeetingRoomResponse {
-  current_participants: number;
-  has_password: boolean;
-  host_nickname: string;
-  max_participants: number;
-  title: string;
-}
+import { useState } from 'react';
+import { MeetingInfoResponse } from '@/types/meeting';
 
 export default function MeetingLobby({
-  meetingId,
+  meetingInfo,
   onJoin,
 }: {
-  meetingId: string;
+  meetingInfo: MeetingInfoResponse | null;
   onJoin: (nickname: string) => void;
 }) {
   const { socket } = useMeetingSocketStore();
@@ -30,26 +22,8 @@ export default function MeetingLobby({
 
   // 비회원 닉네임 확인 로직
   const [isNicknameError, setIsNicknameError] = useState(false);
-  const [roomInfo, setRoomInfo] = useState<MeetingRoomResponse | null>(null);
 
-  useEffect(() => {
-    if (!meetingId) return;
-
-    const fetchMeetingRooom = async () => {
-      try {
-        const response = await api.get<MeetingRoomResponse>(
-          `/rooms/${meetingId}`,
-        );
-        setRoomInfo(response);
-      } catch (e) {
-        // console.error('회의실 정보 조회 실패', e);
-      }
-    };
-
-    fetchMeetingRooom();
-  }, [meetingId]);
-
-  if (!roomInfo) {
+  if (!meetingInfo) {
     return (
       <main className="flex min-h-screen items-center justify-center">
         회의실 정보를 불러오는 중입니다 ...
@@ -81,33 +55,42 @@ export default function MeetingLobby({
       <MediaSettingSection />
 
       {/* 회의 참여 부분 */}
-      <section className="flex w-full max-w-60 flex-col items-center justify-center gap-6">
-        <div className="flex w-full flex-col items-center">
-          <h1 className="mb-2 text-2xl text-neutral-900">
-            <b>{roomInfo?.title}</b>
-          </h1>
-          <span className="text-base text-neutral-600">
-            현재 참여자: {roomInfo?.current_participants}명
-          </span>
-        </div>
+      <section className="flex min-w-60 flex-col items-center justify-center gap-6">
+        {meetingInfo && (
+          <>
+            <div className="flex w-full flex-col items-center gap-3">
+              <h1 className="text-2xl text-neutral-900">
+                {meetingInfo?.title}
+              </h1>
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-sm text-neutral-600">
+                  호스트: {meetingInfo?.host_nickname}
+                </span>
+                <span className="text-sm text-neutral-600">
+                  {`현재 참여자: ${meetingInfo?.current_participants} / ${meetingInfo?.max_participants}명`}
+                </span>
+              </div>
+            </div>
 
-        {isLoaded && !isLoggedIn && (
-          <input
-            value={tempNickname}
-            onChange={(e) => setTempNickname(e.target.value)}
-            className="input-default input-light"
-            placeholder="닉네임을 입력해주세요"
-            autoFocus
-          />
+            {isLoaded && !isLoggedIn && (
+              <input
+                value={tempNickname}
+                onChange={(e) => setTempNickname(e.target.value)}
+                className="input-default input-light"
+                placeholder="닉네임을 입력해주세요"
+                autoFocus
+              />
+            )}
+
+            <Button
+              onClick={onButtonClick}
+              color={isJoinDisabled ? 'disabled' : 'primary'}
+              disabled={isJoinDisabled}
+            >
+              {socket ? '회의 참여하기' : '연결 준비 중...'}
+            </Button>
+          </>
         )}
-
-        <Button
-          onClick={onButtonClick}
-          color={isJoinDisabled ? 'disabled' : 'primary'}
-          disabled={isJoinDisabled}
-        >
-          {socket ? '회의 참여하기' : '연결 준비 중...'}
-        </Button>
       </section>
 
       {isNicknameError && (

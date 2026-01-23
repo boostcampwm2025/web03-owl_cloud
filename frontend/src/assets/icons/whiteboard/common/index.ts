@@ -7,3 +7,8 @@ export { default as lineSolidIcon } from '@/assets/icons/whiteboard/common/lineS
 
 export { default as roundedCornerIcon } from '@/assets/icons/whiteboard/common/roundedCorner.svg';
 export { default as sharpCornerIcon } from '@/assets/icons/whiteboard/common/sharpCorner.svg';
+
+export { default as layerBringForwardIcon } from '@/assets/icons/whiteboard/common/layerBringForward.svg';
+export { default as layerBringToFrontIcon } from '@/assets/icons/whiteboard/common/layerBringToFront.svg';
+export { default as layerSendBackwardIcon } from '@/assets/icons/whiteboard/common/layerSendBackward.svg';
+export { default as layerSendToBackIcon } from '@/assets/icons/whiteboard/common/layerSendToBack.svg';

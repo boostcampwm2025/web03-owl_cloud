@@ -37,9 +37,17 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
     screenSharer,
   } = useMeetingStore();
   const { startAudioProduce, startVideoProduce, isReady } = useProduce();
-  const { socket, device, recvTransport, addConsumer, removeConsumer } =
-    useMeetingSocketStore();
   const {
+    producers,
+    consumers,
+    socket,
+    device,
+    recvTransport,
+    addConsumer,
+    removeConsumer,
+  } = useMeetingSocketStore();
+  const {
+    members,
     setMembers,
     addMember,
     removeMember,
@@ -55,7 +63,7 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
   const { codeEditorSocket } = useToolSocketStore();
 
   const screenStream = useMeetingStore((state) =>
-    screenSharer ? state.memberStreams[screenSharer.id]?.video : null,
+    screenSharer ? state.memberStreams[screenSharer.id]?.screen_video : null,
   );
 
   useEffect(() => {
@@ -103,7 +111,10 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
         const { main, members } = (await socket.emitWithAck(
           'signaling:ws:room_members',
         )) as FetchRoomMembersResponse;
-        setMembers(members.filter((member) => member.user_id !== userId));
+        const filteredMembers = members.filter(
+          (member) => member.user_id !== userId,
+        );
+        setMembers(filteredMembers);
 
         if (!main) return;
 
@@ -139,11 +150,10 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
             };
 
             try {
-              const { consumer, kind, stream } =
-                await consumeOne(screenProducerInfo);
+              const { consumer, stream } = await consumeOne(screenProducerInfo);
 
-              addConsumer(info.user_id, kind, consumer);
-              setMemberStream(info.user_id, kind, stream);
+              addConsumer(info.provider_id, consumer);
+              setMemberStream(info.user_id, info.type, stream);
             } catch (err) {
               console.error('화면 공유 데이터 수신 실패:', err);
             }
@@ -222,18 +232,18 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
     });
     const onAlertProduced = async (producerInfo: ProducerInfo) => {
       const {
-        user_id: producerId,
-        kind: producerKind,
+        user_id: userId,
         type: producerType,
         nickname: producerNickname,
         is_paused: isPaused,
+        producer_id: producerId,
       } = producerInfo;
 
       const existingConsumer =
-        useMeetingSocketStore.getState().consumers[producerId]?.[producerKind];
+        useMeetingSocketStore.getState().consumers[producerId];
 
       if (isPaused) {
-        removeMemberStream(producerId, producerKind);
+        removeMemberStream(userId, producerType);
 
         if (existingConsumer) {
           await socket.emitWithAck('signaling:ws:pause', {
@@ -249,13 +259,13 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
         });
 
         const stream = new MediaStream([existingConsumer.track]);
-        setMemberStream(producerId, producerKind, stream);
+        setMemberStream(userId, producerType, stream);
       } else {
         try {
-          const { consumer, kind, stream } = await consumeOne(producerInfo);
+          const { consumer, stream } = await consumeOne(producerInfo);
 
-          addConsumer(producerId, kind, consumer);
-          setMemberStream(producerId, kind, stream);
+          addConsumer(producerId, consumer);
+          setMemberStream(userId, producerType, stream);
 
           if (
             producerType === 'screen_video' ||
@@ -264,7 +274,7 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
             console.log(
               `[실시간 화면 공유 감지] ${producerNickname}님이 공유를 시작했습니다.`,
             );
-            setScreenSharer({ id: producerId, nickname: producerNickname });
+            setScreenSharer({ id: userId, nickname: producerNickname });
           }
         } catch (error) {
           console.error('신규 컨슈머 생성 실패:', error);

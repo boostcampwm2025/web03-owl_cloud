@@ -153,7 +153,7 @@ export class SignalingWebsocketGateway
     try {
       const result: ConnectResult = await this.signalingService.joinRoomService(dto);
 
-      // 방 채널에 가입을 한다.
+      // 1. 방 채널에 가입을 한다.
       const namespace: string = `${CHANNEL_NAMESPACE.SIGNALING}:${result.room_id}`;
       client.join(namespace);
       
@@ -161,11 +161,21 @@ export class SignalingWebsocketGateway
       if ( !payload.nickname ) client.data.user.nickname = inputs.nickname
       client.data.room_id = result.room_id;
 
-      // 일단 기본 세팅으로 응답
+      // 2. 일단 기본 세팅으로 응답
       client.emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.JOINED, {
         user_id: payload.user_id,
         ok: true,
       });
+
+      // 3. 방에 알릴 것이다 현재 접속을 했다고 ( 기존에 dtls 핸드세이킹에서 일어나는걸 이제 여기서 처리한다. )
+      const room_id: string = client.data.room_id;
+      const newUserNamespace: string = `${CHANNEL_NAMESPACE.SIGNALING}:${room_id}`;
+      client
+        .to(newUserNamespace)
+        .emit(
+          WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.NEW_USER,
+          this.signalingService.makeUserInfo(client),
+        );
     } catch (err) {
       this.logger.error(err);
       throw new WsException({ message: err.message ?? '에러 발생', status: err.status ?? 500 });
@@ -229,16 +239,6 @@ export class SignalingWebsocketGateway
     try {
       // 1. dtls 핸드세이크를 거칠것이다.
       await this.signalingService.dtlsHandshake(client, validate);
-
-      // 2. 방에 알릴 것이다 현재 접속을 했다고
-      const room_id: string = client.data.room_id;
-      const namespace: string = `${CHANNEL_NAMESPACE.SIGNALING}:${room_id}`;
-      client
-        .to(namespace)
-        .emit(
-          WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.NEW_USER,
-          this.signalingService.makeUserInfo(client),
-        );
 
       // 3. 애초에 여기서 방의 정보를 받아오는 방법도 있을것 같다.
       return { ok: true };

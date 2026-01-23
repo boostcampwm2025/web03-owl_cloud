@@ -3,6 +3,9 @@
 import StrokeColorSection from '@/components/whiteboard/sidebar/sections/StrokeColorSection';
 import ButtonGroup from '@/components/whiteboard/sidebar/ui/ButtonGroup';
 import type { DrawingSize } from '@/constants/drawingPresets';
+import LayerSection, {
+  LayerDirection,
+} from '@/components/whiteboard/sidebar/sections/LayerSection';
 
 // DrawingPanel 컴포넌트
 interface DrawingPanelProps {
@@ -10,6 +13,7 @@ interface DrawingPanelProps {
   size: DrawingSize;
   onChangeStroke: (color: string) => void;
   onChangeSize: (size: DrawingSize) => void;
+  onChangeLayer?: (direction: LayerDirection) => void;
 }
 
 export default function DrawingPanel({
@@ -17,6 +21,7 @@ export default function DrawingPanel({
   size,
   onChangeStroke,
   onChangeSize,
+  onChangeLayer,
 }: DrawingPanelProps) {
   return (
     <div className="flex flex-col gap-2">
@@ -39,6 +44,9 @@ export default function DrawingPanel({
         value={size}
         onChange={onChangeSize}
       />
+
+      {/* 레이어 (Layer) */}
+      {onChangeLayer && <LayerSection onChangeLayer={onChangeLayer} />}
     </div>
   );
 }

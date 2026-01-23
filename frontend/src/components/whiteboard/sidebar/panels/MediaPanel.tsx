@@ -9,6 +9,9 @@ import EdgesSection, {
   EdgeType,
 } from '@/components/whiteboard/sidebar/sections/EdgesSection';
 import OpacitySection from '@/components/whiteboard/sidebar/sections/OpacitySection';
+import LayerSection, {
+  LayerDirection,
+} from '@/components/whiteboard/sidebar/sections/LayerSection';
 
 interface MediaPanelProps {
   strokeColor: string;
@@ -22,6 +25,7 @@ interface MediaPanelProps {
   onChangeStrokeStyle: (style: StrokeStyleType) => void;
   onChangeEdgeType: (type: EdgeType) => void;
   onChangeOpacity: (opacity: number) => void;
+  onChangeLayer: (direction: LayerDirection) => void;
 }
 
 export default function MediaPanel({
@@ -35,6 +39,7 @@ export default function MediaPanel({
   onChangeStrokeStyle,
   onChangeEdgeType,
   onChangeOpacity,
+  onChangeLayer,
 }: MediaPanelProps) {
   return (
     <div className="flex flex-col gap-5">
@@ -58,6 +63,9 @@ export default function MediaPanel({
 
       {/* 투명도 */}
       <OpacitySection opacity={opacity} onChange={onChangeOpacity} />
+
+      {/* 레이어 (Layer) */}
+      <LayerSection onChangeLayer={onChangeLayer} />
     </div>
   );
 }

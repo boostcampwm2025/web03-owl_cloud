@@ -11,8 +11,8 @@ concurrency:
 
 jobs:
   # 배포용 파일 빌드 후 배포
-  backend-build:
-    name: Docker 백엔드 빌드
+  main-backend-build:
+    name: Docker main 백엔드 빌드
     runs-on: ubuntu-22.04
 
     steps:
@@ -43,6 +43,45 @@ jobs:
             ${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_MAIN_BACKEND_DEPLOY_SERVER_IMG }}:${{github.sha}}
           cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_MAIN_BACKEND_DEPLOY_SERVER_IMG }}:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_MAIN_BACKEND_DEPLOY_SERVER_IMG }}:buildcache,mode=max
+  
+  tool-backend-build:
+    name: Docker tool 백엔드 빌드
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout Docker backend
+        uses: actions/checkout@v5
+
+      - name: QEMU 설정
+        uses: docker/setup-qemu-action@v3
+
+      - name: Buildidx 세팅
+        uses: docker/setup-buildx-action@v3
+
+      - name: Dockerhub 로그인
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      
+      - name: Docker 빌드 후 push (with cache)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./rep/tool_backend
+          file: ./rep/tool_backend/Dockerfile
+          push: true
+          # amd64를 사용해서 위에 조사를 스킵할 예정이다.
+          platforms: linux/amd64
+
+          # docker image 관리
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_TOOL_BACKEND_DEPLOY_SERVER_IMG }}:latest
+            ${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_TOOL_BACKEND_DEPLOY_SERVER_IMG }}:${{github.sha}}
+
+          # caching 작업 - 모든 빌드단계 레이어 캐싱 즉 max를 설정해서 용량은 많이 쓰지만 성능은 높인다. 
+          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_TOOL_BACKEND_DEPLOY_SERVER_IMG }}:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/${{ vars.DOCKER_TOOL_BACKEND_DEPLOY_SERVER_IMG }}:buildcache,mode=max      
+
 
   frontend-build:
     name: Docker 프론트엔드 빌드
@@ -51,6 +90,12 @@ jobs:
     steps:
       - name: Checkout Docker frontend
         uses: actions/checkout@v5
+
+      - name: frontend env 생성
+        run: | 
+          cat << 'EOF' > ./frontend/.env.frontend
+          ${{ secrets.NODE_FRONTEND_ENV_DEPLOY_SERVER }}
+          EOF
 
       - name: QEMU 설정
         uses: docker/setup-qemu-action@v3
@@ -82,7 +127,8 @@ jobs:
     name: NCP 서버 배포
     runs-on: ubuntu-22.04
     needs:
-      - backend-build
+      - main-backend-build
+      - tool-backend-build
       - frontend-build
     
     steps:

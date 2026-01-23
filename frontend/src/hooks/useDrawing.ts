@@ -1,13 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import Konva from 'konva';
-import { useCanvasStore } from '@/store/useCanvasStore';
+import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
+import { useItemActions } from '@/hooks/useItemActions';
 import { getWorldPointerPosition } from '@/utils/coordinate';
 
 export function useDrawing() {
-  const currentDrawing = useCanvasStore((state) => state.currentDrawing);
-  const startDrawing = useCanvasStore((state) => state.startDrawing);
-  const continueDrawing = useCanvasStore((state) => state.continueDrawing);
-  const finishDrawing = useCanvasStore((state) => state.finishDrawing);
+  const currentDrawing = useWhiteboardLocalStore(
+    (state) => state.currentDrawing,
+  );
+  const startDrawing = useWhiteboardLocalStore((state) => state.startDrawing);
+  const continueDrawing = useWhiteboardLocalStore(
+    (state) => state.continueDrawing,
+  );
+  const finishDrawing = useWhiteboardLocalStore((state) => state.finishDrawing);
+  const { addDrawing } = useItemActions();
 
   const [isDrawing, setIsDrawing] = useState(false);
   const stageRef = useRef<Konva.Stage | null>(null);
@@ -47,6 +53,13 @@ export function useDrawing() {
 
     const handleGlobalMouseUp = () => {
       setIsDrawing(false);
+
+      // 그리기 완료 시 아이템 추가
+      const drawing = useWhiteboardLocalStore.getState().currentDrawing;
+      if (drawing && drawing.points.length >= 4) {
+        addDrawing(drawing);
+      }
+
       finishDrawing();
       stageRef.current = null;
     };
@@ -58,7 +71,7 @@ export function useDrawing() {
       window.removeEventListener('mousemove', handleGlobalMouseMove);
       window.removeEventListener('mouseup', handleGlobalMouseUp);
     };
-  }, [isDrawing, continueDrawing, finishDrawing]);
+  }, [isDrawing, continueDrawing, finishDrawing, addDrawing]);
 
   return {
     handleDrawingMouseDown,

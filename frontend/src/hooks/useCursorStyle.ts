@@ -1,5 +1,5 @@
 import Konva from 'konva';
-import { useCanvasStore } from '@/store/useCanvasStore';
+import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 
 type CursorType =
   | 'move'
@@ -10,7 +10,7 @@ type CursorType =
   | 'grabbing';
 
 export function useCursorStyle(cursorType: CursorType = 'move') {
-  const cursorMode = useCanvasStore((state) => state.cursorMode);
+  const cursorMode = useWhiteboardLocalStore((state) => state.cursorMode);
 
   const handleMouseEnter = (e: Konva.KonvaEventObject<MouseEvent>) => {
     if (cursorMode !== 'select') return;

@@ -374,6 +374,9 @@ jobs:
             docker compose --env-file compose.env -f docker-compose.yml up -d --remove-orphans
             docker image prune -a -f
 
+            # docker에서 nginx 재시작 ( DNS 변경에 따라서 조치 )
+            docker compose restart frontend-nginx main-backend-nginx
+
             # docker compose 작동 확인
             docker ps
             echo "테스트 서버 배포 완료"

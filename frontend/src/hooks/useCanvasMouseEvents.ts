@@ -1,5 +1,5 @@
 import Konva from 'konva';
-import { useCanvasStore } from '@/store/useCanvasStore';
+import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 import { useDrawing } from '@/hooks/useDrawing';
 import { useEraser } from '@/hooks/useEraser';
 
@@ -10,7 +10,7 @@ interface UseCanvasMouseEventsProps {
 export function useCanvasMouseEvents({
   onDeselect,
 }: UseCanvasMouseEventsProps) {
-  const cursorMode = useCanvasStore((state) => state.cursorMode);
+  const cursorMode = useWhiteboardLocalStore((state) => state.cursorMode);
 
   const { handleDrawingMouseDown, currentDrawing } = useDrawing();
 
