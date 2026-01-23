@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment # etcd에는 /registry/deployments/devmeet/main-backend 있다고 보면 된다. 
+metadata:
+  name: main-backend # 이런 main-backend 이름을 가진다. 
+  namespace: devmeet # devmeet에 namespace에서 
+spec:
+  replicas: 1 # 유지할 pod 갯수 
+
+  # 기존 pod를 완전히 종료하고 새 pod를 생성한다. 무중단은 힘들지만 안정성을 확보할 수 있다. 
+  strategy:
+    type: Recreate
+
+  # 정상 배포 중 상태로 기다리는 최대 시간이다. 배포가 진행중이라고 인정해주는 최대 시간이고 1200초 안에 진전이 없으면 실패로 판정한다는 뜻이다. 
+  progressDeadlineSeconds: 1200
+
+  selector:
+    matchLabels:
+      app: main-backend
+  template:
+    metadata:
+      labels:
+        app: main-backend
+    spec:
+      # Pod가 자신의 전용 네트워크를 쓰는것이 아닌 Node 네트워크를 그대로 쓴다. ( webrtc를 쓰다 보니 고정 포트가 필요하다. )
+      hostNetwork: true
+      # 클러스터의 DNS를 우선 사용하겠다는 뜻이다. ( NODE DNS는 service이름을 전혀 모름으로 클러서터의 이름을 사용해라)
+      dnsPolicy: ClusterFirstWithHostNet
+
+      nodeSelector:
+        node-role: main
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "main"
+          effect: "NoSchedule"
+
+      # Pod에게 깔끔하게 죽일수 있는 시간을 얼마 줄것인지이다. 
+      terminationGracePeriodSeconds: 30
+
+      containers:
+        - name: main-backend
+          image: docker.io/logankimdoing/main-backend-deploy-server-img:latest
+          imagePullPolicy: Always
+
+          # 각각의 port를 설정한다 즉 프로토콜에 따라서 어디 container port에 접속하는지 정함
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+            - containerPort: 40000
+              protocol: UDP
+            - containerPort: 40000
+              protocol: TCP
+
+          envFrom:
+            - configMapRef:
+                name: main-backend-config
+            - secretRef:
+                name: main-backend-secret
+
+          # 컨테이너가 종료되기 전에 컨테이너 안에 명령을 한번 실행해라 ( readiness가 떨어지고 5초 동안 신규 트래픽이 안들어오게 막는다. )
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 5"]
+
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            timeoutSeconds: 2
+            failureThreshold: 3
