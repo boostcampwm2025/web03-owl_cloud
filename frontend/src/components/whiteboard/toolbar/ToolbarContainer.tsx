@@ -112,7 +112,7 @@ export default function ToolbarContainer() {
           onClick={() => toggleCursorMode('select')}
           bgColor="bg-white"
           hvColor="bg-neutral-100"
-          activeBgColor="bg-sky-100"
+          activeBgColor="bg-sky-200"
         />
 
         <NavButton
@@ -122,7 +122,7 @@ export default function ToolbarContainer() {
           onClick={() => toggleCursorMode('move')}
           bgColor="bg-white"
           hvColor="bg-neutral-100"
-          activeBgColor="bg-sky-100"
+          activeBgColor="bg-sky-200"
         />
 
         <NavButton
@@ -132,7 +132,7 @@ export default function ToolbarContainer() {
           onClick={(e) => togglePanelWithSelect('shape', e)}
           bgColor="bg-white"
           hvColor="bg-neutral-100"
-          activeBgColor="bg-neutral-100"
+          activeBgColor="bg-sky-200"
         />
 
         <NavButton
@@ -141,7 +141,6 @@ export default function ToolbarContainer() {
           onClick={() => handleAddItem(handleAddArrow)}
           bgColor="bg-white"
           hvColor="bg-neutral-100"
-          activeBgColor="bg-sky-100"
         />
 
         <NavButton
@@ -150,7 +149,6 @@ export default function ToolbarContainer() {
           onClick={() => handleAddItem(handleAddLine)}
           bgColor="bg-white"
           hvColor="bg-neutral-100"
-          activeBgColor="bg-sky-100"
         />
 
         <NavButton
@@ -160,7 +158,7 @@ export default function ToolbarContainer() {
           onClick={() => toggleCursorMode('draw')}
           bgColor="bg-white"
           hvColor="bg-neutral-100"
-          activeBgColor="bg-sky-100"
+          activeBgColor="bg-sky-200"
         />
 
         <NavButton
@@ -169,7 +167,6 @@ export default function ToolbarContainer() {
           onClick={() => handleAddItem(handleAddText)}
           bgColor="bg-white"
           hvColor="bg-neutral-100"
-          activeBgColor="bg-sky-100"
         />
 
         <NavButton
@@ -179,7 +176,7 @@ export default function ToolbarContainer() {
           onClick={(e) => togglePanelWithSelect('media', e)}
           bgColor="bg-white"
           hvColor="bg-neutral-100"
-          activeBgColor="bg-neutral-100"
+          activeBgColor="bg-sky-200"
         />
 
         {/* <NavButton
@@ -198,7 +195,7 @@ export default function ToolbarContainer() {
           onClick={() => toggleCursorMode('eraser')}
           bgColor="bg-white"
           hvColor="bg-neutral-100"
-          activeBgColor="bg-sky-100"
+          activeBgColor="bg-sky-200"
         />
       </div>
 
@@ -233,7 +230,7 @@ export default function ToolbarContainer() {
       )}
 
       {/* {activePanel === 'stack' && (
-        <div className="absolute top-full mt-2">
+        <div className="absolute mt-2 top-full">
           <StackPanel
             selectedTool={activeTool}
             onSelect={(tool) => handleToolSelect(tool)}

@@ -5,6 +5,9 @@ import ArrowStyleSection from '@/components/whiteboard/sidebar/sections/ArrowSty
 import ButtonGroup from '@/components/whiteboard/sidebar/ui/ButtonGroup';
 import type { ArrowSize, ArrowStyle } from '@/constants/arrowPresets';
 import type { ArrowHeadType } from '@/types/whiteboard';
+import LayerSection, {
+  LayerDirection,
+} from '@/components/whiteboard/sidebar/sections/LayerSection';
 
 // ArrowPanel 컴포넌트
 interface ArrowPanelProps {
@@ -18,6 +21,7 @@ interface ArrowPanelProps {
   onChangeStyle: (style: ArrowStyle) => void;
   onChangeStartHeadType: (type: ArrowHeadType) => void;
   onChangeEndHeadType: (type: ArrowHeadType) => void;
+  onChangeLayer: (direction: LayerDirection) => void;
 }
 
 export default function ArrowPanel({
@@ -31,6 +35,7 @@ export default function ArrowPanel({
   onChangeStyle,
   onChangeStartHeadType,
   onChangeEndHeadType,
+  onChangeLayer,
 }: ArrowPanelProps) {
   return (
     <div className="flex flex-col gap-2">
@@ -72,6 +77,9 @@ export default function ArrowPanel({
         value={startHeadType}
         onChange={onChangeStartHeadType}
       />
+
+      {/* 레이어 (Layer) */}
+      <LayerSection onChangeLayer={onChangeLayer} />
     </div>
   );
 }

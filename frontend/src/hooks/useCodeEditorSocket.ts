@@ -57,7 +57,7 @@ export const useCodeEditorSocket = () => {
     (tool: string) => {
       if (!mainSocket) return;
 
-      console.log(`${tool} 티켓 발급 요청 중...`);
+      // console.log(`${tool} 티켓 발급 요청 중...`);
 
       mainSocket.emit(
         'signaling:ws:connect_tool',

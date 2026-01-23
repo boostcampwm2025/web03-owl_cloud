@@ -1,17 +1,7 @@
-import {
-  IsProducing,
-  MediasoupTransports,
-  MemberConsumer,
-  Producers,
-} from '@/types/meeting';
+import { IsProducing, MediasoupTransports, Producers } from '@/types/meeting';
 import { initSendTransport } from '@/utils/initSendTransport';
 import { Device } from 'mediasoup-client';
-import {
-  Consumer,
-  MediaKind,
-  Producer,
-  Transport,
-} from 'mediasoup-client/types';
+import { Consumer, Producer, Transport } from 'mediasoup-client/types';
 import { Socket } from 'socket.io-client';
 import { create } from 'zustand';
 
@@ -22,22 +12,22 @@ interface MeetingSocketState {
   recvTransport: Transport | null;
   producers: Producers;
   isProducing: IsProducing;
-  consumers: Record<string, MemberConsumer>;
+  consumers: Record<string, Consumer>;
 }
 
 interface MeetingSocketAction {
   setSocket: (socket: Socket | null) => void;
-
   setMediasoupTransports: (
     socket: Socket,
     transports: MediasoupTransports,
   ) => void;
-
   setProducer: (type: keyof Producers, producer: Producer | null) => void;
   setIsProducing: (type: keyof IsProducing, state: boolean) => void;
-
-  addConsumer: (userId: string, kind: MediaKind, consumer: Consumer) => void;
-  removeConsumer: (userId: string) => void;
+  addConsumer: (producerId: string, consumer: Consumer) => void;
+  addConsumers: (
+    consumers: { producerId: string; consumer: Consumer }[],
+  ) => void;
+  removeConsumer: (producerId: string) => void;
 }
 
 export const useMeetingSocketStore = create<
@@ -69,26 +59,34 @@ export const useMeetingSocketStore = create<
   setIsProducing: (type, state) =>
     set((prev) => ({ isProducing: { ...prev.isProducing, [type]: state } })),
 
-  addConsumer: (userId, kind, consumer) =>
+  addConsumer: (producerId, consumer) =>
     set((prev) => ({
       consumers: {
         ...prev.consumers,
-        [userId]: {
-          ...prev.consumers[userId],
-          [kind]: consumer,
-        },
+        [producerId]: consumer,
       },
     })),
-  removeConsumer: (userId) =>
+  addConsumers: (newConsumerList) =>
     set((prev) => {
-      const targetMember = prev.consumers[userId];
+      const nextConsumers = { ...prev.consumers };
 
-      if (targetMember) {
-        targetMember.audio?.close();
-        targetMember.video?.close();
+      newConsumerList.forEach(({ producerId, consumer }) => {
+        nextConsumers[producerId] = consumer;
+      });
+
+      return {
+        consumers: nextConsumers,
+      };
+    }),
+  removeConsumer: (producerId) =>
+    set((prev) => {
+      const targetConsumer = prev.consumers[producerId];
+
+      if (targetConsumer) {
+        targetConsumer.close();
       }
 
-      const { [userId]: _, ...remainingConsumers } = prev.consumers;
+      const { [producerId]: _, ...remainingConsumers } = prev.consumers;
 
       return {
         consumers: remainingConsumers,

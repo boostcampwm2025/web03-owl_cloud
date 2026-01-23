@@ -21,13 +21,13 @@ export default function NavButton({
   isActive,
   onClick,
 }: NavButtonProps) {
-  const baseBg = bgColor ?? 'bg-neutral-800';
+  const baseBg = bgColor ?? 'white';
   const hoverBg = hvColor
     ? `hover:${hvColor}`
     : bgColor
       ? `hover:${bgColor}`
-      : 'hover:bg-neutral-700';
-  const activeStyle = activeBgColor ?? 'bg-sky-700';
+      : 'hover:bg-sky-200';
+  const activeStyle = activeBgColor ?? 'bg-sky-200';
 
   return (
     <button
@@ -38,7 +38,7 @@ export default function NavButton({
       }`}
     >
       <Icon
-        className="pointer-events-none h-6 w-6 text-neutral-200"
+        className="pointer-events-none h-6 w-6 text-neutral-600"
         aria-hidden
       />
       <span className="sr-only">{label}</span>

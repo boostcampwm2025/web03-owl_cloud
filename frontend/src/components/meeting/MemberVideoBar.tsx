@@ -3,21 +3,111 @@
 import { ChevronLeftIcon, ChevronRightIcon } from '@/assets/icons/common';
 import MyVideo from '@/components/meeting/MyVideo';
 import SmVideo from '@/components/meeting/SmVideo';
+import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
 import { useMeetingStore } from '@/store/useMeetingStore';
-import { useState } from 'react';
+import { ConsumerInfo } from '@/types/meeting';
+import { getConsumerInstances, getVideoConsumerIds } from '@/utils/meeting';
+import { useEffect, useMemo, useState } from 'react';
 
 export default function MemberVideoBar() {
   const MEMBERS_PER_PAGE = 6;
-
-  const { members } = useMeetingStore();
+  const { members, memberStreams, setMemberStream, removeMemberStream } =
+    useMeetingStore();
+  const { socket, recvTransport, device, consumers, addConsumers } =
+    useMeetingSocketStore();
   const [currentPage, setCurrentPage] = useState(1);
-  const memberCount = Object.values(members).length;
-  const totalPages =
-    memberCount <= 5 ? 1 : 1 + Math.ceil((memberCount - 5) / MEMBERS_PER_PAGE);
-  const [hasPrevPage, hasNextPage] = [
-    currentPage > 1,
-    currentPage < totalPages,
-  ];
+
+  // 전체 페이지 수 계산 (첫 페이지는 MyVideo 포함)
+  const totalPages = useMemo(() => {
+    const memberCount = Object.values(members).length;
+    if (memberCount <= 5) return 1;
+    return 1 + Math.ceil((memberCount - 5) / MEMBERS_PER_PAGE);
+  }, [members]);
+
+  // 현재 페이지에 보여야 할 멤버 리스트 계산
+  const visibleMembers = useMemo(() => {
+    const memberArray = Object.values(members);
+    const isFirstPage = currentPage === 1;
+
+    const start = isFirstPage ? 0 : (currentPage - 2) * MEMBERS_PER_PAGE + 5;
+    const end = isFirstPage ? 5 : start + MEMBERS_PER_PAGE;
+
+    return memberArray.slice(start, end);
+  }, [members, currentPage]);
+
+  const hasPrevPage = currentPage > 1;
+  const hasNextPage = currentPage < totalPages;
+
+  // visibleMembers가 바뀔 때 consume, resume/pause
+  useEffect(() => {
+    if (!socket || !recvTransport || !device) return;
+
+    const syncVideoStreams = async () => {
+      const currentConsumers = useMeetingSocketStore.getState().consumers;
+      const {
+        newVideoConsumers,
+        resumeConsumerIds,
+        pauseConsumerIds,
+        visibleStreamTracks,
+        hiddenUserIds,
+      } = getVideoConsumerIds(members, visibleMembers, currentConsumers);
+
+      const allResumeIds = [...resumeConsumerIds];
+
+      // 새로운 consumer 추가
+      if (newVideoConsumers.length > 0) {
+        const payload = {
+          transport_id: recvTransport.id,
+          producer_infos: newVideoConsumers.map((id) => ({
+            producer_id: id,
+            rtpCapabilities: device.rtpCapabilities,
+            status: 'user',
+          })),
+        };
+
+        const { consumerInfos }: { consumerInfos: ConsumerInfo[] } =
+          await socket.emitWithAck('signaling:ws:consumes', payload);
+        const newConsumers = await getConsumerInstances(
+          recvTransport,
+          consumerInfos,
+        );
+
+        addConsumers(newConsumers);
+
+        newConsumers.forEach(({ producerId, consumer }) => {
+          allResumeIds.push(consumer.id);
+
+          const userId = Object.values(members).find(
+            (m) => m.cam?.provider_id === producerId,
+          )?.user_id;
+          if (userId) {
+            if (members[userId].cam?.is_paused) {
+              removeMemberStream(userId, 'cam');
+            } else {
+              setMemberStream(userId, 'cam', new MediaStream([consumer.track]));
+            }
+          }
+        });
+      }
+
+      // 그룹 resume
+      if (allResumeIds.length > 0) {
+        socket.emit('signaling:ws:resumes', { consumer_ids: allResumeIds });
+        visibleStreamTracks.forEach(({ userId, track }) => {
+          if (members[userId].cam?.is_paused) removeMemberStream(userId, 'cam');
+          else setMemberStream(userId, 'cam', new MediaStream([track]));
+        });
+      }
+
+      // 그룹 pause
+      if (pauseConsumerIds.length > 0) {
+        socket.emit('signaling:ws:pauses', { consumer_ids: pauseConsumerIds });
+        hiddenUserIds.forEach((userId) => removeMemberStream(userId, 'cam'));
+      }
+    };
+
+    syncVideoStreams();
+  }, [visibleMembers, members, socket, recvTransport, device]);
 
   const onPrevClick = () => {
     if (!hasPrevPage) return;
@@ -28,10 +118,7 @@ export default function MemberVideoBar() {
     if (!hasNextPage) return;
     setCurrentPage((prev) => prev + 1);
   };
-
-  const isFirstPage = currentPage === 1;
-  const start = isFirstPage ? 0 : (currentPage - 2) * MEMBERS_PER_PAGE + 5;
-  const end = isFirstPage ? 5 : start + MEMBERS_PER_PAGE;
+  console.log(members, memberStreams, consumers);
 
   return (
     <header className="flex w-full justify-between px-4 py-2">
@@ -43,13 +130,10 @@ export default function MemberVideoBar() {
       </button>
 
       <section className="flex gap-4">
-        {/* 이후 백엔드 연동 시 pagination으로 수정, 수동 slice는 불필요 */}
-        {start === 0 && <MyVideo />}
-        {Object.values(members)
-          .slice(start, end)
-          .map((member) => (
-            <SmVideo key={member.user_id} {...member} />
-          ))}
+        {currentPage === 1 && <MyVideo />}
+        {visibleMembers.map((member) => (
+          <SmVideo key={member.user_id} {...member} />
+        ))}
       </section>
 
       <button

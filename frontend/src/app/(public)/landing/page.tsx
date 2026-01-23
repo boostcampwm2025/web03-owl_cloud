@@ -29,7 +29,7 @@ export default function LandingPage() {
         </div>
 
         <section
-          className="flex flex-col items-center gap-8"
+          className="flex flex-col items-center gap-6"
           aria-labelledby="join-meeting-title"
         >
           <h2

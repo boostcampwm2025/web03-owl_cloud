@@ -3,6 +3,9 @@
 import ArrowStrokeSection from '@/components/whiteboard/sidebar/sections/ArrowStrokeSection';
 import ArrowStyleSection from '@/components/whiteboard/sidebar/sections/ArrowStyleSection';
 import type { ArrowSize, ArrowStyle } from '@/constants/arrowPresets';
+import LayerSection, {
+  LayerDirection,
+} from '@/components/whiteboard/sidebar/sections/LayerSection';
 
 // LinePanel 컴포넌트
 interface LinePanelProps {
@@ -12,6 +15,7 @@ interface LinePanelProps {
   onChangeStroke: (color: string) => void;
   onChangeSize: (size: ArrowSize) => void;
   onChangeStyle: (style: ArrowStyle) => void;
+  onChangeLayer: (direction: LayerDirection) => void;
 }
 
 export default function LinePanel({
@@ -21,6 +25,7 @@ export default function LinePanel({
   onChangeStroke,
   onChangeSize,
   onChangeStyle,
+  onChangeLayer,
 }: LinePanelProps) {
   return (
     <div className="flex flex-col gap-2">
@@ -34,6 +39,8 @@ export default function LinePanel({
         onChangeSize={onChangeSize}
         onChangeStyle={onChangeStyle}
       />
+      {/* 레이어 (Layer) */}
+      <LayerSection onChangeLayer={onChangeLayer} />
     </div>
   );
 }

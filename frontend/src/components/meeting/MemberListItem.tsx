@@ -5,8 +5,9 @@ import {
   MicOffIcon,
   MicOnIcon,
 } from '@/assets/icons/meeting';
+import { useClickOutside } from '@/hooks/useClickOutside';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 interface MemberListItemProps {
   id: string;
@@ -25,8 +26,12 @@ export default function MemberListItem({
   reverseDropdown,
 }: MemberListItemProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useClickOutside(ref, () => setIsDropdownOpen(false), isDropdownOpen);
 
   const onMoreClick = () => setIsDropdownOpen((prev) => !prev);
+  const closeDropdown = () => setIsDropdownOpen(false);
 
   return (
     <li className="group flex items-center gap-2 p-4">
@@ -35,8 +40,8 @@ export default function MemberListItem({
         <Image
           width={32}
           height={32}
-          className="h-8 w-8 rounded-full"
-          src={profileImg}
+          className="h-8 w-8 rounded-full bg-white"
+          src={profileImg || 'https://picsum.photos/id/237/200/100'}
           alt={`${name}의 프로필 사진`}
         />
         <span className="ellipsis w-full text-neutral-50">{name}</span>
@@ -60,6 +65,7 @@ export default function MemberListItem({
 
       {/* 더보기 버튼 */}
       <div
+        ref={ref}
         className={`relative group-hover:flex ${isDropdownOpen ? 'flex' : 'hidden'}`}
       >
         <button
@@ -73,9 +79,15 @@ export default function MemberListItem({
           <menu
             className={`absolute right-0 w-40 rounded-sm border border-neutral-500 bg-neutral-600 ${reverseDropdown ? '-top-2 -translate-y-full' : 'top-[calc(100%+8px)]'}`}
           >
-            <button className="dropdown-btn">드롭다운 메뉴1</button>
-            <button className="dropdown-btn">드롭다운 메뉴2</button>
-            <button className="dropdown-btn">드롭다운 메뉴3</button>
+            <button className="dropdown-btn" onClick={closeDropdown}>
+              드롭다운 메뉴1
+            </button>
+            <button className="dropdown-btn" onClick={closeDropdown}>
+              드롭다운 메뉴2
+            </button>
+            <button className="dropdown-btn" onClick={closeDropdown}>
+              드롭다운 메뉴3
+            </button>
           </menu>
         )}
       </div>

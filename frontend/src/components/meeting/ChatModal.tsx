@@ -19,7 +19,7 @@ export default function ChatModal() {
     e.preventDefault();
     if (value.trim().length === 0) return;
 
-    console.log(value);
+    // console.log(value);
     setValue('');
   };
 
@@ -28,7 +28,7 @@ export default function ChatModal() {
   // textarea 자동 높이 조절 추가하면 좋을 것 같아요
 
   return (
-    <aside className="meeting-side-modal">
+    <aside className="meeting-side-modal z-6">
       <div className="flex-center relative h-12 w-full bg-neutral-800">
         <span className="font-bold text-neutral-200">채팅</span>
         <button

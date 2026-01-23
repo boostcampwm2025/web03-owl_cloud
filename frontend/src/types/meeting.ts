@@ -1,4 +1,11 @@
-import { Consumer, Device, Producer, Transport } from 'mediasoup-client/types';
+import {
+  Consumer,
+  Device,
+  MediaKind,
+  Producer,
+  RtpParameters,
+  Transport,
+} from 'mediasoup-client/types';
 
 export type MediaPermission = 'unknown' | 'granted' | 'denied';
 
@@ -66,22 +73,31 @@ export interface FetchRoomMembersResponse {
   members: MeetingMemberInfo[];
 }
 
+export type MediaType = 'mic' | 'cam' | 'screen_video' | 'screen_audio';
+
 export interface ProducerInfo {
   producer_id: string;
   user_id: string;
   status: 'user' | 'main';
   kind: 'audio' | 'video';
-  type: 'mic' | 'cam' | 'screen_video' | 'screen_audio';
+  type: MediaType;
   nickname: string;
   is_paused: boolean;
 }
 
-export interface MemberStream {
-  audio?: MediaStream;
-  video?: MediaStream;
+export type MemberStream = Partial<Record<MediaType, MediaStream>>;
+
+export interface ConsumerInfo {
+  producer_id: string;
+  consumer_id: string;
+  kind: MediaKind;
+  rtpParameters: RtpParameters;
 }
 
-export interface MemberConsumer {
-  audio?: Consumer;
-  video?: Consumer;
+export interface MeetingInfoResponse {
+  title: string;
+  host_nickname: string;
+  current_participants: number;
+  max_participants: number;
+  has_password: boolean;
 }

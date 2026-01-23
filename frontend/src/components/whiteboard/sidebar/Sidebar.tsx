@@ -36,6 +36,7 @@ import {
   getDrawingSize,
   getItemStyle,
 } from '@/utils/sidebarStyleHelpers';
+import { LayerDirection } from '@/components/whiteboard/sidebar/sections/LayerSection';
 
 // 사이드 바 선택된 요소 타입
 type SelectionType =
@@ -51,7 +52,9 @@ export default function Sidebar() {
   // 스토어에서 선택된 아이템 정보 가져오기
   const selectedId = useWhiteboardLocalStore((state) => state.selectedId);
   const items = useWhiteboardSharedStore((state) => state.items);
-  const { updateItem } = useItemActions();
+  const { updateItem, bringToFront, sendToBack, bringForward, sendBackward } =
+    useItemActions();
+
   const cursorMode = useWhiteboardLocalStore((state) => state.cursorMode);
   const drawingStroke = useWhiteboardLocalStore((state) => state.drawingStroke);
   const drawingSize = useWhiteboardLocalStore((state) => state.drawingSize);
@@ -152,8 +155,28 @@ export default function Sidebar() {
     return null;
   }
 
+  // 레이어 변경 핸들러
+  const handleLayerChange = (direction: LayerDirection) => {
+    if (!selectedId) return;
+
+    switch (direction) {
+      case 'front':
+        bringToFront(selectedId);
+        break;
+      case 'back':
+        sendToBack(selectedId);
+        break;
+      case 'forward':
+        bringForward(selectedId);
+        break;
+      case 'backward':
+        sendBackward(selectedId);
+        break;
+    }
+  };
+
   return (
-    <aside className="absolute top-1/2 left-2 z-1 flex max-h-[calc(100vh-2rem)] w-56 -translate-y-1/2 flex-col overflow-y-auto rounded-lg border border-neutral-200 bg-white p-4 shadow-xl">
+    <aside className="absolute top-1/2 left-2 z-5 flex max-h-[calc(100vh-2rem)] w-56 -translate-y-1/2 flex-col overflow-y-auto rounded-lg border border-neutral-200 bg-white p-4 shadow-xl">
       {/* Sidebar Title */}
       <div className="mb-1">
         <h2 className="text-lg font-bold text-neutral-800">
@@ -221,6 +244,7 @@ export default function Sidebar() {
             onChangeOpacity={(opacity) => {
               updateItem(selectedId!, { opacity });
             }}
+            onChangeLayer={handleLayerChange}
           />
         )}
 
@@ -252,6 +276,7 @@ export default function Sidebar() {
             onChangeEndHeadType={(type) => {
               updateItem(selectedId!, { endHeadType: type });
             }}
+            onChangeLayer={handleLayerChange}
           />
         )}
 
@@ -273,6 +298,7 @@ export default function Sidebar() {
             onChangeStyle={(style) => {
               updateItem(selectedId!, { tension: ARROW_STYLE_PRESETS[style] });
             }}
+            onChangeLayer={handleLayerChange}
           />
         )}
 
@@ -333,6 +359,7 @@ export default function Sidebar() {
             onChangeOpacity={(opacity) => {
               updateItem(selectedId!, { opacity });
             }}
+            onChangeLayer={handleLayerChange}
           />
         )}
 
@@ -356,6 +383,7 @@ export default function Sidebar() {
             onChangeTextDecoration={(textDecoration) =>
               updateItem(selectedId!, { textDecoration })
             }
+            onChangeLayer={handleLayerChange}
           />
         )}
         {/* drawing */}
@@ -386,6 +414,7 @@ export default function Sidebar() {
                 setDrawingSize(size);
               }
             }}
+            onChangeLayer={selectedItem ? handleLayerChange : undefined}
           />
         )}
       </div>

@@ -6,6 +6,9 @@ import TextAlignSection from '@/components/whiteboard/sidebar/sections/text/Text
 import TextFormatSection from '@/components/whiteboard/sidebar/sections/text/TextFormatSection';
 import type { TextSize } from '@/constants/textPresets';
 import type { TextAlignment } from '@/types/whiteboard/base';
+import LayerSection, {
+  LayerDirection,
+} from '@/components/whiteboard/sidebar/sections/LayerSection';
 
 // TextPanel 컴포넌트
 interface TextPanelProps {
@@ -19,6 +22,7 @@ interface TextPanelProps {
   onChangeAlign: (align: TextAlignment) => void;
   onChangeFontStyle: (fontStyle: string) => void;
   onChangeTextDecoration: (textDecoration: string) => void;
+  onChangeLayer: (direction: LayerDirection) => void;
 }
 
 export default function TextPanel({
@@ -32,6 +36,7 @@ export default function TextPanel({
   onChangeAlign,
   onChangeFontStyle,
   onChangeTextDecoration,
+  onChangeLayer,
 }: TextPanelProps) {
   return (
     <div className="flex flex-col gap-2">
@@ -56,6 +61,9 @@ export default function TextPanel({
         onChangeFontStyle={onChangeFontStyle}
         onChangeTextDecoration={onChangeTextDecoration}
       />
+
+      {/* 레이어 (Layer) */}
+      <LayerSection onChangeLayer={onChangeLayer} />
     </div>
   );
 }

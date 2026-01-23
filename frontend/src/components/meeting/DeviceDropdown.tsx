@@ -1,5 +1,6 @@
 import { ArrowDownIcon } from '@/assets/icons/common';
-import { useState } from 'react';
+import { useClickOutside } from '@/hooks/useClickOutside';
+import { useRef, useState } from 'react';
 
 interface Props {
   label: string;
@@ -23,8 +24,12 @@ export function DeviceDropdown({
   const selected = devices.find((d) => d.deviceId === selectedId);
   const isDisabled = devices.length === 0;
 
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  useClickOutside(dropdownRef, () => setIsOpen(false), isOpen);
+
   return (
-    <div className={`relative min-w-0 ${className}`}>
+    <div className={`relative min-w-0 ${className}`} ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
