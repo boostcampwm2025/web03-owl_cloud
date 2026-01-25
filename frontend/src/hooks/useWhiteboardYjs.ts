@@ -15,7 +15,6 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
   const initializedRef = useRef(false);
 
   const setItems = useWhiteboardSharedStore((state) => state.setItems);
-  const { updateUser, setMyUserId } = useWhiteboardAwarenessStore();
 
   useEffect(() => {
     if (initializedRef.current) {
@@ -54,7 +53,7 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
 
     // Backend에서 사용자 ID 받기
     socket.on('init-user', ({ userId }: { userId: string }) => {
-      setMyUserId(userId);
+      useWhiteboardAwarenessStore.getState().setMyUserId(userId);
 
       // 팔레트에서 랜덤 색상 선택 (흰색, 검정, 회색 제외)
       const colorPalette = NO_TRANSPARENT_PALETTE.filter(
@@ -90,24 +89,6 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
     useWhiteboardLocalStore
       .getState()
       .setAwarenessCallback(updateAwarenessSelection);
-
-    // 커서 업데이트 (스로틀링 30ms)
-    let lastCursorUpdate = 0;
-    const updateAwarenessCursor = (x: number, y: number) => {
-      const now = Date.now();
-      if (now - lastCursorUpdate < 30) return;
-      lastCursorUpdate = now;
-
-      const currentState = awareness.getLocalState();
-      if (currentState) {
-        awareness.setLocalState({
-          ...currentState,
-          cursor: { x, y },
-        });
-      }
-    };
-
-    useWhiteboardLocalStore.getState().setCursorCallback(updateAwarenessCursor);
 
     // Yjs → Socket
     ydoc.on(
@@ -197,7 +178,7 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
         if (clientId === ydoc.clientID) return;
 
         if (state.user) {
-          updateUser(state.user.id, {
+          useWhiteboardAwarenessStore.getState().updateUser(state.user.id, {
             id: state.user.id,
             name: state.user.name,
             color: state.user.color,
@@ -217,7 +198,6 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
         .getState()
         .setYjsInstances(null, null, null, null);
       useWhiteboardLocalStore.getState().setAwarenessCallback(null);
-      useWhiteboardLocalStore.getState().setCursorCallback(null);
       yItems.unobserveDeep(handleYjsChange);
       socket.off('yjs-update');
       socket.off('awareness-update');
@@ -225,7 +205,7 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
       socket.off('init-user');
       ydoc.destroy();
     };
-  }, [socket, setItems, updateUser, setMyUserId]);
+  }, [socket, setItems]);
 
   useEffect(() => {
     return () => cleanupRef.current?.();

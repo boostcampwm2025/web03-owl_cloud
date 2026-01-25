@@ -35,12 +35,28 @@ export const useWhiteboardAwarenessStore = create<AwarenessStore>((set) => ({
   // 사용자 정보 업데이트
   updateUser: (userId, data) =>
     set((state) => {
-      const newUsers = new Map(state.users);
-      const user = newUsers.get(userId);
+      const user = state.users.get(userId);
+
       if (user) {
-        newUsers.set(userId, { ...user, ...data });
+        const updatedUser = { ...user, ...data };
+
+        // 실제로 변경되었는지 확인
+        const isSame =
+          updatedUser.name === user.name &&
+          updatedUser.color === user.color &&
+          updatedUser.selectedId === user.selectedId &&
+          updatedUser.cursor?.x === user.cursor?.x &&
+          updatedUser.cursor?.y === user.cursor?.y;
+
+        // 변경이 없으면 업데이트 x
+        if (isSame) return state;
+
+        const newUsers = new Map(state.users);
+        newUsers.set(userId, updatedUser);
+        return { users: newUsers };
       } else {
         // 새 사용자 추가
+        const newUsers = new Map(state.users);
         newUsers.set(userId, {
           id: userId,
           name: data.name || 'Anonymous',
@@ -48,8 +64,8 @@ export const useWhiteboardAwarenessStore = create<AwarenessStore>((set) => ({
           cursor: data.cursor || null,
           selectedId: data.selectedId || null,
         });
+        return { users: newUsers };
       }
-      return { users: newUsers };
     }),
 
   // 사용자 제거
