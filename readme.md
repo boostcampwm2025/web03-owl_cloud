@@ -66,6 +66,6 @@ dev:meet는 화상 통화, 실시간 코드 에디터, 화이트보드를 하나
 |                            ISTP                            |                            INFP                            |                           ISTP                            |                           ISTJ                            |                           ESTJ                            |
 |          [@KimDwDev](https://github.com/KimDwDev)          |         [@seorang42](https://github.com/seorang42)         |         [@tjsdn052](https://github.com/tjsdn052)          |         [@chamny20](https://github.com/chamny20)          |         [@ChaJiTae](https://github.com/ChaJiTae)          |
 | ![](https://avatars.githubusercontent.com/u/212347248?v=4) | ![](https://avatars.githubusercontent.com/u/123955813?v=4) | ![](https://avatars.githubusercontent.com/u/74086324?v=4) | ![](https://avatars.githubusercontent.com/u/80542421?v=4) | ![](https://avatars.githubusercontent.com/u/55056889?v=4) |
-|                         준비됐엉️                          |                     마지막까지 즐겁게                      |                        일단 해보기                        |                   다 경험이고 추억이다                    |                          크아앙                           |
+|                         준비됐엉️                          |                     마지막까지 즐겁게                      |                        일단 해보기                        |                   다 경험이고 추억이다                    |                          크아앙!                           |
 
 <br/>
