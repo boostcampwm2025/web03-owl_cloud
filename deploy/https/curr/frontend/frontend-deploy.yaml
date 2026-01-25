@@ -29,7 +29,7 @@ spec:
       # pod안에 어떤 container를 실행할것인지에 대해서 정한다. 
       containers:
         - name: frontend
-          image: docker.io/logankimdoing/frontend-deploy-server-img:latest
+          image: docker.io/logankimdoing/frontend-deploy-server-img
           imagePullPolicy: Always # pod가 새로 생길때 마다 pull을 항상 시도하라 
           # configMap 환경변수를 통째로 주입한다. ( backend는 secret도 있다. )
           envFrom:

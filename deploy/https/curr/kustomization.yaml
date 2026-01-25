@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: devmeet
+
+# 감지할 리소스들
+resources:
+  - frontend/frontend-deploy.yaml
+  - frontend/frontend-service.yaml
+  - main_backend/main-backend-deploy.yaml
+  - main_backend/main-backend-service.yaml
+  - tool_backend/tool-backend-deploy.yaml
+  - tool_backend/tool-backend-service.yaml
+  - devmeet-gateway-ingress.yaml
+  - letsencrypt-prod.yaml
+
+# 사용되는 이미지들
+images:
+  - name: docker.io/logankimdoing/frontend-deploy-server-img
+    newTag: sha-0000000
+  - name: docker.io/logankimdoing/main-backend-deploy-server-img
+    newTag: sha-0000000
+  - name: docker.io/logankimdoing/tool-backend-deploy-server-img
+    newTag: sha-0000000

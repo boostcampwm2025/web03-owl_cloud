@@ -141,7 +141,7 @@ jobs:
           host: ${{ secrets.DEPLOY_SERVER_HOST }}
           username: ${{ secrets.DEPLOY_SERVER_USER }}
           key: ${{ secrets.DEPLOY_SERVER_SSH_KEY }}
-          source: ./deploy/https/*
+          source: ./deploy/https/curr/*
           target: /root/deploy
           strip_components: 2
 

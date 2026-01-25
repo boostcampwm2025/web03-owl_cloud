@@ -39,7 +39,7 @@ spec:
 
       containers:
         - name: main-backend
-          image: docker.io/logankimdoing/main-backend-deploy-server-img:latest
+          image: docker.io/logankimdoing/main-backend-deploy-server-img
           imagePullPolicy: Always
 
           # 각각의 port를 설정한다 즉 프로토콜에 따라서 어디 container port에 접속하는지 정함

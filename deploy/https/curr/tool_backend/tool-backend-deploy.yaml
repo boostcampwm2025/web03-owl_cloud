@@ -25,7 +25,7 @@ spec:
 
       containers:
         - name: tool-backend
-          image: docker.io/logankimdoing/tool-backend-deploy-server-img:latest
+          image: docker.io/logankimdoing/tool-backend-deploy-server-img
           # pod 시작할때 당겨오는 규칙
           imagePullPolicy: Always
           ports:
