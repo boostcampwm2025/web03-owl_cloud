@@ -53,7 +53,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx.gateway.conf:/etc/nginx/conf.d/default.conf:ro # gateway 임으로 기본 설정을 유지하면서 몇개만 변경
-      - ./etc/certbot/www:/var/www/certbot
+      - /etc/certbot/www:/var/www/certbot
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - main-backend-nginx

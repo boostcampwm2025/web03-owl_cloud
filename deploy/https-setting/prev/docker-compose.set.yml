@@ -16,7 +16,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx.setting.conf:/etc/nginx/nginx.conf:ro
-      - ./etc/certbot/www:/var/www/certbot
+      - /etc/certbot/www:/var/www/certbot
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - frontend
