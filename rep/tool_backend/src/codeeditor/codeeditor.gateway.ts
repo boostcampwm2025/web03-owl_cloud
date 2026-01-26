@@ -18,7 +18,7 @@ import { EVENT_STREAM_NAME } from '@/infra/event-stream/event-stream.constants';
 import { CODEEDITOR_WEBSOCKET } from '@/infra/websocket/websocket.constants';
 import { CodeeditorWebsocket } from '@/infra/websocket/codeeditor/codeeditor.service';
 import * as Y from 'yjs';
-
+// 이 부분을 어떻게 처리하는게 좋을지 고민이다. 
 const roomDocs = new Map<string, Y.Doc>();
 
 @WebSocketGateway({

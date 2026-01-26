@@ -11,6 +11,7 @@ import { WhiteboardModule } from './whiteboard/whiteboard.module';
 import { CodeeditorModule } from './codeeditor/codeeditor.module';
 import { CodeeditorWebsocketModule } from './infra/websocket/codeeditor/codeeditor.module';
 import { WhiteboardWebsocketModule } from './infra/websocket/whiteboard/whiteboard.module';
+import { MemoryModule } from './infra/memory/memory.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { WhiteboardWebsocketModule } from './infra/websocket/whiteboard/whiteboa
     RedisChannelModule,
     MysqlModule,
     KafkaModule, // kafka용 모듈
+    MemoryModule, // 내장 ram을 사용하기 위한 모듈
 
     // 추가 모듈
     HealthModule,
