@@ -9,7 +9,7 @@ resources:
   - frontend/frontend-deploy.yaml
   - frontend/frontend-service.yaml
   - frontend/frontend-config.yaml
-  
+
   # main_backend 관련
   - main_backend/main-backend-deploy.yaml
   - main_backend/main-backend-service.yaml

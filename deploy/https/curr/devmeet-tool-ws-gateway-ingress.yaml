@@ -1,7 +1,7 @@
 # (ingress-nginx) www.devmeet.p-e.kr -> LB -> tool-backend-svc (/tool/ws 전용)
 # 목적: room_code(querystring) 기준으로 websocket을 특정 pod로 "비교적 일관되게" 매핑하기 위함 (인메모리 Y.Doc 전략)
 apiVersion: networking.k8s.io/v1
-kind: Ingress  
+kind: Ingress
 metadata:
   name: devmeet-tool-ws
   # ingress는 같은 네임스페이스 안에 service만 참조가 가능하다.
@@ -13,7 +13,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/hsts: "true"
-    nginx.ingress.kubernetes.io/hsts-max-age: "31536000" 
+    nginx.ingress.kubernetes.io/hsts-max-age: "31536000"
     nginx.ingress.kubernetes.io/hsts-include-subdomains: "true"
 
     # 성능과 관련된 설정
@@ -33,7 +33,7 @@ spec:
       secretName: devmeet-tls
 
   rules:
-    # 같은 호스트 임으로 기존의 ingress-nginx에 규칙이 하나더 추가 되는 것이다. 
+    # 같은 호스트 임으로 기존의 ingress-nginx에 규칙이 하나더 추가 되는 것이다.
     - host: www.devmeet.p-e.kr
       http:
         paths:

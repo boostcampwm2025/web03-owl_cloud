@@ -4,15 +4,28 @@ metadata:
   name: tool-backend
   namespace: devmeet
 spec:
-  # node 3개를 유지한다는 것이다. 
+  # node 3개를 유지한다는 것이다.
   replicas: 3
+
+  # 롤링 업데이트 안정화를 진행한다.
+  strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 0  # 업데이트 중에 기존 pod를 줄이지 않는다.
+    maxSurge: 1 # 새 pod를 하나 더 띄우고 교체를 진행한다.
+
+  # 새 pod가 ready된 이후 잠깐 안정화 시간을 준다.
+  minReadySeconds: 10
+
   selector:
     matchLabels:
       app: tool-backend
+
   template:
     metadata:
       labels:
         app: tool-backend
+
     spec:
       nodeSelector:
         node-role: tool
@@ -22,6 +35,9 @@ spec:
           operator: "Equal"
           value: "tool"
           effect: "NoSchedule"
+
+      # 종료 할때 websocket 정리 시간을 확보한다.
+      terminationGracePeriodSeconds: 30
 
       containers:
         - name: tool-backend
@@ -37,6 +53,12 @@ spec:
                 name: tool-backend-config
             - secretRef:
                 name: tool-backend-secret
+
+          # 기존 연결 정리 시간이다.
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 5"]
 
           readinessProbe:
             httpGet:
