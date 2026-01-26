@@ -7,13 +7,12 @@ import { MeetingMemberInfo } from '@/types/meeting';
 import Image from 'next/image';
 import { useRef, useState } from 'react';
 
-export default function SmVideo({
+export default function MemberVideo({
   user_id,
   nickname,
   profile_path,
-  cam,
-  mic,
-}: MeetingMemberInfo) {
+  width = '160px',
+}: MeetingMemberInfo & { width?: string }) {
   const isPinned = useMeetingStore((state) =>
     state.pinnedMemberIds.includes(user_id),
   );
@@ -32,7 +31,8 @@ export default function SmVideo({
 
   return (
     <div
-      className={`group flex-center relative aspect-video w-40 rounded-lg bg-neutral-700`}
+      style={{ width }}
+      className={`group flex-center relative aspect-video max-h-full max-w-full rounded-lg bg-neutral-700`}
     >
       {/* 테두리 영역 */}
       {isSpeaking && (

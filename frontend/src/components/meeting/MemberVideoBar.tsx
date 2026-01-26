@@ -2,7 +2,7 @@
 
 import { ChevronLeftIcon, ChevronRightIcon } from '@/assets/icons/common';
 import MyVideo from '@/components/meeting/MyVideo';
-import SmVideo from '@/components/meeting/SmVideo';
+import MemberVideo from '@/components/meeting/MemberVideo';
 import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
 import { useMeetingStore } from '@/store/useMeetingStore';
 import { ConsumerInfo } from '@/types/meeting';
@@ -126,7 +126,6 @@ export default function MemberVideoBar() {
     if (!hasNextPage) return;
     setCurrentPage((prev) => prev + 1);
   };
-  console.log(members, memberStreams, consumers);
 
   return (
     <header className="flex w-full justify-between px-4 py-2">
@@ -140,7 +139,7 @@ export default function MemberVideoBar() {
       <section className="flex gap-4">
         {currentPage === 1 && <MyVideo />}
         {visibleMembers.map((member) => (
-          <SmVideo key={member.user_id} {...member} />
+          <MemberVideo key={member.user_id} {...member} />
         ))}
       </section>
 

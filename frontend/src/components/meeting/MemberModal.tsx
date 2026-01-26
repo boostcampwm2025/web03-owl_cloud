@@ -46,10 +46,10 @@ export default function MemberModal() {
             {...member}
             name={member.nickname}
             audio={
-              index === 0 ? media.audioOn : !!memberStreams[member.user_id].mic
+              index === 0 ? media.audioOn : !!memberStreams[member.user_id]?.mic
             }
             video={
-              index === 0 ? media.videoOn : !!memberStreams[member.user_id].cam
+              index === 0 ? media.videoOn : !!memberStreams[member.user_id]?.cam
             }
             profileImg={member.profile_path}
             reverseDropdown={members.length > 3 && index >= members.length - 2}

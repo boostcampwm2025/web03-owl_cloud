@@ -26,6 +26,7 @@ import { createConsumeHelpers } from '@/utils/createConsumeHelpers';
 import { useEffect } from 'react';
 import VideoView from './media/VideoView';
 import AudioView from '@/components/meeting/media/AudioView';
+import MainVideo from '@/components/meeting/MainVideo';
 
 export default function MeetingRoom({ meetingId }: { meetingId: string }) {
   const {
@@ -301,6 +302,10 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
       <section className="relative flex-1 overflow-hidden">
         {/* 워크스페이스 / 코드 에디터 등의 컴포넌트가 들어갈 공간 */}
         <div className="flex h-full w-full overflow-hidden">
+          {!screenVideoStream && !isWhiteboardOpen && !isCodeEditorOpen && (
+            <MainVideo />
+          )}
+
           {screenVideoStream && (
             <div className="group flex-center relative aspect-video w-full rounded-lg bg-neutral-700">
               <div className="flex-center h-full w-full overflow-hidden rounded-lg">

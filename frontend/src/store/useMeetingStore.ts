@@ -35,6 +35,7 @@ interface MeetingState {
   orderedMemberIds: string[];
   pinnedMemberIds: string[];
   meetingInfo: MeetingInfoResponse;
+  lastSpeakerId: string | null;
 
   isInfoOpen: boolean;
   isMemberOpen: boolean;
@@ -86,6 +87,7 @@ export const useMeetingStore = create<MeetingState & MeetingActions>((set) => ({
   orderedMemberIds: [],
   pinnedMemberIds: [],
   meetingInfo: INITIAL_MEETING_INFO,
+  lastSpeakerId: null,
 
   isInfoOpen: false,
   isMemberOpen: false,

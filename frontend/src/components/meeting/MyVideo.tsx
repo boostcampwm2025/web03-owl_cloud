@@ -9,14 +9,11 @@ import { useUserStore } from '@/store/useUserStore';
 import Image from 'next/image';
 import { useMemo, useRef, useState } from 'react';
 
-export default function MyVideo() {
+export default function MyVideo({ width = '160px' }: { width?: string }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useClickOutside(ref, () => setIsDropdownOpen(false), isDropdownOpen);
-
-  const onMoreClick = () => setIsDropdownOpen((prev) => !prev);
-  const closeDropdown = () => setIsDropdownOpen(false);
 
   const { media } = useMeetingStore();
   const { nickname, profilePath } = useUserStore();
@@ -39,7 +36,10 @@ export default function MyVideo() {
   const isSpeaking = useVoiceActivity(localAudioStream);
 
   return (
-    <div className="group flex-center relative aspect-video w-40 rounded-lg bg-neutral-700">
+    <div
+      style={{ width }}
+      className="group flex-center relative aspect-video max-h-full max-w-full rounded-lg bg-neutral-700"
+    >
       {/* 테두리 영역 */}
       {media.audioOn && isSpeaking && (
         <div className="pointer-events-none absolute inset-0 z-10 rounded-lg border-3 border-sky-500" />
