@@ -1,38 +1,61 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export function useVoiceActivity(
-  audioTrack: MediaStreamTrack | null | undefined,
+  stream: MediaStream | null | undefined,
+  options = { threshold: 10, hangoverMs: 400 },
 ) {
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (!audioTrack || audioTrack.readyState !== 'live') return;
+    if (!stream || stream.getAudioTracks().length === 0) return;
 
     const audioContext = new AudioContext();
-    const source = audioContext.createMediaStreamSource(
-      new MediaStream([audioTrack]),
-    );
+    const source = audioContext.createMediaStreamSource(stream);
     const analyser = audioContext.createAnalyser();
     analyser.fftSize = 256;
     source.connect(analyser);
 
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
+    let animationId: number;
 
     const checkVolume = () => {
       analyser.getByteFrequencyData(dataArray);
-      const average = dataArray.reduce((a, b) => a + b) / bufferLength;
 
-      // 감도 조절
-      setIsSpeaking(average > 40);
-      requestAnimationFrame(checkVolume);
+      let sum = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        sum += dataArray[i];
+      }
+      const average = sum / bufferLength;
+
+      if (average > options.threshold) {
+        setIsSpeaking(true);
+
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+      } else {
+        if (!timeoutRef.current) {
+          timeoutRef.current = setTimeout(() => {
+            setIsSpeaking(false);
+            timeoutRef.current = null;
+          }, options.hangoverMs);
+        }
+      }
+
+      animationId = requestAnimationFrame(checkVolume);
     };
 
     checkVolume();
+
     return () => {
+      cancelAnimationFrame(animationId);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       audioContext.close();
     };
-  }, [audioTrack]);
+  }, [stream, options.threshold, options.hangoverMs]);
 
   return isSpeaking;
 }

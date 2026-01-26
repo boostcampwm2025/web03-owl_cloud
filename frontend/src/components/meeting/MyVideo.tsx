@@ -23,14 +23,20 @@ export default function MyVideo() {
   const { producers } = useMeetingSocketStore();
 
   // 영상 정보 가져오기
-  const localStream = useMemo(() => {
+  const localVideoStream = useMemo(() => {
     const track = producers.videoProducer?.track;
     if (!track) return null;
     return new MediaStream([track]);
   }, [producers.videoProducer]);
 
-  // 마이크 소리 감지
-  const isSpeaking = useVoiceActivity(producers.audioProducer?.track);
+  // 음성 정보 가져오기
+  const localAudioStream = useMemo(() => {
+    const track = producers.audioProducer?.track;
+    if (!track) return null;
+    return new MediaStream([track]);
+  }, [producers.audioProducer]);
+
+  const isSpeaking = useVoiceActivity(localAudioStream);
 
   return (
     <div className="group flex-center relative aspect-video w-40 rounded-lg bg-neutral-700">
@@ -40,9 +46,9 @@ export default function MyVideo() {
       )}
 
       {/* 영상 */}
-      {media.videoOn && localStream ? (
+      {media.videoOn && localVideoStream ? (
         <div className="flex-center h-full w-full overflow-hidden rounded-lg">
-          <VideoView stream={localStream} />
+          <VideoView stream={localVideoStream} />
         </div>
       ) : profilePath ? (
         <Image

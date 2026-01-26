@@ -24,11 +24,17 @@ export default function SmVideo({
   const closeDropdown = () => setIsDropdownOpen(false);
 
   const streams = useMeetingStore((state) => state.memberStreams[user_id]);
+  const isSpeaking = useMeetingStore((state) => state.speakingMembers[user_id]);
 
   return (
     <div
       className={`group flex-center relative aspect-video w-40 rounded-lg bg-neutral-700`}
     >
+      {/* 테두리 영역 */}
+      {isSpeaking && (
+        <div className="pointer-events-none absolute inset-0 z-10 rounded-lg border-3 border-sky-500" />
+      )}
+
       {/* 영상 */}
       {streams?.cam ? (
         <div className="flex-center h-full w-full overflow-hidden rounded-lg">
