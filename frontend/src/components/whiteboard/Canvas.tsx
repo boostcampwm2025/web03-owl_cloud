@@ -340,10 +340,11 @@ export default function Canvas() {
             setEditingTextId(null);
             selectItem(null);
           }}
-          onSizeChange={(width, height, newY, newX) => {
+          onSizeChange={(width, height, newY, newX, newText) => {
             const updates: Partial<ShapeItem> = { width, height };
             if (newY !== undefined) updates.y = newY;
             if (newX !== undefined) updates.x = newX;
+            if (newText !== undefined) updates.text = newText;
 
             updateItem(editingTextId, updates);
           }}

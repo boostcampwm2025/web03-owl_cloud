@@ -15,6 +15,7 @@ export interface ShapeTextAreaProps {
     height: number,
     newY?: number,
     newX?: number,
+    text?: string,
   ) => void;
 }
 
@@ -189,7 +190,10 @@ export default function ShapeTextArea({
     setText(newText);
 
     // 텍스트 변경 시 도형 높이 조절 (너비는 고정)
-    if (!ref.current || !stageRef.current || !onSizeChange) return;
+    if (!ref.current || !stageRef.current || !onSizeChange) {
+      onChange(newText);
+      return;
+    }
 
     const textarea = ref.current;
     const stage = stageRef.current;
@@ -227,7 +231,9 @@ export default function ShapeTextArea({
       }
 
       lastSizeRef.current = { width: shapeItem.width, height: actualHeight };
-      onSizeChange(shapeItem.width, actualHeight, newY, newX);
+      onSizeChange(shapeItem.width, actualHeight, newY, newX, newText);
+    } else {
+      onChange(newText);
     }
   };
 
