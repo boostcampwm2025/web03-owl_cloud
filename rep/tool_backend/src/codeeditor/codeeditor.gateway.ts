@@ -7,7 +7,6 @@ import {
   OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
@@ -32,8 +31,6 @@ import { CodeeditorRepository } from '@/infra/memory/tool';
   pingTimeout: 20 * 1000, // ping pong 허용 시간 ( 20초 )
 })
 export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConnection {
-  @WebSocketServer()
-  private readonly server: Server;
 
   private readonly logger = new Logger();
 
@@ -78,7 +75,8 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
     const roomName = this.codeeditorService.makeNamespace(payload.room_id); // 방가입
     await client.join(roomName);
     client.data.roomName = roomName;
-
+    
+    // 메모리에 존재하면 가져오고 없으면 cache에서 가져온다.  
     const doc = this.codeeditorRepo.get(roomName);
     if (doc) {
       this.logger.log(`[Sync] 서버에서 신규 유저 ${payload.user_id}에게 직접 데이터 전송`);

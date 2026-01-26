@@ -1,6 +1,5 @@
 import { Global, Module } from "@nestjs/common";
-import { CodeeditorRepository } from "./tool";
-import { WhiteboardRepository } from "./tool/whiteboard-repo";
+import { CodeeditorRepository, WhiteboardRepository } from "./tool";
 
 
 @Global()
