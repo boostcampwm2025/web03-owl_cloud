@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
         hostname: 'picsum.photos',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: process.env.NEXT_PUBLIC_S3_HOSTNAME as string,
+        pathname: '/**',
+      },
     ],
   },
 
