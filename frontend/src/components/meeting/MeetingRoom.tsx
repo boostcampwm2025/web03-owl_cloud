@@ -23,8 +23,9 @@ import {
   ProviderToolInfo,
 } from '@/types/meeting';
 import { createConsumeHelpers } from '@/utils/createConsumeHelpers';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import VideoView from './media/VideoView';
+import AudioView from '@/components/meeting/media/AudioView';
 
 export default function MeetingRoom({ meetingId }: { meetingId: string }) {
   const {
@@ -62,8 +63,11 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
   const { socket: mainSocket } = useMeetingSocket();
   const { codeEditorSocket } = useToolSocketStore();
 
-  const screenStream = useMeetingStore((state) =>
+  const screenVideoStream = useMeetingStore((state) =>
     screenSharer ? state.memberStreams[screenSharer.id]?.screen_video : null,
+  );
+  const screenAudioStream = useMeetingStore((state) =>
+    screenSharer ? state.memberStreams[screenSharer.id]?.screen_audio : null,
   );
 
   useEffect(() => {
@@ -297,10 +301,13 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
       <section className="relative flex-1 overflow-hidden">
         {/* 워크스페이스 / 코드 에디터 등의 컴포넌트가 들어갈 공간 */}
         <div className="flex h-full w-full overflow-hidden">
-          {screenStream && (
+          {screenVideoStream && (
             <div className="group flex-center relative aspect-video w-full rounded-lg bg-neutral-700">
               <div className="flex-center h-full w-full overflow-hidden rounded-lg">
-                <VideoView stream={screenStream} mirrored={false} />
+                <VideoView stream={screenVideoStream} mirrored={false} />
+                {screenAudioStream && (
+                  <AudioView stream={screenAudioStream} userId={userId} />
+                )}
                 <div className="absolute bottom-6 left-10 rounded-md bg-black/60 px-3 py-1.5 text-sm font-medium text-white">
                   {screenSharer?.nickname}님의 화면
                 </div>
