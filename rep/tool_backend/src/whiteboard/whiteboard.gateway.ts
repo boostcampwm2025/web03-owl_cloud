@@ -17,6 +17,7 @@ import { KafkaService } from '@/infra/event-stream/kafka/event-stream.service';
 import { EVENT_STREAM_NAME } from '@/infra/event-stream/event-stream.constants';
 import { WHITEBOARD_WEBSOCKET } from '@/infra/websocket/websocket.constants';
 import { WhiteboardWebsocket } from '@/infra/websocket/whiteboard/whiteboard.service';
+import { WhiteboardRepository } from '@/infra/memory/tool/whiteboard-repo';
 
 @WebSocketGateway({
   namespace: process.env.NODE_BACKEND_WEBSOCKET_WHITEBOARD,
@@ -37,6 +38,7 @@ export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConne
   constructor(
     private readonly whiteboardService: WhiteboardService,
     private readonly kafkaService: KafkaService,
+    private readonly whiteboard : WhiteboardRepository,
     @Inject(WHITEBOARD_WEBSOCKET) private readonly whiteboardSocket: WhiteboardWebsocket,
   ) {}
 
