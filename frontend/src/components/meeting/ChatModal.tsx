@@ -1,25 +1,35 @@
-import { DUMMY_CHATS } from '@/app/[meetingId]/dummy';
 import { CloseIcon, ImageIcon } from '@/assets/icons/common';
 import { FileIcon, SendIcon } from '@/assets/icons/meeting';
 import ChatListItem from '@/components/meeting/ChatListItem';
+import { useChatSender } from '@/hooks/useChatSender';
+import { useChatStore } from '@/store/useChatStore';
+import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
 import { useMeetingStore } from '@/store/useMeetingStore';
+import { useUserStore } from '@/store/useUserStore';
 import { MouseEvent, useState } from 'react';
 
 export default function ChatModal() {
-  const chats = DUMMY_CHATS;
-
   const { setIsOpen } = useMeetingStore();
   const [value, setValue] = useState('');
   const [files, setFiles] = useState([]);
+
+  const { userId, nickname, profilePath } = useUserStore();
+  const messages = useChatStore((s) => s.messages);
+  const socket = useMeetingSocketStore((s) => s.socket);
+
+  const { sendMessage: sendTextMessage } = useChatSender({
+    socket,
+    userId,
+    nickname,
+    profileImg: profilePath as string,
+  });
 
   const onCloseClick = () => setIsOpen('isChatOpen', false);
 
   // 이후 form 관련 라이브러리 사용 시 수정 필요
   const onSubmit = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    if (value.trim().length === 0) return;
-
-    // console.log(value);
+    sendTextMessage(value);
     setValue('');
   };
 
@@ -41,7 +51,7 @@ export default function ChatModal() {
 
       {/* 채팅 내역 */}
       <section className="flex-1 overflow-y-auto">
-        {chats.map((chat) => (
+        {messages.map((chat) => (
           <ChatListItem key={chat.id} {...chat} />
         ))}
       </section>
