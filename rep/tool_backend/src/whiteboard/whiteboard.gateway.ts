@@ -52,21 +52,6 @@ export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConne
         // 클라이언트가 보낸 데이터 확인
         const { token, type } = socket.handshake.auth as AuthType;
 
-        // TODO : 여기 if 부분만 나중에 삭제하면 됨
-        // 테스트용 임시 코드 -> 가짜 mock data 역할
-        if (token === 'temp-ticket') {
-          socket.data.payload = {
-            user_id: `test-${socket.id}`,
-            room_id: 'test-room',
-            clientType: 'main',
-            tool: 'whiteboard',
-            socket_id: socket.id,
-            ticket: token,
-          };
-          this.logger.log('[TEST] 웹소켓 인증 우회 접속');
-          return next();
-        }
-
         // 검사 구간
         // 토큰이 없거나 클라이언트 타입이 이상하면 next(Error) 호출
         if (!token) return next(new Error('TOKEN_REQUIRED'));
@@ -112,7 +97,7 @@ export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConne
     client.to(roomName).emit('request-sync');
 
     // Kafka 이벤트 발행(로그,동기화)
-    if (payload.clientType === 'main' && payload.ticket !== 'temp-ticket') {
+    if (payload.clientType === 'main') {
       this.kafkaService.emit(EVENT_STREAM_NAME.WHITEBOARD_ENTER, {
         room_id: payload.room_id,
         user_id: payload.user_id,

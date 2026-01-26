@@ -48,9 +48,9 @@ export default function MeetingMenu() {
   } = useProduce();
 
   const { openCodeEditor, closeCodeEditor } = useCodeEditorSocket();
-  
+
   // 화이트보드 연결 / 해제 함수 가져오기
-  const { connectWhiteboard, disconnectWhiteboard } = useWhiteboardSocket();
+  const { openWhiteboard, closeWhiteboard } = useWhiteboardSocket();
 
   const isMeSharing = media.screenShareOn;
   const isSomeoneSharing = screenSharer !== null;
@@ -100,10 +100,10 @@ export default function MeetingMenu() {
   const onWorkspaceClick = () => {
     if (isWhiteboardOpen) {
       // 이미 열려있으면 -> 연결 끊고 닫기
-      disconnectWhiteboard();
+      closeWhiteboard();
     } else {
       // 닫혀있으면 -> 연결 시도
-      connectWhiteboard();
+      openWhiteboard();
     }
     setIsOpen('isWhiteboardOpen', !isWhiteboardOpen);
   };
