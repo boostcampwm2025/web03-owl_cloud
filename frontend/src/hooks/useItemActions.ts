@@ -39,6 +39,26 @@ export function useItemActions() {
     return yMap;
   };
 
+  // Y.Map 복제 (delete 후 재삽입 시 필요함)
+  const cloneYMap = (yMap: Y.Map<YMapValue>): Y.Map<YMapValue> => {
+    const clone = new Y.Map<YMapValue>();
+    yMap.forEach((value, key) => {
+      clone.set(key, value);
+    });
+    return clone;
+  };
+
+  // z-order 변경
+  const reorderItems = (fromIndex: number, toIndex: number) => {
+    if (!yItems?.doc) return;
+
+    yItems.doc.transact(() => {
+      const item = cloneYMap(yItems.get(fromIndex) as Y.Map<YMapValue>);
+      yItems.delete(fromIndex, 1);
+      yItems.insert(toIndex, [item]);
+    }, yjsOrigin);
+  };
+
   // 텍스트 추가
   const addText = (payload?: Partial<Omit<TextItem, 'id' | 'type'>>) => {
     if (!yItems || !yItems.doc) return;
@@ -283,66 +303,46 @@ export function useItemActions() {
 
   // 맨 앞으로
   const bringToFront = (id: string) => {
-    if (!yItems || !yItems.doc) return;
+    if (!yItems) return;
 
     const yMaps = yItems.toArray();
-    const index = yMaps.findIndex((yMap) => yMap.get('id') === id);
+    const index = yMaps.findIndex((yMap) => yMap?.get('id') === id);
     if (index === -1 || index === yMaps.length - 1) return;
 
-    const yMap = yMaps[index];
-
-    yItems.doc.transact(() => {
-      yItems.delete(index, 1);
-      yItems.push([yMap]);
-    }, yjsOrigin);
+    reorderItems(index, yMaps.length - 1);
   };
 
   // 맨 뒤로
   const sendToBack = (id: string) => {
-    if (!yItems || !yItems.doc) return;
+    if (!yItems) return;
 
     const yMaps = yItems.toArray();
-    const index = yMaps.findIndex((yMap) => yMap.get('id') === id);
+    const index = yMaps.findIndex((yMap) => yMap?.get('id') === id);
     if (index === -1 || index === 0) return;
 
-    const yMap = yMaps[index];
-
-    yItems.doc.transact(() => {
-      yItems.delete(index, 1);
-      yItems.insert(0, [yMap]);
-    }, yjsOrigin);
+    reorderItems(index, 0);
   };
 
   // 한 단계 앞으로
   const bringForward = (id: string) => {
-    if (!yItems || !yItems.doc) return;
+    if (!yItems) return;
 
     const yMaps = yItems.toArray();
-    const currentIndex = yMaps.findIndex((yMap) => yMap.get('id') === id);
-    if (currentIndex === -1 || currentIndex === yMaps.length - 1) return;
+    const index = yMaps.findIndex((yMap) => yMap?.get('id') === id);
+    if (index === -1 || index === yMaps.length - 1) return;
 
-    const yMap = yMaps[currentIndex];
-
-    yItems.doc.transact(() => {
-      yItems.delete(currentIndex, 1);
-      yItems.insert(currentIndex + 1, [yMap]);
-    }, yjsOrigin);
+    reorderItems(index, index + 1);
   };
 
   // 한 단계 뒤로
   const sendBackward = (id: string) => {
-    if (!yItems || !yItems.doc) return;
+    if (!yItems) return;
 
     const yMaps = yItems.toArray();
-    const currentIndex = yMaps.findIndex((yMap) => yMap.get('id') === id);
-    if (currentIndex <= 0) return;
+    const index = yMaps.findIndex((yMap) => yMap?.get('id') === id);
+    if (index <= 0) return;
 
-    const yMap = yMaps[currentIndex];
-
-    yItems.doc.transact(() => {
-      yItems.delete(currentIndex, 1);
-      yItems.insert(currentIndex - 1, [yMap]);
-    }, yjsOrigin);
+    reorderItems(index, index - 1);
   };
 
   return {
