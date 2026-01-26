@@ -15,7 +15,7 @@ const findTopLevelItem = (node: Konva.Node): Konva.Node => {
 
 export function useEraser() {
   const cursorMode = useWhiteboardLocalStore((state) => state.cursorMode);
-  const { deleteItem } = useItemActions();
+  const { deleteItems } = useItemActions();
 
   const [isErasing, setIsErasing] = useState(false);
   const [erasedIds, setErasedIds] = useState<Set<string>>(new Set());
@@ -28,7 +28,8 @@ export function useEraser() {
     const id = topLevelItem.id();
 
     if (id && !erasedIds.has(id)) {
-      deleteItem(id);
+      // 지울 대상은 투명도 줌
+      topLevelItem.opacity(0.3);
       setErasedIds((prev) => new Set(prev).add(id));
     }
   };
@@ -58,6 +59,11 @@ export function useEraser() {
 
   const handleEraserMouseUp = () => {
     if (!isErasing) return;
+
+    if (erasedIds.size > 0) {
+      deleteItems(Array.from(erasedIds));
+    }
+
     setIsErasing(false);
     setErasedIds(new Set());
   };

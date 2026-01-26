@@ -131,7 +131,7 @@ export function usePointsAnimation({
   isSelected,
 }: UsePointsAnimationProps) {
   const nodeRef = useRef<Konva.Node>(null);
-  const prevPointsRef = useRef(points);
+  const prevPointsRef = useRef(points || []);
   const animationRef = useRef<Konva.Tween | null>(null);
   const isSelectedRef = useRef(isSelected);
 
@@ -142,6 +142,7 @@ export function usePointsAnimation({
   useEffect(() => {
     if (
       !nodeRef.current ||
+      !points ||
       points.length < 2 ||
       isDragging ||
       isSelectedRef.current
@@ -217,7 +218,7 @@ export function usePointsAnimation({
       }
     }
 
-    prevPointsRef.current = points;
+    prevPointsRef.current = points || [];
   }, [points, isDragging]);
 
   return nodeRef;
