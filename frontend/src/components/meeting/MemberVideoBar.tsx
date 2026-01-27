@@ -29,6 +29,10 @@ export default function MemberVideoBar() {
     return 1 + Math.ceil((memberCount - 5) / MEMBERS_PER_PAGE);
   }, [members]);
 
+  if (currentPage > totalPages) {
+    setCurrentPage(totalPages);
+  }
+
   const sortedMembers = useMemo(() => {
     return orderedMemberIds.map((id) => members[id]).filter(Boolean);
   }, [orderedMemberIds, members]);
