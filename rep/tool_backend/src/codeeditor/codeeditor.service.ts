@@ -2,7 +2,7 @@ import { GuardService } from '@/guards/guard.service';
 import { ToolBackendPayload } from '@/guards/guard.type';
 import { Inject, Injectable } from '@nestjs/common';
 import { CODEEDITOR_GROUP } from './codeeditor.constants';
-import { encodeUpdate, REDIS_SERVER, streamKey } from '@/infra/cache/cache.constants';
+import { CACHE_CODEEDITOR_NAMESPACE_NAME, CACHE_NAMESPACE_NAME, REDIS_SERVER } from '@/infra/cache/cache.constants';
 import type { RedisClientType } from 'redis';
 import { CodeeditorRepository, YjsUpdateClientPayload } from '@/infra/memory/tool';
 
@@ -37,68 +37,6 @@ export class CodeeditorService {
   makeNamespace(room_id: string): string {
     return `${CODEEDITOR_GROUP.CODEEDITOR}:${room_id}`;
   }
-
-  // redis에 스트림을 처리 
-  async appendUpdateLog(args : {
-    room_id : string;
-    prevIdx: string;
-    update: Buffer;
-    user_id : string;
-  }) {
-    // redis에 저장할 키 이름
-    const key = streamKey(args.room_id);
-
-    const updateIdx = await this.redis.xAdd(
-      key,
-      '*', // 자동으로 생성
-      {
-        prev_idx: args.prevIdx,
-        update: encodeUpdate(args.update),
-        ts: Date.now().toString(),
-        ...(args.user_id ? { user_id: args.user_id } : {}),
-      },
-      {
-        // 메모리 보호: 대충 5000개 유지 (필요에 맞게)
-        TRIM: { strategy: 'MAXLEN', strategyModifier: '~', threshold: 5000 },
-      },
-    );
-
-    return { updateIdx };
-  };
-
-  // 마지막 stream id를 가져온다.
-  async getLastUpdateIdx(roomId: string): Promise<string> {
-    const key = streamKey(roomId);
-    const rows = await this.redis.xRevRange(key, '+', '-', { COUNT: 1 }); // +는 가장 최신 부터 -는 가장 오래된 id까지 한개만 가져온다.
-    if (rows.length === 0) return '0-0';
-    return rows[0].id;
-  };
-
-  // client에 idx부터 로그를 쭉 가져온다. 
-  async pullUpdatesAfter(roomId: string, fromIdx: string): Promise<Array<{ id: string; update: Buffer; prevIdx?: string }>> {
-    const key = streamKey(roomId);
-
-    // fromIdx "미포함" 범위: (fromIdx
-    const start = `(${fromIdx}`;
-    const rows = await this.redis.xRange(key, start, '+');
-
-    // 현재 이후에 idx를 전체적으로 반납한다. 
-    return rows.map((r) => {
-      const raw = r.message.update;
-
-      if (typeof raw !== 'string') {
-        throw new Error('Invalid update type: expected base64 string');
-      }
-
-      return {
-        id: r.id,
-        update: Buffer.from(raw, 'base64'),
-        prevIdx: typeof r.message.prev_idx === 'string'
-          ? r.message.prev_idx
-          : undefined,
-      };
-    });
-  };
 
   // buffer가 ydocs가 허용하는 buffer인지 검증
   normalizeToBuffer(value: unknown): Buffer | null {
@@ -138,4 +76,20 @@ export class CodeeditorService {
 
     return null; // 둘 다 없음
   }
+
+  // redis 스트림으로 처리
+  // stream 쌓는법 
+  // key이름 생성법 
+  private streamKey(room_id : string) : string {
+    return `${CACHE_NAMESPACE_NAME.CODEEDITOR}:${room_id}:${CACHE_CODEEDITOR_NAMESPACE_NAME.STREAM}`;
+  };
+  private snapshotKey(room_id : string) : string {
+    return `${CACHE_NAMESPACE_NAME.CODEEDITOR}:${room_id}:${CACHE_CODEEDITOR_NAMESPACE_NAME.SNAPSHOT}`;
+  };
+  private snapshotLockKey(room_id : string) : string {
+    return `${CACHE_NAMESPACE_NAME.CODEEDITOR}:${room_id}:${CACHE_CODEEDITOR_NAMESPACE_NAME.SNAPSHOT_LOCK}`;
+  };
+
+  
+
 }

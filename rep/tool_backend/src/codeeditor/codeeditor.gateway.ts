@@ -75,12 +75,12 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
     if (!payload) {
       client.disconnect(true);
       return;
-    }
+    };
     const roomName = this.codeeditorService.makeNamespace(payload.room_id); // 방가입
     await client.join(roomName);
     client.data.roomName = roomName;
     
-    // 메모리에 존재하면 가져오고 없으면 cache에서 가져온다.  
+    // 메모리에 존재하면 가져오고 없으면 cache에서 가져온다. ( 이 부분을 cache에서 가져오는 걸로 수정을 한다. )  
     this.codeeditorRepo.ensure(roomName); // 현재 존재하는지 확인하고 없다면 새로 생성
     const full = this.codeeditorRepo.encodeFull(roomName); // 그 업데이트 본을 준다. 
 
@@ -209,6 +209,9 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
           updates: appliedUpdates,
         });
       }
+
+      // 모든 업데이트가 끝났을때 redis에 업데이트 한다. 
+
     } catch (error) {
       this.logger.error(`Yjs Update Error: ${error?.message ?? error}`);
       const msg: YjsSyncServerPayload = { type: 'error', ok: false, code: 'INTERNAL', message: error?.message };
