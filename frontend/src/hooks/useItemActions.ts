@@ -282,7 +282,9 @@ export function useItemActions() {
 
     yItems.doc.transact(() => {
       Object.entries(changes).forEach(([key, value]) => {
-        if (value !== undefined) {
+        if (value === null) {
+          yMap.delete(key);
+        } else if (value !== undefined) {
           yMap.set(key, value);
         }
       });
@@ -346,6 +348,14 @@ export function useItemActions() {
     reorderItems(index, index - 1);
   };
 
+  const performTransaction = (fn: () => void) => {
+    if (!yItems || !yItems.doc) {
+      fn();
+      return;
+    }
+    yItems.doc.transact(fn, yjsOrigin);
+  };
+
   return {
     addText,
     addArrow,
@@ -361,5 +371,6 @@ export function useItemActions() {
     sendToBack,
     bringForward,
     sendBackward,
+    performTransaction,
   };
 }
