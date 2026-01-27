@@ -61,19 +61,10 @@ export default function TextArea({
     // 크기
     const nodeWidth = textNode.width() * stageScale;
     const nodeHeight = textNode.height() * stageScale;
-    const keepCentered = Boolean(textItem.parentPolygonId);
 
     const positionTextarea = () => {
-      if (keepCentered) {
-        const centerX = absPos.x + nodeWidth / 2;
-        const centerY = absPos.y + nodeHeight / 2;
-        const currentHeight = textarea.offsetHeight;
-        textarea.style.left = `${centerX - nodeWidth / 2}px`;
-        textarea.style.top = `${centerY - currentHeight / 2}px`;
-      } else {
-        textarea.style.left = `${absPos.x}px`;
-        textarea.style.top = `${absPos.y}px`;
-      }
+      textarea.style.left = `${absPos.x}px`;
+      textarea.style.top = `${absPos.y}px`;
     };
 
     textarea.style.width = `${nodeWidth}px`;
@@ -116,7 +107,7 @@ export default function TextArea({
     positionTextarea();
 
     const notifyBounds = () => {
-      if (!keepCentered || !onBoundsChange) return;
+      if (!onBoundsChange) return;
 
       const canvasWidth = nodeWidth / stageScale;
       const canvasHeight = textarea.offsetHeight / stageScale;
