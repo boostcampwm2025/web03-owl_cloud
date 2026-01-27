@@ -10,6 +10,7 @@ export { default as MarkedChatIcon } from './markedChatIcon.svg';
 export { default as MemberIcon } from './memberIcon.svg';
 export { default as MicOffIcon } from './micOffIcon.svg';
 export { default as MicOnIcon } from './micOnIcon.svg';
+export { default as MoreMenuIcon } from './moreMenuIcon.svg';
 export { default as PinIcon } from './pinIcon.svg';
 export { default as SendIcon } from './sendIcon.svg';
 export { default as ShareIcon } from './shareIcon.svg';

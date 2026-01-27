@@ -6,11 +6,22 @@ import MemberVideo from '@/components/meeting/MemberVideo';
 import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
 import { useMeetingStore } from '@/store/useMeetingStore';
 import { ConsumerInfo } from '@/types/meeting';
-import { getConsumerInstances, getVideoConsumerIds } from '@/utils/meeting';
+import {
+  getConsumerInstances,
+  getMembersPerPage,
+  getVideoConsumerIds,
+} from '@/utils/meeting';
 import { useEffect, useMemo, useState } from 'react';
+import { useWindowSize } from '@/hooks/useWindowSize';
 
 export default function MemberVideoBar() {
-  const MEMBERS_PER_PAGE = 6;
+  const { width } = useWindowSize();
+
+  const MEMBERS_PER_PAGE = useMemo(() => {
+    return getMembersPerPage(width);
+  }, [width]);
+  const firstPageMemberCount = MEMBERS_PER_PAGE - 1;
+
   const { members, setMemberStream, removeMemberStream, orderedMemberIds } =
     useMeetingStore();
   const { socket, recvTransport, device, addConsumers } =
@@ -20,9 +31,11 @@ export default function MemberVideoBar() {
   // 전체 페이지 수 계산 (첫 페이지는 MyVideo 포함)
   const totalPages = useMemo(() => {
     const memberCount = Object.values(members).length;
-    if (memberCount <= 5) return 1;
-    return 1 + Math.ceil((memberCount - 5) / MEMBERS_PER_PAGE);
-  }, [members]);
+    if (memberCount <= firstPageMemberCount) return 1;
+    return (
+      1 + Math.ceil((memberCount - firstPageMemberCount) / MEMBERS_PER_PAGE)
+    );
+  }, [members, firstPageMemberCount, MEMBERS_PER_PAGE]);
 
   if (currentPage > totalPages) {
     setCurrentPage(totalPages);
@@ -36,11 +49,13 @@ export default function MemberVideoBar() {
   const visibleMembers = useMemo(() => {
     const isFirstPage = currentPage === 1;
 
-    const start = isFirstPage ? 0 : (currentPage - 2) * MEMBERS_PER_PAGE + 5;
-    const end = isFirstPage ? 5 : start + MEMBERS_PER_PAGE;
+    const start = isFirstPage
+      ? 0
+      : (currentPage - 2) * MEMBERS_PER_PAGE + firstPageMemberCount;
+    const end = isFirstPage ? firstPageMemberCount : start + MEMBERS_PER_PAGE;
 
     return sortedMembers.slice(start, end);
-  }, [sortedMembers, currentPage]);
+  }, [sortedMembers, currentPage, firstPageMemberCount, MEMBERS_PER_PAGE]);
 
   const hasPrevPage = currentPage > 1;
   const hasNextPage = currentPage < totalPages;
@@ -114,7 +129,7 @@ export default function MemberVideoBar() {
     };
 
     syncVideoStreams();
-  }, [visibleMembers, members, socket, recvTransport, device]);
+  }, [visibleMembers, socket, recvTransport, device]);
 
   const onPrevClick = () => {
     if (!hasPrevPage) return;
