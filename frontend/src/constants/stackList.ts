@@ -53,12 +53,6 @@ export const STACK_LIST: StackIconInfo[] = [
     category: 'backend',
   },
   {
-    id: 'azul',
-    name: 'Azul',
-    src: '/icons/stack/backend/azul.svg',
-    category: 'backend',
-  },
-  {
     id: 'deno',
     name: 'Deno',
     src: '/icons/stack/backend/deno.svg',
@@ -261,12 +255,6 @@ export const STACK_LIST: StackIconInfo[] = [
     category: 'desktop',
   },
   {
-    id: 'gtk',
-    name: 'Gtk',
-    src: '/icons/stack/desktop/gtk.svg',
-    category: 'desktop',
-  },
-  {
     id: 'qt',
     name: 'Qt',
     src: '/icons/stack/desktop/qt.svg',
@@ -302,12 +290,6 @@ export const STACK_LIST: StackIconInfo[] = [
     id: 'bash',
     name: 'Bash',
     src: '/icons/stack/devops/bash.svg',
-    category: 'devops',
-  },
-  {
-    id: 'bsd',
-    name: 'Bsd',
-    src: '/icons/stack/devops/bsd.svg',
     category: 'devops',
   },
   {
@@ -681,12 +663,6 @@ export const STACK_LIST: StackIconInfo[] = [
     category: 'game',
   },
   {
-    id: 'processing',
-    name: 'Processing',
-    src: '/icons/stack/game/processing.svg',
-    category: 'game',
-  },
-  {
     id: 'unity',
     name: 'Unity',
     src: '/icons/stack/game/unity.svg',
@@ -868,12 +844,6 @@ export const STACK_LIST: StackIconInfo[] = [
     id: 'ocaml',
     name: 'Ocaml',
     src: '/icons/stack/language/ocaml.svg',
-    category: 'language',
-  },
-  {
-    id: 'octave',
-    name: 'Octave',
-    src: '/icons/stack/language/octave.svg',
     category: 'language',
   },
   {
