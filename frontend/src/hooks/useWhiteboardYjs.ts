@@ -5,6 +5,7 @@ import { Socket } from 'socket.io-client';
 import { useWhiteboardSharedStore } from '@/store/useWhiteboardSharedStore';
 import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 import { useWhiteboardAwarenessStore } from '@/store/useWhiteboardAwarenessStore';
+import { useUserStore } from '@/store/useUserStore';
 import { NO_TRANSPARENT_PALETTE } from '@/constants/colors';
 import type { WhiteboardItem } from '@/types/whiteboard';
 import type { YMapValue } from '@/types/whiteboard/yjs';
@@ -15,6 +16,7 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
   const initializedRef = useRef(false);
 
   const setItems = useWhiteboardSharedStore((state) => state.setItems);
+  const { nickname } = useUserStore();
 
   useEffect(() => {
     if (initializedRef.current) {
@@ -66,7 +68,7 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
       awareness.setLocalState({
         user: {
           id: userId,
-          name: userId,
+          name: nickname || '알 수 없음',
           color: randomColor,
         },
         cursor: null,
@@ -154,7 +156,6 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
 
       // 중복 데이터를 Yjs에서 삭제
       if (indexesToDelete.length > 0) {
-        console.log(`[Yjs] 중복 아이템 ${indexesToDelete.length}개 제거`);
         ydoc.transact(() => {
           indexesToDelete.reverse().forEach((index) => {
             yItems.delete(index, 1);

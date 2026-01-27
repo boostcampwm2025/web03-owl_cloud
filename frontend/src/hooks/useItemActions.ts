@@ -301,6 +301,24 @@ export function useItemActions() {
     }, yjsOrigin);
   };
 
+  // 여러 아이템 한번에 삭제 (지우개로 빠르게 각각 삭제하니까 몇 몇 아이템이 동기화가 안되는 문제가 있음)
+  const deleteItems = (ids: string[]) => {
+    if (!yItems || !yItems.doc || ids.length === 0) return;
+
+    yItems.doc.transact(() => {
+      const yMaps = yItems.toArray();
+      const idsToDelete = new Set(ids);
+
+      // 역순으로 순회하면서 삭제
+      for (let index = yMaps.length - 1; index >= 0; index--) {
+        const id = yMaps[index].get('id');
+        if (id && idsToDelete.has(id as string)) {
+          yItems.delete(index, 1);
+        }
+      }
+    }, yjsOrigin);
+  };
+
   // 맨 앞으로
   const bringToFront = (id: string) => {
     if (!yItems) return;
@@ -356,6 +374,7 @@ export function useItemActions() {
     addDrawing,
     updateItem,
     deleteItem,
+    deleteItems,
     bringToFront,
     sendToBack,
     bringForward,

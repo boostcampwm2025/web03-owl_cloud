@@ -17,6 +17,10 @@ import { EVENT_STREAM_NAME } from '@/infra/event-stream/event-stream.constants';
 import { WHITEBOARD_WEBSOCKET } from '@/infra/websocket/websocket.constants';
 import { WhiteboardWebsocket } from '@/infra/websocket/whiteboard/whiteboard.service';
 import { WhiteboardRepository } from '@/infra/memory/tool';
+import * as Y from 'yjs';
+
+//메모리에 저장함 추후 변경
+const roomDocs = new Map<string, Y.Doc>();
 
 @WebSocketGateway({
   namespace: process.env.NODE_BACKEND_WEBSOCKET_WHITEBOARD,
@@ -49,21 +53,6 @@ export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConne
       try {
         // 클라이언트가 보낸 데이터 확인
         const { token, type } = socket.handshake.auth as AuthType;
-
-        // TODO : 여기 if 부분만 나중에 삭제하면 됨
-        // 테스트용 임시 코드 -> 가짜 mock data 역할
-        if (token === 'temp-ticket') {
-          socket.data.payload = {
-            user_id: `test-${socket.id}`,
-            room_id: 'test-room',
-            clientType: 'main',
-            tool: 'whiteboard',
-            socket_id: socket.id,
-            ticket: token,
-          };
-          this.logger.log('[TEST] 웹소켓 인증 우회 접속');
-          return next();
-        }
 
         // 검사 구간
         // 토큰이 없거나 클라이언트 타입이 이상하면 next(Error) 호출
@@ -106,11 +95,19 @@ export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConne
 
     console.log(payload.user_id);
 
-    // 나중에 들어왔을때 동기화 요청 (기존 사용자에게 전체 상태 요청)
-    client.to(roomName).emit('request-sync');
+    // 서버에 저장된 Y.Doc이 있으면 신규 유저에게 전송함
+    const doc = roomDocs.get(roomName);
+    if (doc) {
+      this.logger.log(`[Sync] 서버에서 신규 유저 ${payload.user_id}에게 직접 데이터 전송`);
+      const fullUpdate = Y.encodeStateAsUpdate(doc);
+      client.emit('yjs-update', fullUpdate);
+    } else {
+      // 서버에 Doc이 없으면 다른 사용자에게 요청
+      client.to(roomName).emit('request-sync');
+    }
 
     // Kafka 이벤트 발행(로그,동기화)
-    if (payload.clientType === 'main' && payload.ticket !== 'temp-ticket') {
+    if (payload.clientType === 'main') {
       this.kafkaService.emit(EVENT_STREAM_NAME.WHITEBOARD_ENTER, {
         room_id: payload.room_id,
         user_id: payload.user_id,
@@ -201,6 +198,15 @@ export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConne
 
       const roomName = client.data.roomName;
 
+      // 서버에 저장
+      let doc = roomDocs.get(roomName);
+      if (!doc) {
+        doc = new Y.Doc();
+        roomDocs.set(roomName, doc);
+      }
+      Y.applyUpdate(doc, new Uint8Array(update));
+
+      // 브로드캐스트
       client.to(roomName).volatile.emit('yjs-update', update);
     } catch (error) {
       this.logger.error(`Yjs Update Error: ${error.message}`);
@@ -217,5 +223,19 @@ export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConne
     } catch (error) {
       this.logger.error(`Awareness Update Error: ${error.message}`);
     }
+  }
+
+  // 동기화 요청 처리
+  @SubscribeMessage('request-sync')
+  handleRequestSync(@ConnectedSocket() client: Socket) {
+    const roomName = client.data.roomName;
+    const doc = roomDocs.get(roomName);
+
+    if (!doc) return;
+
+    const fullUpdate = Y.encodeStateAsUpdate(doc);
+    client.emit('yjs-update', fullUpdate);
+
+    this.logger.log(`[Sync] 동기화 요청 처리: ${roomName}`);
   }
 }
