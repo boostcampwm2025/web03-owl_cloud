@@ -51,10 +51,10 @@ export function useEraser() {
     const pos = stage.getPointerPosition();
     if (!pos) return;
 
-    const shape = stage.getIntersection(pos);
-    if (shape) {
+    const shapes = stage.getAllIntersections(pos);
+    shapes.forEach((shape) => {
       eraseItem(shape);
-    }
+    });
   };
 
   const handleEraserMouseUp = () => {
