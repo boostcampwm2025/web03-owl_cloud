@@ -111,6 +111,8 @@ export default function ShapeTextArea({
     textarea.style.fontSize = `${fontSize * stage.scaleX()}px`;
     textarea.style.fontFamily = shapeItem.fontFamily || 'Arial';
     textarea.style.color = shapeItem.textColor || '#000000';
+    textarea.style.fontStyle = shapeItem.fontStyle || 'normal';
+    textarea.style.textDecoration = shapeItem.textDecoration || 'none';
     textarea.style.background = 'transparent';
     textarea.style.border = 'none';
     textarea.style.outline = 'none';
@@ -124,7 +126,7 @@ export default function ShapeTextArea({
     const padding = 4;
     textarea.style.padding = `${padding * stage.scaleX()}px`;
 
-    textarea.style.textAlign = 'center';
+    textarea.style.textAlign = shapeItem.textAlign || 'center';
     textarea.style.boxSizing = 'border-box';
     textarea.style.zIndex = '1000';
 

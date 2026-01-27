@@ -22,7 +22,6 @@ export interface TextItem extends BaseItem {
   wrap: TextWrap;
   rotation: number;
   width: number;
-  parentPolygonId?: string;
 }
 
 export interface ArrowItem extends BaseItem {
@@ -72,10 +71,14 @@ export interface ShapeItem extends BaseItem {
   opacity?: number;
   dash?: number[];
   cornerRadius?: number;
+  // 텍스트 속성
   text?: string;
   fontSize?: number;
   fontFamily?: string;
+  fontStyle?: string;
+  textDecoration?: string;
   textColor?: string;
+  textAlign?: TextAlignment;
 }
 
 // Image Item

@@ -204,8 +204,10 @@ export default function ShapeItem({
         text={shapeItem.text}
         fontSize={shapeItem.fontSize || 16}
         fontFamily={shapeItem.fontFamily || 'Arial'}
+        fontStyle={shapeItem.fontStyle || 'normal'}
+        textDecoration={shapeItem.textDecoration || ''}
         fill={shapeItem.textColor || '#000000'}
-        align="center"
+        align={shapeItem.textAlign || 'center'}
         verticalAlign="middle"
         width={textWidth}
         height={height}
