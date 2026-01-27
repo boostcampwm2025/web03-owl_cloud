@@ -18,7 +18,7 @@ import { EVENT_STREAM_NAME } from '@/infra/event-stream/event-stream.constants';
 import { CODEEDITOR_WEBSOCKET } from '@/infra/websocket/websocket.constants';
 import { CodeeditorWebsocket } from '@/infra/websocket/codeeditor/codeeditor.service';
 import * as Y from 'yjs';
-import { CodeeditorRepository, YjsRoomResult, YjsUpdateMessage } from '@/infra/memory/tool';
+import { CodeeditorRepository, YjsPullMessage, YjsRoomResult, YjsUpdateMessage } from '@/infra/memory/tool';
 
 
 @WebSocketGateway({
@@ -88,6 +88,7 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
 
     // 초기에 idx와 함께 같이 전달해준다. ( 현재 메모리에 저장된 idx )
     client.emit('yjs-init', { update: fullUpdate, idx: entry.idx }); 
+    client.data.last_idx = entry.idx;
 
     if (payload.clientType === 'main') {
       // main이 불러오면 ydoc에 있는 캐시도 자동으로 불러오게 한다. 
@@ -129,15 +130,6 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
     }
   }
 
-  // 클라이언트가 서버에게 업데이트 완료했다고 보내는 메시지
-  // 클라이언트가 초기값을 받고 그 동안에 이루어진 작업을 요청하는 것이다. 
-  @SubscribeMessage('yjs-init-ack')
-  handleYjsInitAck(
-    
-  ) {
-
-  };
-
   // 업데이트 하고 싶다고 보내는 메시지
   @UsePipes(
   new ValidationPipe({
@@ -164,13 +156,23 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
             ? Buffer.from(updateMsg.update)
             : Buffer.from(updateMsg.update);
 
+      // prev_idx가 만약 entry.idx와 다르면 catchup 부터 시도하게 한다.
+      if (updateMsg.prev_idx !== entry.idx) {
+        // 클라가 가진 기준(prev_idx)부터 따라잡게 함
+        await this.codeeditorService.catchUpForm(client, updateMsg.prev_idx);
+
+        // 재전송 요구
+        return;
+      }
+      const prevIdx = entry.idx;
+
       // 여기서 메모리 업데이트 + cache 업데이트를 진행해야 한다. 
       Y.applyUpdate(entry.doc, updateBuf);
 
       // redis 스트림에 업데이트 
       const { updateIdx } = await this.codeeditorService.appendUpdateLog({
-        room_id: payload.room_id,       // ✅ room_id 원본
-        prevIdx: updateMsg.prev_idx ?? entry.idx,
+        room_id: payload.room_id,       // room_id를 넣는다.
+        prevIdx,
         update: updateBuf,
         user_id: payload.user_id,
       });
@@ -179,7 +181,7 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
       entry.idx = updateIdx;
 
       const result: YjsRoomResult = {
-        prev_idx: updateMsg.prev_idx,
+        prev_idx: prevIdx,
         update_idx: updateIdx,
         update: updateBuf,
       };
@@ -187,9 +189,27 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
       // 브로드캐스트 (이게 나를 제외하고 전부 보내는것인지 궁금)
       // code에 경우 최신성 보다는 정확성이 더 중요하다고 생각하기 때문에 이 부분에서 volatile을 삭제한다. 
       client.to(roomName).emit('yjs-update', result);
+
+      client.data.last_idx = updateIdx;
     } catch (error) {
       this.logger.error(`Yjs Update Error: ${error.message}`);
     }
+  };
+
+  // 누락본 보내기 
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
+  @SubscribeMessage('yjs-pull')
+  async handleYjsPull(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() msg: YjsPullMessage,
+  ) {
+    try {
+      const fromIdx = msg.from_idx ?? '0-0';
+      await this.codeeditorService.catchUpForm(client, fromIdx);
+    } catch (err: any) {
+      this.logger.error(`yjs-pull error: ${err?.message ?? err}`);
+      client.emit('yjs-catchup', { ok: false });
+    };
   };
   
 

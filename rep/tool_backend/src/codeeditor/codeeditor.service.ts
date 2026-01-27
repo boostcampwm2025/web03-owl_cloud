@@ -4,6 +4,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { CODEEDITOR_GROUP } from './codeeditor.constants';
 import { encodeUpdate, REDIS_SERVER, streamKey } from '@/infra/cache/cache.constants';
 import type { RedisClientType } from 'redis';
+import { Socket } from 'socket.io';
+import { CodeeditorRepository, YjsRoomResult } from '@/infra/memory/tool';
 
 
 @Injectable()
@@ -11,6 +13,7 @@ export class CodeeditorService {
   constructor(
     private readonly guard: GuardService,
     @Inject(REDIS_SERVER) private readonly redis : RedisClientType<any, any>, // redis를 사용하기 위한 부분
+    private readonly codeeditorRepo : CodeeditorRepository,
   ) {}
 
   async guardService(token: string, type: 'main' | 'sub'): Promise<ToolBackendPayload> {
@@ -96,6 +99,47 @@ export class CodeeditorService {
           : undefined,
       };
     });
-  }
+  };
+
+  async catchUpForm(client: Socket, fromIdx: string) {
+
+    // socket 정보
+    const payload: ToolBackendPayload = client.data.payload;
+    const roomName: string = client.data.roomName;
+
+    if (!payload?.room_id || !roomName) return;
+
+    // 서버에 가장 최신 idx 가져오기 
+    const entry = this.codeeditorRepo.ensure(roomName);
+    const serverIdx = entry.idx;
+
+    // 최신이면 스킵 ( 아마 초창기에는 그럴수 있다.  )
+    if (fromIdx === serverIdx) {
+      client.emit('yjs-catchup', { ok: true, from: fromIdx, to: serverIdx, updates: [] });
+      client.data.last_idx = serverIdx;
+      return;
+    };
+
+    // 잃어버린걸 pull한다. 
+    const missing = await this.pullUpdatesAfter(payload.room_id, fromIdx);
+    if (missing.length === 0 && fromIdx !== serverIdx) {
+      client.emit('yjs-resync-required', { server_idx: serverIdx });
+      return;
+    };
+
+    // 한번에 보낸다. 
+    client.emit('yjs-catchup', {
+      ok: true,
+      from: fromIdx,
+      to: missing[missing.length - 1].id,
+      updates: missing.map((m) => ({
+        prev_idx: m.prevIdx ?? undefined,
+        update_idx: m.id,
+        update: m.update,
+      })),
+    });
+
+    client.data.last_idx = missing[missing.length - 1].id;
+  };
 
 }

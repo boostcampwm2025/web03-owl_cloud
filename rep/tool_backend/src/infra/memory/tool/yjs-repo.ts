@@ -44,4 +44,11 @@ export type YjsRoomResult = {
   prev_idx : string;
   update_idx : string | undefined;
   update : Buffer
+};
+
+// 누락본이 필요할때는 이를 이용하면 좋다. 
+export class YjsPullMessage {
+  @IsNotEmpty()
+  @IsString()
+  from_idx: string; // 클라가 마지막에 받은 idx
 }
