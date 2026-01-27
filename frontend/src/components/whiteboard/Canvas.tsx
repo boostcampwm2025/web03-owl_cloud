@@ -17,6 +17,10 @@ import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 import { useWhiteboardAwarenessStore } from '@/store/useWhiteboardAwarenessStore';
 import { useItemActions } from '@/hooks/useItemActions';
 import { cn } from '@/utils/cn';
+import {
+  updateBoundArrows,
+  getDraggingArrowPoints,
+} from '@/utils/arrowBinding';
 
 import { useElementSize } from '@/hooks/useElementSize';
 import { useClickOutside } from '@/hooks/useClickOutside';
@@ -32,6 +36,8 @@ import ItemTransformer from '@/components/whiteboard/controls/ItemTransformer';
 import RemoteSelectionLayer from '@/components/whiteboard/remote/RemoteSelectionLayer';
 import ArrowHandles from '@/components/whiteboard/items/arrow/ArrowHandles';
 
+const GEOMETRY_KEYS = ['x', 'y', 'width', 'height'] as const;
+
 export default function Canvas() {
   const stageScale = useWhiteboardLocalStore((state) => state.stageScale);
   const stagePos = useWhiteboardLocalStore((state) => state.stagePos);
@@ -41,7 +47,7 @@ export default function Canvas() {
   const selectedId = useWhiteboardLocalStore((state) => state.selectedId);
   const editingTextId = useWhiteboardLocalStore((state) => state.editingTextId);
   const selectItem = useWhiteboardLocalStore((state) => state.selectItem);
-  const { updateItem } = useItemActions();
+  const { updateItem, performTransaction } = useItemActions();
   const setEditingTextId = useWhiteboardLocalStore(
     (state) => state.setEditingTextId,
   );
@@ -55,6 +61,13 @@ export default function Canvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDraggingArrow, setIsDraggingArrow] = useState(false);
   const [isDraggingCanvas, setIsDraggingCanvas] = useState(false);
+  const [localDraggingId, setLocalDraggingId] = useState<string | null>(null);
+  const [localDraggingPos, setLocalDraggingPos] = useState<{
+    x: number;
+    y: number;
+    width?: number;
+    height?: number;
+  } | null>(null);
 
   const size = useElementSize(containerRef);
 
@@ -99,8 +112,10 @@ export default function Canvas() {
     handleArrowDblClick,
     deleteControlPoint,
     draggingPoints,
+    snapIndicator,
   } = useArrowHandles({
     arrow: isArrowOrLineSelected ? (selectedItem as ArrowItem) : null,
+    items,
     stageRef,
     updateItem,
   });
@@ -169,7 +184,21 @@ export default function Canvas() {
     id: string,
     newAttributes: Partial<WhiteboardItem>,
   ) => {
-    updateItem(id, newAttributes);
+    performTransaction(() => {
+      updateItem(id, newAttributes);
+
+      // 도형에 연결된 화살표 업데이트
+      const isGeometryChanged = GEOMETRY_KEYS.some(
+        (key) => key in newAttributes,
+      );
+      if (!isGeometryChanged) return;
+
+      const changedItem = items.find((item) => item.id === id);
+      if (!changedItem || changedItem.type !== 'shape') return;
+
+      const updatedShape = { ...changedItem, ...newAttributes } as ShapeItem;
+      updateBoundArrows(id, updatedShape, items, updateItem);
+    });
   };
 
   // width={0} height={0}으로 canvas 렌더링 방지
@@ -237,13 +266,47 @@ export default function Canvas() {
 
           {/* 아이템 렌더링 */}
           {items.map((item) => {
-            // 드래그 중인 화살표/선이면 draggingPoints 적용
-            const displayItem =
-              item.id === selectedId &&
-              (item.type === 'arrow' || item.type === 'line') &&
-              draggingPoints
-                ? { ...item, points: draggingPoints }
-                : item;
+            // 드래그 중인 아이템의 실시간 위치
+            let displayItem = item;
+            if (localDraggingId === item.id && localDraggingPos) {
+              displayItem = {
+                ...item,
+                x: localDraggingPos.x,
+                y: localDraggingPos.y,
+              } as WhiteboardItem;
+            }
+
+            // 화살표인 경우, 부착 대상이 드래그 중인지 확인하고 계산
+            if (item.type === 'arrow' && localDraggingId && localDraggingPos) {
+              const tempPoints = getDraggingArrowPoints(
+                item as ArrowItem,
+                localDraggingId,
+                localDraggingPos.x,
+                localDraggingPos.y,
+                items,
+                localDraggingPos.width,
+                localDraggingPos.height,
+              );
+              if (tempPoints && Array.isArray(tempPoints)) {
+                displayItem = {
+                  ...displayItem,
+                  points: tempPoints,
+                } as WhiteboardItem;
+              }
+            }
+
+            // 핸들 드래그 중인 화살표
+            if (
+              displayItem.id === selectedId &&
+              (displayItem.type === 'arrow' || displayItem.type === 'line') &&
+              draggingPoints &&
+              Array.isArray(draggingPoints)
+            ) {
+              displayItem = {
+                ...displayItem,
+                points: draggingPoints,
+              } as WhiteboardItem;
+            }
 
             return (
               <RenderItem
@@ -260,11 +323,44 @@ export default function Canvas() {
                   if (item.type === 'arrow' || item.type === 'line') {
                     setIsDraggingArrow(true);
                   }
+                  setLocalDraggingId(item.id);
+                  if (
+                    item.type === 'shape' ||
+                    item.type === 'text' ||
+                    item.type === 'image'
+                  ) {
+                    const geoItem = item as {
+                      x: number;
+                      y: number;
+                      width?: number;
+                      height?: number;
+                    };
+                    setLocalDraggingPos({
+                      x: geoItem.x,
+                      y: geoItem.y,
+                      width: geoItem.width,
+                      height: geoItem.height,
+                    });
+                  } else {
+                    setLocalDraggingPos(null);
+                  }
+                }}
+                onDragMove={(id, x, y) => {
+                  setLocalDraggingId(id);
+                  setLocalDraggingPos((prev) =>
+                    prev ? { ...prev, x, y } : { x, y },
+                  );
+                }}
+                onTransformMove={(id, x, y, w, h) => {
+                  setLocalDraggingId(id);
+                  setLocalDraggingPos({ x, y, width: w, height: h });
                 }}
                 onDragEnd={() => {
                   if (item.type === 'arrow' || item.type === 'line') {
                     setIsDraggingArrow(false);
                   }
+                  setLocalDraggingId(null);
+                  setLocalDraggingPos(null);
                 }}
               />
             );
@@ -279,6 +375,19 @@ export default function Canvas() {
               onEndDrag={handleArrowEndDrag}
               onDragEnd={handleHandleDragEnd}
               draggingPoints={draggingPoints}
+            />
+          )}
+
+          {/* 부착 표시 */}
+          {snapIndicator && (
+            <Rect
+              x={snapIndicator.x}
+              y={snapIndicator.y}
+              width={snapIndicator.width}
+              height={snapIndicator.height}
+              stroke="#0096FF"
+              strokeWidth={3}
+              cornerRadius={3}
             />
           )}
 

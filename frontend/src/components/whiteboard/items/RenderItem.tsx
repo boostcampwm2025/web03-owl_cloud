@@ -31,6 +31,14 @@ interface RenderItemProps {
   onSelect: (id: string) => void;
   onChange: (newAttributes: Partial<WhiteboardItem>) => void;
   onDragStart?: () => void;
+  onDragMove?: (id: string, x: number, y: number) => void;
+  onTransformMove?: (
+    id: string,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+  ) => void;
   onDragEnd?: () => void;
   onArrowDblClick?: (id: string) => void;
   onShapeDblClick?: (id: string) => void;
@@ -42,6 +50,8 @@ function RenderItem({
   onSelect,
   onChange,
   onDragStart,
+  onDragMove,
+  onTransformMove,
   onDragEnd,
   onArrowDblClick,
   onShapeDblClick,
@@ -136,6 +146,8 @@ function RenderItem({
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onDragStart={onDragStart}
+        onDragMove={(x, y) => onDragMove?.(item.id, x, y)}
+        onTransformMove={(x, y, w, h) => onTransformMove?.(item.id, x, y, w, h)}
         onDragEnd={onDragEnd}
       />
     );
