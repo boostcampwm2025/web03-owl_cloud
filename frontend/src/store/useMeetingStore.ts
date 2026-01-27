@@ -158,6 +158,8 @@ export const useMeetingStore = create<MeetingState & MeetingActions>((set) => ({
         speakingMembers: nextSpeakingMembers,
         orderedMemberIds: state.orderedMemberIds.filter((id) => id !== userId),
         pinnedMemberIds: state.pinnedMemberIds.filter((id) => id !== userId),
+        lastSpeakerId:
+          state.lastSpeakerId === userId ? null : state.lastSpeakerId,
       };
     }),
   setScreenSharer: (sharer) => set(() => ({ screenSharer: sharer })),

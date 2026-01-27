@@ -6,11 +6,17 @@ export default function MainVideo() {
   // 화면에 표시될 사람의 id 계산
   const mainDisplayUserId = useMeetingStore((state) => {
     // 1. 고정한 사람 중 첫 번째
-    if (state.pinnedMemberIds.length > 0) return state.pinnedMemberIds[0];
+    const firstPinnedId = state.pinnedMemberIds[0];
+    if (firstPinnedId && state.members[firstPinnedId]) return firstPinnedId;
     // 2. 가장 최근에 발언한 사람
-    if (state.lastSpeakerId) return state.lastSpeakerId;
-    // 3. 나 혹은 목록의 첫 번째 유저
-    return state.orderedMemberIds[0] || -1;
+    if (state.lastSpeakerId && state.members[state.lastSpeakerId]) {
+      return state.lastSpeakerId;
+    }
+    // 3. 목록의 첫 번째 유저
+    const firstOrderedId = state.orderedMemberIds[0];
+    if (firstOrderedId && state.members[firstOrderedId]) return firstOrderedId;
+
+    return -1;
   });
 
   const memberInfo = useMeetingStore(
