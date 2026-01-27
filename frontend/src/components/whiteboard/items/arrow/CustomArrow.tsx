@@ -45,7 +45,11 @@ export default function CustomArrow({
     isSelected,
   });
 
-  const points = item.points;
+  const points = item?.points;
+  if (!points || !Array.isArray(points) || points.length < 2) {
+    return null;
+  }
+
   const n = points.length;
 
   // 시작점과 각도 계산
