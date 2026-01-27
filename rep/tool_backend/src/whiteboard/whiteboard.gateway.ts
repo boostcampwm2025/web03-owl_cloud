@@ -7,7 +7,6 @@ import {
   OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
@@ -17,6 +16,7 @@ import { KafkaService } from '@/infra/event-stream/kafka/event-stream.service';
 import { EVENT_STREAM_NAME } from '@/infra/event-stream/event-stream.constants';
 import { WHITEBOARD_WEBSOCKET } from '@/infra/websocket/websocket.constants';
 import { WhiteboardWebsocket } from '@/infra/websocket/whiteboard/whiteboard.service';
+import { WhiteboardRepository } from '@/infra/memory/tool';
 
 @WebSocketGateway({
   namespace: process.env.NODE_BACKEND_WEBSOCKET_WHITEBOARD,
@@ -29,14 +29,12 @@ import { WhiteboardWebsocket } from '@/infra/websocket/whiteboard/whiteboard.ser
   pingTimeout: 20 * 1000,
 })
 export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConnection {
-  @WebSocketServer()
-  private readonly server: Server;
-
   private readonly logger = new Logger(WhiteboardWebsocketGateway.name);
 
   constructor(
     private readonly whiteboardService: WhiteboardService,
     private readonly kafkaService: KafkaService,
+    private readonly whiteboardRepo: WhiteboardRepository,
     @Inject(WHITEBOARD_WEBSOCKET) private readonly whiteboardSocket: WhiteboardWebsocket,
   ) {}
 

@@ -5,6 +5,7 @@ import { ToolLeftDto } from './event-stream.type';
 import { CODEEDITOR_WEBSOCKET, WHITEBOARD_WEBSOCKET } from '@/infra/websocket/websocket.constants';
 import { CodeeditorWebsocket } from '@/infra/websocket/codeeditor/codeeditor.service';
 import { WhiteboardWebsocket } from '@/infra/websocket/whiteboard/whiteboard.service';
+import { CodeeditorRepository, WhiteboardRepository } from '@/infra/memory/tool';
 
 @Controller()
 export class MainConsumerController {
@@ -13,6 +14,8 @@ export class MainConsumerController {
   constructor(
     @Inject(CODEEDITOR_WEBSOCKET) private readonly codeeditorSocket: CodeeditorWebsocket,
     @Inject(WHITEBOARD_WEBSOCKET) private readonly whiteboardSocket: WhiteboardWebsocket,
+    private readonly codeeditorRepo: CodeeditorRepository, // codeeditor용 repo
+    private readonly whiteboardRepo: WhiteboardRepository, // whiteboard용 repo
   ) {}
 
   @EventPattern(EVENT_STREAM_NAME.TOOL_LEFT)
@@ -33,10 +36,16 @@ export class MainConsumerController {
     );
 
     try {
-      if (value.tool === 'codeeditor')
+      if (value.tool === 'codeeditor') {
         await this.codeeditorSocket.disconnectCodeeditorRoom(value.room_id);
-      else if (value.tool === 'whiteboard')
+        // 메모리를 비워야 한다.
+
+        // cache에 저장을 해야 한다.
+      } else if (value.tool === 'whiteboard') {
         await this.whiteboardSocket.disconnectWhiteboardRoom(value.room_id);
+
+        // 마찬가지일 것이다.
+      }
       return;
     } catch (err) {
       this.logger.error(err);

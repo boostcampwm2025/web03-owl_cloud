@@ -9,7 +9,7 @@ resources:
   - frontend/frontend-deploy.yaml
   - frontend/frontend-service.yaml
   - frontend/frontend-config.yaml
-  
+
   # main_backend 관련
   - main_backend/main-backend-deploy.yaml
   - main_backend/main-backend-service.yaml
@@ -21,9 +21,11 @@ resources:
   - tool_backend/tool-backend-service.yaml
   - tool_backend/tool-backend-config.yaml
   - tool_backend/tool-backend-secret.dec.yaml
+  - tool-backend-pdb.yaml
 
   # ingress-nginx 관련
   - devmeet-gateway-ingress.yaml
+  - devmeet-tool-ws-gateway-ingress.yaml
   - letsencrypt-prod.yaml
 
 # 사용되는 이미지들

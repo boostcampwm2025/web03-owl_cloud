@@ -130,7 +130,7 @@ export class CreateProduceUsecase<T> {
     }
 
     // 연결전에 검증을 진행한다. ( video만 진행 )
-    if ( dto.kind === "video" ) {
+    if (dto.kind === 'video') {
       const { isVp9, isSvc } = this.analyzeRtp(dto.rtpParameters);
       this.analyze({ dto, isVp9, isSvc });
     }
@@ -234,38 +234,44 @@ export class CreateProduceUsecase<T> {
 
   // produce에서 cam + screen_video부분에서 검증 함수를 추가한다.
   private analyzeRtp(rtp: RtpParameters) {
-    // video codec을 확인하고 video가 맞다면 
-    const videoCodec = rtp.codecs?.find(c => c.mimeType?.toLowerCase().startsWith('video/'));
+    // video codec을 확인하고 video가 맞다면
+    const videoCodec = rtp.codecs?.find((c) => c.mimeType?.toLowerCase().startsWith('video/'));
 
-    // mime 타입을 확인한다. 
+    // mime 타입을 확인한다.
     const mime = videoCodec?.mimeType?.toLowerCase();
 
     // vp9인지 확인하기 위해서
     const isVp9 = mime === 'video/vp9';
 
-    const scalabilityModes =
-      (rtp.encodings ?? [])
-        .map(e => (e as any).scalabilityMode)
-        .filter(Boolean) as string[];
+    const scalabilityModes = (rtp.encodings ?? [])
+      .map((e) => (e as any).scalabilityMode)
+      .filter(Boolean) as string[];
 
     // svc를 쓰는지 3레이어를 쓰는지 확인
     const isSvc = scalabilityModes.length > 0;
-    const hasL3T3Key = scalabilityModes.some(m => m.toUpperCase() === 'L3T3_KEY');
+    const hasL3T3Key = scalabilityModes.some((m) => m.toUpperCase() === 'L3T3_KEY');
 
-    // 검증을 위한 값들 현재는 SVC를 쓰지 않지만 추후 실험과 테스트를 통해서 검증을 해야 한다. 
+    // 검증을 위한 값들 현재는 SVC를 쓰지 않지만 추후 실험과 테스트를 통해서 검증을 해야 한다.
     return { mime, isVp9, isSvc, scalabilityModes, hasL3T3Key };
-  };
+  }
 
-  private analyze({ dto, isVp9, isSvc } : { dto : CreatePropduceDto, isVp9 : boolean, isSvc : boolean }) {
+  private analyze({
+    dto,
+    isVp9,
+    isSvc,
+  }: {
+    dto: CreatePropduceDto;
+    isVp9: boolean;
+    isSvc: boolean;
+  }) {
     // cam은 현재 vp9을 지원하지 않는다.
     if (dto.type === 'cam' && isVp9) {
       throw new SfuErrorMessage('cam은 현재 VP9를 지원하지 않습니다. (VP8 simulcast 사용)');
-    };
+    }
 
     // screen_video는 현재 svc를 지원하지 않는다 추후 실험을 통해서 지원 가능
     if (dto.type === 'screen_video' && isSvc) {
       throw new SfuErrorMessage('screen_video의 VP9 SVC는 현재 비활성화 상태입니다.');
-    };
-  };
-
+    }
+  }
 }
