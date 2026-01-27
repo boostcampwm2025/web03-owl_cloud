@@ -26,7 +26,6 @@ export const useFileDownload = (socket: Socket | null) => {
         const a = document.createElement('a');
         a.href = downloadUrl;
         a.download = filename;
-        a.target = '_blank';
         document.body.appendChild(a);
         a.click();
         a.remove();

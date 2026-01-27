@@ -64,9 +64,9 @@ export function ChatListItem({
             <Image
               width={200}
               height={200}
-              className="max-h-50 w-auto object-cover"
+              className="w-auto object-cover"
               src={content.fileUrl as string}
-              alt="채팅 이미지"
+              alt={content.filename}
             />
 
             <button
