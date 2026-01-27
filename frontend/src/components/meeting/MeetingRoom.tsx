@@ -25,7 +25,7 @@ import {
 import { createConsumeHelpers } from '@/utils/createConsumeHelpers';
 import { useEffect, useState } from 'react';
 import VideoView from './media/VideoView';
-import { bindChatSocket } from '@/socket/bindChatSocket';
+import { useChatSocket } from '@/hooks/chat/useChatSocket';
 
 export default function MeetingRoom({ meetingId }: { meetingId: string }) {
   const {
@@ -62,6 +62,7 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
   const { joinCodeEditor } = useCodeEditorSocket();
   const { socket: mainSocket } = useMeetingSocket();
   const { codeEditorSocket } = useToolSocketStore();
+  useChatSocket(socket);
 
   const screenStream = useMeetingStore((state) =>
     screenSharer ? state.memberStreams[screenSharer.id]?.screen_video : null,
@@ -288,16 +289,6 @@ export default function MeetingRoom({ meetingId }: { meetingId: string }) {
       socket.off('room:alert_produced', onAlertProduced);
     };
   }, [socket, device, recvTransport]);
-
-  useEffect(() => {
-    if (!socket) return;
-
-    bindChatSocket(socket);
-
-    return () => {
-      socket.off('room:recv_message');
-    };
-  }, [socket]);
 
   return (
     <main className="flex h-screen w-full flex-col overflow-hidden bg-neutral-900">
