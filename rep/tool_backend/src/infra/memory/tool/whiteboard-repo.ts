@@ -2,15 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { UpdateEntry, YJS_ENTITY_MAX_NUMBER, YjsRepository, YjsRoomEntry } from './yjs-repo';
 import * as Y from 'yjs';
 
-// 두 repo는 현재 동일하다 
+// 두 repo는 현재 동일하다
 @Injectable()
 export class WhiteboardRepository implements YjsRepository {
   private readonly roomDocs = new Map<string, YjsRoomEntry>();
 
-  // yjs room 정보 가져오기 
+  // yjs room 정보 가져오기
   get(room_id: string): YjsRoomEntry | undefined {
     return this.roomDocs.get(room_id);
-  };
+  }
 
   // 방 정보가 없으면 새로 생성
   ensure(room_id: string): YjsRoomEntry {
@@ -28,7 +28,7 @@ export class WhiteboardRepository implements YjsRepository {
     return entry;
   }
 
-  // docs를 update하고 seq를 증가시키고 링버퍼를 고정한다. 
+  // docs를 update하고 seq를 증가시키고 링버퍼를 고정한다.
   applyAndAppendUpdate(room_id: string, update: Uint8Array): number {
     const entry = this.ensure(room_id);
 
@@ -43,8 +43,8 @@ export class WhiteboardRepository implements YjsRepository {
     entry.ring[slot] = { seq: entry.seq, update };
 
     return entry.seq;
-  };
-  
+  }
+
   // 현재 repo에 정보를 업데이트 해준다 null이면 full sync
   getUpdatesSince(room_id: string, last_seq: number): UpdateEntry[] | null {
     const entry = this.ensure(room_id);
@@ -73,9 +73,9 @@ export class WhiteboardRepository implements YjsRepository {
     }
 
     return updates;
-  };
+  }
 
-  // null이라면 전체를 반환한다. 
+  // null이라면 전체를 반환한다.
   encodeFull(room_id: string): { seq: number; update: Uint8Array } {
     const entry = this.ensure(room_id);
     const full = Y.encodeStateAsUpdate(entry.doc);
@@ -86,7 +86,7 @@ export class WhiteboardRepository implements YjsRepository {
   encodeSnapshot(room_id: string): Uint8Array {
     const entry = this.ensure(room_id);
     return Y.encodeStateAsUpdate(entry.doc);
-  };
+  }
 
   // snapshot을 적용
   applySnapshot(room_id: string, snapshotUpdate: Uint8Array): void {
@@ -106,5 +106,5 @@ export class WhiteboardRepository implements YjsRepository {
   // room_id 삭제 ( 나중에 구현 )
   delete(room_id: string): void {
     this.roomDocs.delete(room_id);
-  }  
+  }
 }

@@ -2,10 +2,19 @@ import { GuardService } from '@/guards/guard.service';
 import { ToolBackendPayload } from '@/guards/guard.type';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { CODEEDITOR_GROUP } from './codeeditor.constants';
-import { CACHE_CODEEDITOR_NAMESPACE_NAME, CACHE_CODEEDITOR_SNAPSHOT_KEY_NAME, CACHE_CODEEDITOR_STREAM_KEY_NAME, CACHE_NAMESPACE_NAME, decodeB64, encodeB64, REDIS_SERVER, SNAPSHOT_N, STREAM_MAXLEN } from '@/infra/cache/cache.constants';
+import {
+  CACHE_CODEEDITOR_NAMESPACE_NAME,
+  CACHE_CODEEDITOR_SNAPSHOT_KEY_NAME,
+  CACHE_CODEEDITOR_STREAM_KEY_NAME,
+  CACHE_NAMESPACE_NAME,
+  decodeB64,
+  encodeB64,
+  REDIS_SERVER,
+  SNAPSHOT_N,
+  STREAM_MAXLEN,
+} from '@/infra/cache/cache.constants';
 import type { RedisClientType } from 'redis';
 import { CodeeditorRepository, UpdateEntry, YjsUpdateClientPayload } from '@/infra/memory/tool';
-
 
 @Injectable()
 export class CodeeditorService {
@@ -13,8 +22,8 @@ export class CodeeditorService {
 
   constructor(
     private readonly guard: GuardService,
-    @Inject(REDIS_SERVER) private readonly redis : RedisClientType<any, any>, // redis를 사용하기 위한 부분
-    private readonly codeeditorRepo : CodeeditorRepository,
+    @Inject(REDIS_SERVER) private readonly redis: RedisClientType<any, any>, // redis를 사용하기 위한 부분
+    private readonly codeeditorRepo: CodeeditorRepository,
   ) {}
 
   async guardService(token: string, type: 'main' | 'sub'): Promise<ToolBackendPayload> {
@@ -80,43 +89,42 @@ export class CodeeditorService {
   }
 
   // redis 스트림으로 처리
-  // stream 쌓는법 
-  // key이름 생성법 
-  private streamKey(room_id : string) : string {
+  // stream 쌓는법
+  // key이름 생성법
+  private streamKey(room_id: string): string {
     return `${CACHE_NAMESPACE_NAME.CODEEDITOR}:${room_id}:${CACHE_CODEEDITOR_NAMESPACE_NAME.STREAM}`;
-  };
-  private snapshotKey(room_id : string) : string {
+  }
+  private snapshotKey(room_id: string): string {
     return `${CACHE_NAMESPACE_NAME.CODEEDITOR}:${room_id}:${CACHE_CODEEDITOR_NAMESPACE_NAME.SNAPSHOT}`;
-  };
-  private snapshotLockKey(room_id : string) : string {
+  }
+  private snapshotLockKey(room_id: string): string {
     return `${CACHE_NAMESPACE_NAME.CODEEDITOR}:${room_id}:${CACHE_CODEEDITOR_NAMESPACE_NAME.SNAPSHOT_LOCK}`;
-  };
+  }
 
   // redis로 부터 docs를 가져오는 로직 ( 메모리에 없을 경우 cache에서 불러와서 저장한다. )
-  async ensureDocFromRedis(roomName : string, room_id : string) : Promise<UpdateEntry> {
-
+  async ensureDocFromRedis(roomName: string, room_id: string): Promise<UpdateEntry> {
     const existed = this.codeeditorRepo.get(room_id);
-    if ( existed ) return this.codeeditorRepo.encodeFull(room_id);
+    if (existed) return this.codeeditorRepo.encodeFull(room_id);
 
     // 없으면 생성한다. ( cache에서 채울 예정 )
     this.codeeditorRepo.ensure(roomName);
 
-    const snapKey : string = this.snapshotKey(room_id);
-    const snap = await this.redis.hGetAll(snapKey); // 현재 snap shot을 가져온다. 
+    const snapKey: string = this.snapshotKey(room_id);
+    const snap = await this.redis.hGetAll(snapKey); // 현재 snap shot을 가져온다.
 
-    let snapshotIdx : string = "0-0"; // 초기 스트림 아이디 
-    const snapStr : string | null = snap[CACHE_CODEEDITOR_SNAPSHOT_KEY_NAME.SNAP];
-    const idx : string | null = snap[CACHE_CODEEDITOR_SNAPSHOT_KEY_NAME.IDX];
-    if ( snap && snapStr && idx ) {
+    let snapshotIdx: string = '0-0'; // 초기 스트림 아이디
+    const snapStr: string | null = snap[CACHE_CODEEDITOR_SNAPSHOT_KEY_NAME.SNAP];
+    const idx: string | null = snap[CACHE_CODEEDITOR_SNAPSHOT_KEY_NAME.IDX];
+    if (snap && snapStr && idx) {
       const snapBuf = decodeB64(snapStr);
       // 위에서 새로운 codeeditor을 업데이트 했음으로 데이터를 업데이트 해준다. ( 없을 경우에는 그냥 docs로 가게 된다. )
       this.codeeditorRepo.applySnapshot(roomName, new Uint8Array(snapBuf));
       snapshotIdx = idx; // 가장 마지막으로 업데이트
-    };
+    }
 
     // snapshot 이후 stream을 다시 replay 한다.
-    const stremkey : string = this.streamKey(room_id);
-    const rows = await this.redis.xRange(stremkey, snapshotIdx, "+"); // 그 IDX 이후에 데이터가 있는지 확인
+    const stremkey: string = this.streamKey(room_id);
+    const rows = await this.redis.xRange(stremkey, snapshotIdx, '+'); // 그 IDX 이후에 데이터가 있는지 확인
 
     for (const row of rows) {
       if (snapshotIdx !== '0-0' && row.id === snapshotIdx) continue;
@@ -124,32 +132,31 @@ export class CodeeditorService {
       if (!uB64) continue;
       const uBuf = decodeB64(uB64);
       this.codeeditorRepo.applyAndAppendUpdate(roomName, new Uint8Array(uBuf));
-    };
+    }
 
-    // 마지막 stream 까지 업데이트 시킨다. 
+    // 마지막 stream 까지 업데이트 시킨다.
     return this.codeeditorRepo.encodeFull(roomName);
-  };
+  }
 
   // stream update
-  async appendUpdatesToStream(room_id : string, updates: Uint8Array[], user_id : string) {
-    const streamKey : string = this.streamKey(room_id);
-    let lastId : string = "0-0";
+  async appendUpdatesToStream(room_id: string, updates: Uint8Array[], user_id: string) {
+    const streamKey: string = this.streamKey(room_id);
+    let lastId: string = '0-0';
 
-    for ( const u of updates ) {
-      lastId = await this.redis.xAdd(streamKey, "*", {
-        [CACHE_CODEEDITOR_STREAM_KEY_NAME.UPDATE] : encodeB64(u),
-        [CACHE_CODEEDITOR_STREAM_KEY_NAME.TX] : String(Date.now()),
-        [CACHE_CODEEDITOR_STREAM_KEY_NAME.USER_ID] : user_id
-      })
-    };
+    for (const u of updates) {
+      lastId = await this.redis.xAdd(streamKey, '*', {
+        [CACHE_CODEEDITOR_STREAM_KEY_NAME.UPDATE]: encodeB64(u),
+        [CACHE_CODEEDITOR_STREAM_KEY_NAME.TX]: String(Date.now()),
+        [CACHE_CODEEDITOR_STREAM_KEY_NAME.USER_ID]: user_id,
+      });
+    }
 
     return lastId;
-  };
+  }
 
   // stream 300 마다 snapshot 작성
-  async maybeSnapShot(roomName : string, room_id : string ) {
-
-    const state = this.codeeditorRepo.ensure(roomName); 
+  async maybeSnapShot(roomName: string, room_id: string) {
+    const state = this.codeeditorRepo.ensure(roomName);
     if (state.seq % SNAPSHOT_N !== 0) return; // 현재 stream이 정한 갯수 만큼 찍혔다면 업데이트한다.
 
     // 추후 여러 pod 대비 lock을 추가해야 한다. ( 지금은 스킵 )
@@ -165,20 +172,19 @@ export class CodeeditorService {
 
       const snapKey = this.snapshotKey(room_id);
       const tx = this.redis.multi();
-      
+
       tx.hSet(snapKey, {
         [CACHE_CODEEDITOR_SNAPSHOT_KEY_NAME.SNAP]: snapB64,
         [CACHE_CODEEDITOR_SNAPSHOT_KEY_NAME.IDX]: idx,
-        [CACHE_CODEEDITOR_SNAPSHOT_KEY_NAME.TX]: ts
+        [CACHE_CODEEDITOR_SNAPSHOT_KEY_NAME.TX]: ts,
       });
 
       tx.xTrim(streamKey, 'MAXLEN', STREAM_MAXLEN, { strategyModifier: '~' }); // 원자성 보장
 
       const res = await tx.exec();
-      if ( !res ) return;
+      if (!res) return;
     } catch (err) {
       this.logger.error(err);
-    };
-  };
-
+    }
+  }
 }

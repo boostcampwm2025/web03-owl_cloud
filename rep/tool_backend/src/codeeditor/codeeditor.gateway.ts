@@ -18,8 +18,12 @@ import { EVENT_STREAM_NAME } from '@/infra/event-stream/event-stream.constants';
 import { CODEEDITOR_WEBSOCKET } from '@/infra/websocket/websocket.constants';
 import { CodeeditorWebsocket } from '@/infra/websocket/codeeditor/codeeditor.service';
 import * as Y from 'yjs';
-import { CodeeditorRepository, YjsSyncReqPayload, YjsSyncServerPayload, YjsUpdateClientPayload } from '@/infra/memory/tool';
-
+import {
+  CodeeditorRepository,
+  YjsSyncReqPayload,
+  YjsSyncServerPayload,
+  YjsUpdateClientPayload,
+} from '@/infra/memory/tool';
 
 @WebSocketGateway({
   namespace: process.env.NODE_BACKEND_WEBSOCKET_CODEEDITOR,
@@ -32,7 +36,6 @@ import { CodeeditorRepository, YjsSyncReqPayload, YjsSyncServerPayload, YjsUpdat
   pingTimeout: 20 * 1000, // ping pong 허용 시간 ( 20초 )
 })
 export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConnection {
-
   @WebSocketServer()
   private readonly server: Server;
 
@@ -41,7 +44,7 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
   constructor(
     private readonly codeeditorService: CodeeditorService,
     private readonly kafkaService: KafkaService,
-    private readonly codeeditorRepo : CodeeditorRepository,
+    private readonly codeeditorRepo: CodeeditorRepository,
     @Inject(CODEEDITOR_WEBSOCKET) private readonly codeeditorSocket: CodeeditorWebsocket,
   ) {}
 
@@ -75,24 +78,24 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
     if (!payload) {
       client.disconnect(true);
       return;
-    };
+    }
     const roomName = this.codeeditorService.makeNamespace(payload.room_id); // 방가입
     await client.join(roomName);
     client.data.roomName = roomName;
-    
-    // 메모리에 존재하면 가져오고 없으면 cache에서 가져온다. ( 이 부분을 cache에서 가져오는 걸로 수정을 한다. )  
+
+    // 메모리에 존재하면 가져오고 없으면 cache에서 가져온다. ( 이 부분을 cache에서 가져오는 걸로 수정을 한다. )
     const full = await this.codeeditorService.ensureDocFromRedis(roomName, payload.room_id);
 
     // 초기에 idx와 함께 같이 전달해준다. ( 현재 메모리에 저장된 idx )
-    client.emit('yjs-init', { 
-      update: Buffer.from(full.update), 
-      seq : full.seq,
-      origin: 'INIT'
-    }); 
+    client.emit('yjs-init', {
+      update: Buffer.from(full.update),
+      seq: full.seq,
+      origin: 'INIT',
+    });
     client.data.last_seq = full.seq;
 
     if (payload.clientType === 'main') {
-      // main이 불러오면 ydoc에 있는 캐시도 자동으로 불러오게 한다. 
+      // main이 불러오면 ydoc에 있는 캐시도 자동으로 불러오게 한다.
 
       this.kafkaService.emit(EVENT_STREAM_NAME.CODEEDITOR_ENTER, {
         room_id: payload.room_id,
@@ -112,7 +115,6 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
     if (!roomName) return;
 
     // TODO: 방에 아무도 없을 때 삭제
-
   }
 
   @SubscribeMessage(CODEEDITOR_EVENT_NAME.HEALTH_CHECK)
@@ -135,12 +137,12 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
   @SubscribeMessage('yjs-update')
   @UsePipes(
     new ValidationPipe({
-      whitelist : true
-    })
+      whitelist: true,
+    }),
   )
   async handleYjsUpdate(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload : YjsUpdateClientPayload
+    @MessageBody() payload: YjsUpdateClientPayload,
   ) {
     // 캐싱된 룸 이름 사용
     const roomName = client.data.roomName;
@@ -148,7 +150,11 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
     try {
       const bufs = this.codeeditorService.normalizeToBuffers(payload);
       if (!bufs || bufs.length === 0) {
-        client.emit('yjs-sync', { type: 'error', ok: false, code: 'BAD_PAYLOAD' } satisfies YjsSyncServerPayload);
+        client.emit('yjs-sync', {
+          type: 'error',
+          ok: false,
+          code: 'BAD_PAYLOAD',
+        } satisfies YjsSyncServerPayload);
         return;
       }
 
@@ -163,14 +169,14 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
           ok: true,
           server_seq: full.seq,
           update: Buffer.from(full.update),
-          origin : "UPDATE_REJECTED",
+          origin: 'UPDATE_REJECTED',
         };
-        client.emit('yjs-sync', msg); // 새롭게 전체 업데이트 한것 까지 추가해서 보내면 좋다. 
+        client.emit('yjs-sync', msg); // 새롭게 전체 업데이트 한것 까지 추가해서 보내면 좋다.
         return;
       }
 
       if (missed.length > 0) {
-        // 이것도 그냥 업데이트 하고 patch로 보내면 좋을것 같다. 
+        // 이것도 그냥 업데이트 하고 patch로 보내면 좋을것 같다.
         const msg: YjsSyncServerPayload = {
           type: 'patch',
           ok: true,
@@ -178,7 +184,7 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
           to_seq: missed[missed.length - 1].seq,
           updates: missed.map((u) => Buffer.from(u.update)),
           server_seq: this.codeeditorRepo.ensure(roomName).seq,
-          origin : "UPDATE_REJECTED"
+          origin: 'UPDATE_REJECTED',
         };
         client.emit('yjs-sync', msg);
         return;
@@ -195,8 +201,12 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
         appliedUpdates.push(b);
       }
 
-      // ack에 경우는 마지막만 
-      client.emit('yjs-sync', { type: 'ack', ok: true, server_seq: lastSeq } satisfies YjsSyncServerPayload);
+      // ack에 경우는 마지막만
+      client.emit('yjs-sync', {
+        type: 'ack',
+        ok: true,
+        server_seq: lastSeq,
+      } satisfies YjsSyncServerPayload);
 
       // 브로드캐스트: 단일/배치 둘 다 가능
       if (appliedUpdates.length === 1) {
@@ -209,7 +219,7 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
         });
       }
 
-      // 모든 업데이트가 끝났을때 redis에 업데이트 한다. 
+      // 모든 업데이트가 끝났을때 redis에 업데이트 한다.
       const dataPayload: ToolBackendPayload = client.data.payload;
       await this.codeeditorService.appendUpdatesToStream(
         dataPayload.room_id,
@@ -217,25 +227,23 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
         dataPayload.user_id,
       );
 
-      await this.codeeditorService.maybeSnapShot(
-        roomName,
-        dataPayload.room_id,
-      );
-
+      await this.codeeditorService.maybeSnapShot(roomName, dataPayload.room_id);
     } catch (error) {
       this.logger.error(`Yjs Update Error: ${error?.message ?? error}`);
-      const msg: YjsSyncServerPayload = { type: 'error', ok: false, code: 'INTERNAL', message: error?.message };
+      const msg: YjsSyncServerPayload = {
+        type: 'error',
+        ok: false,
+        code: 'INTERNAL',
+        message: error?.message,
+      };
       client.emit('yjs-sync', msg);
     }
   }
 
-  // update를 받았는데 싱크가 안맞을 경우 요청해야 한다. 
+  // update를 받았는데 싱크가 안맞을 경우 요청해야 한다.
   @SubscribeMessage('yjs-sync-req')
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  handleYjsSyncReq(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() payload: YjsSyncReqPayload,
-  ) {
+  handleYjsSyncReq(@ConnectedSocket() client: Socket, @MessageBody() payload: YjsSyncReqPayload) {
     const roomName = client.data.roomName;
     if (!roomName) return;
 
