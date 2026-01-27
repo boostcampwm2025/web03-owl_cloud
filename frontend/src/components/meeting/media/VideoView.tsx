@@ -40,7 +40,7 @@ export default function VideoView({
       muted={muted}
       playsInline
       autoPlay
-      className={`h-full w-full object-cover ${mirrored ? '-scale-x-100' : ''}`}
+      className={`h-full w-full object-contain ${mirrored ? '-scale-x-100' : ''}`}
     />
   );
 }
