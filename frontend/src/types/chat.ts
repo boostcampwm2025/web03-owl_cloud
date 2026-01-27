@@ -25,34 +25,37 @@ export interface ChatMessage {
   content: ChatContent;
 }
 
-export type UploadTicket =
-  | {
-      type: 'direct';
-      file_id: string;
-      direct: {
-        upload_url: string;
-      };
-    }
-  | {
-      type: 'multipart';
-      file_id: string;
-      multipart: {
-        upload_id: string;
-        part_size: number;
-        upload_urls: { part_number: number; upload_url: string }[];
-      };
-    }
-  | {
-      type: 'multipart_resume';
-      file_id: string;
-      multipart_resume: {
-        upload_id: string;
-        part_size: number;
-        upload_urls: { part_number: number; upload_url: string }[];
-        complete_parts: { part_number: number; etag: string }[];
-      };
-    }
-  | {
-      type: 'multipart_completed';
-      file_id: string;
-    };
+export type UploadTicket = {
+  type: 'direct' | 'multipart' | 'multipart_resume' | 'multipart_completed';
+  file_id: string;
+
+  // direct 업로드 정보
+  direct: {
+    upload_url: string;
+  } | null;
+
+  // multipart 업로드 정보
+  multipart: {
+    upload_id: string;
+    part_size: number;
+    upload_urls: { part_number: number; upload_url: string }[];
+  } | null;
+
+  // multipart Resume 정보
+  multipart_resume: {
+    upload_id: string;
+    part_size: number;
+    upload_urls: { part_number: number; upload_url: string }[];
+    complete_parts: { part_number: number; etag: string }[];
+  } | null;
+};
+
+export type FileCheckPayload = {
+  file_id: string;
+  type: 'direct' | 'multipart';
+  direct?: { etag: string };
+  multipart?: {
+    upload_id: string;
+    tags: { part_number: number; etag: string }[];
+  };
+};

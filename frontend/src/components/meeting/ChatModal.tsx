@@ -29,6 +29,19 @@ export default function ChatModal() {
   const [hasValue, setHasValue] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
 
+  const { userId, nickname, profilePath } = useUserStore();
+  const messages = useChatStore((s) => s.messages);
+  const socket = useMeetingSocketStore((s) => s.socket);
+
+  const { sendMessage: sendTextMessage } = useChatSender({
+    socket,
+    userId,
+    nickname,
+    profileImg: profilePath as string,
+  });
+
+  const { uploadFile, uploading, percent } = useFileUpload(socket);
+
   // 파일 선택 핸들러
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -58,19 +71,6 @@ export default function ChatModal() {
     e.target.value = '';
   };
 
-  const { userId, nickname, profilePath } = useUserStore();
-  const messages = useChatStore((s) => s.messages);
-  const socket = useMeetingSocketStore((s) => s.socket);
-
-  const { sendMessage: sendTextMessage } = useChatSender({
-    socket,
-    userId,
-    nickname,
-    profileImg: profilePath as string,
-  });
-
-  const { uploadFile, uploading, percent } = useFileUpload(socket);
-
   const onCloseClick = () => setIsOpen('isChatOpen', false);
 
   useEffect(() => {
@@ -98,7 +98,6 @@ export default function ChatModal() {
 
     if (pendingFiles.length > 0) {
       const filesToUpload = [...pendingFiles];
-      setPendingFiles([]); // 입력창 비우기
 
       for (const item of filesToUpload) {
         try {
@@ -111,6 +110,8 @@ export default function ChatModal() {
             useChatStore.setState((state) => ({
               messages: [...state.messages, newMessage],
             }));
+
+            setPendingFiles((prev) => prev.filter((f) => f.id !== item.id));
           }
         } catch (err) {
           console.error(`${item.file.name} 업로드에 실패했습니다.`);
@@ -172,7 +173,7 @@ export default function ChatModal() {
         {/* 파일 업로드 현황 */}
         {pendingFiles.length > 0 && (
           <div className="flex flex-wrap gap-3 bg-neutral-700/50 p-3">
-            {pendingFiles.map((f) => (
+            {pendingFiles.map((f, idx) => (
               <div key={f.id} className="group relative">
                 {f.mediaType === 'image' && f.preview && (
                   <Image
@@ -205,6 +206,21 @@ export default function ChatModal() {
                       <span className="text-xs text-neutral-300">
                         {formatFileSize(f.file.size)}
                       </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 업로드 진행률 표시 */}
+                {uploading && idx === 0 && (
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60">
+                    <span className="mb-1 text-[10px] font-bold text-white">
+                      {percent}%
+                    </span>
+                    <div className="h-1 w-12 overflow-hidden rounded-full bg-neutral-600">
+                      <div
+                        className="h-full bg-blue-500 transition-all duration-300"
+                        style={{ width: `${percent}%` }}
+                      />
                     </div>
                   </div>
                 )}

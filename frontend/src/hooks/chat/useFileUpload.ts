@@ -1,4 +1,4 @@
-import { UploadTicket } from '@/types/chat';
+import { FileCheckPayload, UploadTicket } from '@/types/chat';
 import {
   emitAck,
   pickCategory,
@@ -27,7 +27,7 @@ export const useFileUpload = (socket: Socket | null) => {
   );
 
   const fileCheck = useCallback(
-    async (payload: any) => {
+    async (payload: FileCheckPayload) => {
       if (!socket?.connected) throw new Error('socket not connected');
       return emitAck(socket, 'signaling:ws:file_check', payload);
     },
@@ -43,61 +43,66 @@ export const useFileUpload = (socket: Socket | null) => {
 
       try {
         const ticket = await requestUploadTicket(file);
-        let finalPayload: any;
+        const { type, file_id, direct, multipart, multipart_resume } = ticket;
+        let finalPayload: FileCheckPayload;
+
+        const isMultipart = file.size > 10 * 1024 * 1024;
 
         // 이미 완료된 경우
-        if (ticket.type === 'multipart_completed') {
+        if (type === 'multipart_completed') {
           finalPayload = {
-            file_id: ticket.file_id,
-            type: 'direct',
-            direct: { etag: 'SKIP' },
+            file_id,
+            type: isMultipart ? 'multipart' : 'direct',
+            ...(isMultipart
+              ? {
+                  multipart: {
+                    upload_id: multipart!.upload_id,
+                    tags: [],
+                  },
+                }
+              : { direct: { etag: 'SKIP' } }),
           };
         }
 
         // Direct Upload
-        else if (ticket.type === 'direct') {
+        else if (type === 'direct' && direct) {
           const etag = await putToPresignedUrl({
-            upload_url: ticket.direct.upload_url,
+            upload_url: direct.upload_url,
             blob: file,
             mime_type: file.type,
           });
 
-          finalPayload = {
-            file_id: ticket.file_id,
-            type: 'direct',
-            direct: { etag },
-          };
+          finalPayload = { file_id, type: 'direct', direct: { etag } };
+          setPercent(100);
         }
 
         // Multipart Upload
         else {
-          const multipart =
-            ticket.type === 'multipart'
-              ? ticket.multipart
-              : ticket.multipart_resume;
-          const done =
-            ticket.type === 'multipart_resume'
-              ? new Map(
-                  ticket.multipart_resume.complete_parts.map((p) => [
-                    p.part_number,
-                    p.etag,
-                  ]),
-                )
-              : new Map();
+          const activeInfo = multipart_resume || multipart;
+          if (!activeInfo)
+            throw new Error('업로드 티켓 데이터가 유효하지 않습니다.');
 
-          const parts = sliceFile(file, multipart.part_size);
+          const parts = sliceFile(file, activeInfo.part_size);
           const urlMap = new Map(
-            multipart.upload_urls.map((u) => [u.part_number, u.upload_url]),
+            activeInfo.upload_urls.map((u) => [u.part_number, u.upload_url]),
           );
-          const tags = [];
+
+          // 이미 완료된 파트 체크 (Resume용)
+          const doneTags = new Map(
+            multipart_resume?.complete_parts?.map((p) => [
+              p.part_number,
+              p.etag,
+            ]) || [],
+          );
+
+          const tags: { part_number: number; etag: string }[] = [];
 
           for (let i = 0; i < parts.length; i++) {
             const p = parts[i];
-
-            if (done.has(p.partNumber)) {
+            if (doneTags.has(p.partNumber)) {
               tags.push({
                 part_number: p.partNumber,
-                etag: done.get(p.partNumber),
+                etag: doneTags.get(p.partNumber)!,
               });
             } else {
               const upload_url = urlMap.get(p.partNumber);
@@ -110,18 +115,23 @@ export const useFileUpload = (socket: Socket | null) => {
               });
               tags.push({ part_number: p.partNumber, etag });
             }
-            setPercent(Math.floor(((i + 1) / parts.length) * 100));
+
+            const currentPercent = Math.floor(((i + 1) / parts.length) * 100);
+            setPercent(currentPercent);
           }
 
           finalPayload = {
-            file_id: ticket.file_id,
+            file_id,
             type: 'multipart',
-            multipart: { upload_id: multipart.upload_id, tags },
+            multipart: { upload_id: activeInfo.upload_id, tags },
           };
         }
 
         const res = await fileCheck(finalPayload);
         return res;
+      } catch (err) {
+        console.error('upload error:', err);
+        throw err;
       } finally {
         setUploading(false);
       }
