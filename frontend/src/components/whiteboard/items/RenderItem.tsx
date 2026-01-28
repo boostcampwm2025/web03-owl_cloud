@@ -221,7 +221,7 @@ function RenderItem({
         isListening={isListening}
         isSelected={isSelected}
         onSelect={() => onSelect(item.id)}
-        onChange={onChange}
+        onChange={(attrs) => onChange(item.id, attrs)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onDragStart={onDragStart}
