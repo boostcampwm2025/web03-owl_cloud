@@ -128,7 +128,12 @@ export default function CustomArrow({
           i % 2 === 0 ? p + pos.x : p + pos.y,
         );
         e.target.position({ x: 0, y: 0 });
-        onChange({ points: newPoints });
+
+        const updates: Partial<ArrowItem> = { points: newPoints };
+        if (item.startBinding) updates.startBinding = null;
+        if (item.endBinding) updates.endBinding = null;
+
+        onChange(updates);
         onDragEnd?.();
       }}
     >

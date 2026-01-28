@@ -22,6 +22,7 @@ export function useArrowHandles({
   const [selectedHandleIndex, setSelectedHandleIndex] = useState<number | null>(
     null,
   );
+
   // 드래그 중인 points를 로컬 상태로 관리
   const [draggingPoints, setDraggingPoints] = useState<number[] | null>(null);
 
@@ -90,14 +91,8 @@ export function useArrowHandles({
 
   // 부착 로직 함수
   const checkSnapping = (x: number, y: number) => {
-    // 도형만 필터링 (자기 자신 제외)
-    const shapes = items.filter(
-      (item) =>
-        item.type === 'shape' ||
-        item.type === 'image' ||
-        item.type === 'video' ||
-        item.type === 'youtube',
-    ) as ShapeItem[];
+    // 도형만 부착
+    const shapes = items.filter((item) => item.type === 'shape') as ShapeItem[];
 
     let closestDist = 20; // 부착 감지 거리
     let foundSnap = null;
