@@ -12,8 +12,8 @@ services:
     restart: unless-stopped
     # 보안 주의 -> 이 포트는 docker에서 외부에 열어놓는거라서 nginx에 보호도 받지 못한다. -> 특정 컨테이너로 매핑
     ports:
-      - "40000-40199:40000-40199/udp"
-      - "40000-40199:40000-40199/tcp"
+      - "40000-40299:40000-40299/udp"
+      - "40000-40299:40000-40299/tcp"
 
   # main_backend에 nginx ( 확장성으로 인해서 nginx를 나누기로 하였다. )
   main-backend-nginx:

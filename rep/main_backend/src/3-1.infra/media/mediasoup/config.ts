@@ -24,7 +24,7 @@ export const mediaSoupWorkerConfig: WorkerSettings = {
 
   // udp 사용 포트
   rtcMinPort: 40000,
-  rtcMaxPort: process.env.NODE_ENV === 'production' ? 41999 : 40199,
+  rtcMaxPort: process.env.NODE_ENV === 'production' ? 41999 : 40299,
 
   // 현재나의 로그 메타데이터를 추가하려면
   appData: {

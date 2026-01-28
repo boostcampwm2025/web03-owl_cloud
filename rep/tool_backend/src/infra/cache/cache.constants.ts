@@ -19,8 +19,16 @@ export const SNAPSHOT_N = 300; // snapshot을 찍는 stream 갯수들
 export const STREAM_MAXLEN = 5000; // stream이 유지할수 있는 최대 길이
 export const SNAPSHOT_LOCK_TTL_MS = 10_000; // 살아있는 시간이다 스냅샷을 찍는 락을 잡는다. 여러 pod에서 작업시 필요하다.
 
+// whiteboard와 관련된 변수들
+export const WHITEBOARD_STREAM_MAXLEN = 50_000;          // 50000의 stream을 최댓값으로 가진다.
+export const WHITEBOARD_SNAPSHOT_EVERY_MS = 10_000;      // 10초마다 snapshot을 찍는다. 
+export const WHITEBOARD_SNAPSHOT_MIN_SEQ_DELTA = 2_000;  // 마지막 스냅샷 이후 업데이트가 쌓인 양 
+export const WHITEBOARD_BATCH_WINDOW_MS = 50;            // 50ms 동안 모아서 합치기
+export const WHITEBOARD_BATCH_MAX_UPDATES = 200;         // 너무 오래 모이지 않게 캡 
+
 export const CACHE_NAMESPACE_NAME = Object.freeze({
   CODEEDITOR: 'cache:codeeditor',
+  WHITEBOARD : "cache:whiteboard"
 } as const);
 
 // codeeditor에 cache가 사용하는 namespace
@@ -39,6 +47,27 @@ export const CACHE_CODEEDITOR_SNAPSHOT_KEY_NAME = Object.freeze({
 
 // stream message에 저장될 keyname
 export const CACHE_CODEEDITOR_STREAM_KEY_NAME = Object.freeze({
+  UPDATE: 'update',
+  TX: 'tx',
+  USER_ID: 'user_id',
+} as const);
+
+// whiteboard에 cache가 사용하는 namespace
+export const CACHE_WHITEBOARD_NAMESPACE_NAME = Object.freeze({
+  STREAM: 'stream',
+  SNAPSHOT: 'snapshot',
+  SNAPSHOT_LOCK: 'snapshot:lock',  
+} as const);
+
+// codeeditor에서 snap_shot과 관련된 keyname
+export const CACHE_WHITEBOARD_SNAPSHOT_KEY_NAME = Object.freeze({
+  SNAP: 'snap', // 스냅샷 바이너리 base64 문자열로 저장된다.
+  IDX: 'idx', // shapshot이 반영한 마지막 stream_id
+  TX: 'tx', // snapshot이 찍힌 시간
+} as const);
+
+// stream message에 저장될 keyname
+export const CACHE_WHITEBOARD_STREAM_KEY_NAME = Object.freeze({
   UPDATE: 'update',
   TX: 'tx',
   USER_ID: 'user_id',

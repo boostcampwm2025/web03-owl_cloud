@@ -83,17 +83,6 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
     await client.join(roomName);
     client.data.roomName = roomName;
 
-    // 메모리에 존재하면 가져오고 없으면 cache에서 가져온다. ( 이 부분을 cache에서 가져오는 걸로 수정을 한다. )
-    // const full = await this.codeeditorService.ensureDocFromRedis(payload.room_id);
-
-    // // 초기에 idx와 함께 같이 전달해준다. ( 현재 메모리에 저장된 idx )
-    // client.emit('yjs-init', {
-    //   update: Buffer.from(full.update),
-    //   seq: full.seq,
-    //   origin: 'INIT',
-    // });
-    // client.data.last_seq = full.seq;
-
     if (payload.clientType === 'main') {
       // main이 불러오면 ydoc에 있는 캐시도 자동으로 불러오게 한다.
 

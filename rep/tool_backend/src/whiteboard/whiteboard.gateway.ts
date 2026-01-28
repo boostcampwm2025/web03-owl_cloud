@@ -83,24 +83,7 @@ export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConne
 
     const roomName = this.whiteboardService.makeNamespace(payload.room_id);
     client.join(roomName);
-
     client.data.roomName = roomName;
-
-    this.logger.log(`User가 ${roomName}에 참여함`);
-
-    client.emit('init-user', { userId: payload.user_id });
-
-    console.log(payload.user_id);
-
-    // 서버에 저장된 Y.Doc이 있으면 신규 유저에게 전송함 ( 나중에 수정 )
-    const entry = this.whiteboardRepo.ensure(roomName);
-    if (entry) {
-      this.logger.log(`[Sync] 서버에서 신규 유저 ${payload.user_id}에게 직접 데이터 전송`);
-      const fullUpdate = Y.encodeStateAsUpdate(entry.doc);
-      client.emit('yjs-update', fullUpdate);
-    } else {
-      client.to(roomName).emit('request-sync'); // 이건 아마 작동을 안할 것이다.
-    }
 
     // Kafka 이벤트 발행(로그,동기화)
     if (payload.clientType === 'main') {
@@ -129,6 +112,22 @@ export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConne
       this.logger.error(err);
       throw new WsException({ message: err.message ?? '에러 발생', status: err.status ?? 500 });
     }
+  }
+
+  // 준비가 돼었을때를 위한 ready
+  @SubscribeMessage(WHITEBOARD_EVENT_NAME.CLIENT_READY)
+  async onReady(@ConnectedSocket() client: Socket) {
+    if (client.data.__yjsReadySent) return;
+    client.data.__yjsReadySent = true;
+
+    const payload: ToolBackendPayload = client.data.payload;
+    const full = await this.whiteboardService.ensureDocFromRedis(payload.room_id);
+
+    client.emit('yjs-init', {
+      update: Buffer.from(full.update),
+      seq: full.seq,
+      origin: 'INIT',
+    });
   }
 
   // 요소 생성

@@ -1,25 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { UpdateEntry, YJS_ENTITY_MAX_NUMBER, YjsRepository, YjsRoomEntry } from './yjs-repo';
+import { UpdateEntry, WHITEBOARD_RING_SIZE, YJS_ENTITY_MAX_NUMBER, YjsRepository, YjsRoomEntry, YjsWhiteboardRoomEntry } from './yjs-repo';
 import * as Y from 'yjs';
 
 // 두 repo는 현재 동일하다
 @Injectable()
 export class WhiteboardRepository implements YjsRepository {
-  private readonly roomDocs = new Map<string, YjsRoomEntry>();
+  private readonly roomDocs = new Map<string, YjsWhiteboardRoomEntry>();
 
   // yjs room 정보 가져오기
-  get(room_id: string): YjsRoomEntry | undefined {
+  get(room_id: string): YjsWhiteboardRoomEntry | undefined {
     return this.roomDocs.get(room_id);
   }
 
   // 방 정보가 없으면 새로 생성
-  ensure(room_id: string): YjsRoomEntry {
+  ensure(room_id: string): YjsWhiteboardRoomEntry {
     let entry = this.roomDocs.get(room_id);
     if (!entry) {
-      const ringSize = YJS_ENTITY_MAX_NUMBER; // 1000
+      const ringSize = WHITEBOARD_RING_SIZE; // 20000
       entry = {
         doc: new Y.Doc(),
         seq: 0,
+        baseSeq: 0,
         ringSize,
         ring: new Array<UpdateEntry | undefined>(ringSize),
       };
@@ -39,7 +40,7 @@ export class WhiteboardRepository implements YjsRepository {
     entry.seq += 1;
 
     // 링버퍼에 저장 (고정 배열 + mod)
-    const slot = entry.seq % entry.ringSize;
+    const slot = (entry.seq - 1) % entry.ringSize;
     entry.ring[slot] = { seq: entry.seq, update };
 
     return entry.seq;
@@ -54,7 +55,9 @@ export class WhiteboardRepository implements YjsRepository {
 
     // 링버퍼가 커버하는 최소 seq 계산
     // 예) seq=1500, ringSize=1000 -> 커버 범위는 (501..1500)
-    const minSeqKept = Math.max(1, entry.seq - entry.ringSize + 1);
+    const minSeqKeptBySnapshot = entry.baseSeq + 1;
+    const minSeqKeptByRing = Math.max(1, entry.seq - entry.ringSize + 1);
+    const minSeqKept = Math.max(minSeqKeptByRing, minSeqKeptBySnapshot);
 
     // 요청이 너무 오래돼서 링에 없음 -> full sync 유도
     if (last_seq + 1 < minSeqKept) return null;
@@ -62,7 +65,7 @@ export class WhiteboardRepository implements YjsRepository {
     // last_seq+1 부터 entry.seq 까지 순서대로 복원
     const updates: UpdateEntry[] = [];
     for (let s = last_seq + 1; s <= entry.seq; s++) {
-      const slot = s % entry.ringSize;
+      const slot = (s - 1) % entry.ringSize;
       const item = entry.ring[slot];
 
       if (!item || item.seq !== s) {
@@ -88,7 +91,7 @@ export class WhiteboardRepository implements YjsRepository {
     return Y.encodeStateAsUpdate(entry.doc);
   }
 
-  // snapshot을 적용
+  // snapshot을 적용 whiteboard는 snapshot을 0으로 리셋하면 성능적인 문제가 크게 발생한다.
   applySnapshot(room_id: string, snapshotUpdate: Uint8Array): void {
     const entry = this.ensure(room_id);
 
@@ -97,9 +100,16 @@ export class WhiteboardRepository implements YjsRepository {
     Y.applyUpdate(newDoc, snapshotUpdate);
 
     entry.doc = newDoc;
+    entry.baseSeq = entry.seq; // snap shot을 찍었을때 변경 사항
 
     // 새롭게 업데이트
-    entry.seq = 0;
+    entry.ring = new Array<UpdateEntry | undefined>(entry.ringSize);
+  }
+
+  // 스냅샷 작성 시기에 대해서 체크
+  markSnapshot(room_id: string, snapSeq: number) {
+    const entry = this.ensure(room_id);
+    entry.baseSeq = Math.max(entry.baseSeq, snapSeq);
     entry.ring = new Array<UpdateEntry | undefined>(entry.ringSize);
   }
 
