@@ -1,13 +1,18 @@
 import { useState, useRef } from 'react';
 import Konva from 'konva';
 import { KonvaEventObject } from 'konva/lib/Node';
-import type { ArrowItem, WhiteboardItem, ShapeItem } from '@/types/whiteboard';
+import type {
+  ArrowItem,
+  LineItem,
+  WhiteboardItem,
+  ShapeItem,
+} from '@/types/whiteboard';
 import { pointToSegmentDistance } from '@/utils/arrow';
 import { getWorldPointerPosition } from '@/utils/coordinate';
 import { getNearestSnapPoint } from '@/utils/geom';
 
 interface UseArrowHandlesProps {
-  arrow: ArrowItem | null;
+  arrow: ArrowItem | LineItem | null;
   items: WhiteboardItem[];
   stageRef: React.RefObject<Konva.Stage | null>;
   updateItem: (id: string, payload: Partial<WhiteboardItem>) => void;
@@ -89,8 +94,13 @@ export function useArrowHandles({
     setSelectedHandleIndex(index);
   };
 
-  // 부착 로직 함수
+  // 부착 로직 함수 (arrow 타입만 부착 지원)
   const checkSnapping = (x: number, y: number) => {
+    // line 타입은 부착 기능 비활성화
+    if (arrow?.type === 'line') {
+      return { x, y };
+    }
+
     // 도형만 부착
     const shapes = items.filter((item) => item.type === 'shape') as ShapeItem[];
 
