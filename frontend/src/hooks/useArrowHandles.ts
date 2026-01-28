@@ -19,6 +19,8 @@ export function useArrowHandles({
   const [selectedHandleIndex, setSelectedHandleIndex] = useState<number | null>(
     null,
   );
+  // 드래그 중인 points를 로컬 상태로 관리
+  const [draggingPoints, setDraggingPoints] = useState<number[] | null>(null);
 
   // 화살표 더블클릭 - 중간점 추가
   const handleArrowDblClick = (arrowId: string) => {
@@ -73,11 +75,11 @@ export function useArrowHandles({
     if (!arrow) return;
 
     const { x, y } = e.target.position();
-    const newPoints = [...arrow.points];
+    const newPoints = [...(draggingPoints || arrow.points)];
     newPoints[0] = x;
     newPoints[1] = y;
 
-    updateItem(arrow.id, { points: newPoints });
+    setDraggingPoints(newPoints);
   };
 
   // 화살표 중간점 드래그
@@ -88,11 +90,11 @@ export function useArrowHandles({
     if (!arrow) return;
 
     const { x, y } = e.target.position();
-    const newPoints = [...arrow.points];
+    const newPoints = [...(draggingPoints || arrow.points)];
     newPoints[pointIndex] = x;
     newPoints[pointIndex + 1] = y;
 
-    updateItem(arrow.id, { points: newPoints });
+    setDraggingPoints(newPoints);
   };
 
   // 화살표 끝점 드래그
@@ -100,11 +102,19 @@ export function useArrowHandles({
     if (!arrow) return;
 
     const { x, y } = e.target.position();
-    const newPoints = [...arrow.points];
+    const newPoints = [...(draggingPoints || arrow.points)];
     newPoints[newPoints.length - 2] = x;
     newPoints[newPoints.length - 1] = y;
 
-    updateItem(arrow.id, { points: newPoints });
+    setDraggingPoints(newPoints);
+  };
+
+  // 핸들 드래그 종료 시 store에 반영
+  const handleHandleDragEnd = () => {
+    if (!arrow || !draggingPoints) return;
+
+    updateItem(arrow.id, { points: draggingPoints });
+    setDraggingPoints(null);
   };
 
   // 화살표 중간점 삭제
@@ -137,7 +147,9 @@ export function useArrowHandles({
     handleArrowStartDrag,
     handleArrowControlPointDrag,
     handleArrowEndDrag,
+    handleHandleDragEnd,
     handleArrowDblClick,
     deleteControlPoint,
+    draggingPoints,
   };
 }

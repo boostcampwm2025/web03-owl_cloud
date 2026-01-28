@@ -1,21 +1,22 @@
 'use client';
 
-import Konva from 'konva';
-import { Text, Line } from 'react-konva';
-import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
+import React from 'react';
 import { useCursorStyle } from '@/hooks/useCursorStyle';
 import { useItemInteraction } from '@/hooks/useItemInteraction';
+import TextItem from '@/components/whiteboard/items/text/TextItem';
 import ShapeItem from '@/components/whiteboard/items/shape/ShapeItem';
 import CustomArrow from '@/components/whiteboard/items/arrow/CustomArrow';
+import LineItem from '@/components/whiteboard/items/line/LineItem';
+import DrawingItem from '@/components/whiteboard/items/drawing/DrawingItem';
 import ImageItem from '@/components/whiteboard/items/image/ImageItem';
 import VideoItem from '@/components/whiteboard/items/video/VideoItem';
 import YoutubeItem from '@/components/whiteboard/items/youtube/YoutubeItem';
 
 import type {
-  TextItem,
+  TextItem as TextItemType,
   ArrowItem,
-  LineItem,
-  DrawingItem,
+  LineItem as LineItemType,
+  DrawingItem as DrawingItemType,
   ShapeItem as ShapeItemType,
   ImageItem as ImageItemType,
   VideoItem as VideoItemType,
@@ -34,85 +35,45 @@ interface RenderItemProps {
   onArrowDblClick?: (id: string) => void;
 }
 
-// RenderItem Component
-export default function RenderItem({
+function RenderItem({
   item,
+  isSelected,
   onSelect,
   onChange,
   onDragStart,
   onDragEnd,
   onArrowDblClick,
 }: RenderItemProps) {
-  const setEditingTextId = useWhiteboardLocalStore(
-    (state) => state.setEditingTextId,
-  );
-
   // 아이템 인터랙션 상태
-  const { isInteractive, isDraggable, isListening } = useItemInteraction();
+  const { isDraggable, isListening } = useItemInteraction();
 
   // 커서 스타일 훅
   const { handleMouseEnter, handleMouseLeave } = useCursorStyle('move');
 
   if (item.type === 'text') {
-    const textItem = item as TextItem;
+    const textItem = item as TextItemType;
     return (
-      <Text
-        {...textItem}
-        id={item.id}
-        draggable={isDraggable}
-        listening={isListening}
-        onMouseDown={() => isInteractive && onSelect(item.id)}
-        onTouchStart={() => isInteractive && onSelect(item.id)}
+      <TextItem
+        textItem={textItem}
+        isDraggable={isDraggable}
+        isListening={isListening}
+        isSelected={isSelected}
+        onSelect={() => onSelect(item.id)}
+        onChange={onChange}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        onDblClick={() => {
-          if (!isInteractive) return;
-          setEditingTextId(item.id);
-          onSelect(item.id);
-        }}
-        onDragEnd={(e) => {
-          if (!isInteractive) return;
-          onChange({
-            x: e.target.x(),
-            y: e.target.y(),
-          });
-        }}
-        onTransform={(e) => {
-          if (!isInteractive) return;
-          const node = e.target;
-          const scaleX = node.scaleX();
-          const scaleY = node.scaleY();
-
-          // Transform 중에도 스케일 보정
-          if (scaleX !== 1 || scaleY !== 1) {
-            node.scaleX(1);
-            node.scaleY(1);
-            node.width(node.width() * scaleX);
-          }
-        }}
-        onTransformEnd={(e) => {
-          if (!isInteractive) return;
-          const node = e.target;
-          const scaleX = node.scaleX();
-          node.scaleX(1);
-          node.scaleY(1);
-          onChange({
-            x: node.x(),
-            y: node.y(),
-            width: Math.max(5, node.width() * scaleX),
-            rotation: node.rotation(),
-          });
-        }}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
       />
     );
   }
 
   if (item.type === 'arrow') {
     const arrowItem = item as ArrowItem;
-
     return (
       <CustomArrow
         item={arrowItem}
+        isSelected={isSelected}
         onSelect={onSelect}
         onChange={onChange}
         onDragStart={onDragStart}
@@ -123,104 +84,38 @@ export default function RenderItem({
   }
 
   if (item.type === 'line') {
-    const lineItem = item as LineItem;
+    const lineItem = item as LineItemType;
     return (
-      <Line
-        {...lineItem}
-        id={item.id}
-        draggable={isDraggable}
-        listening={isListening}
-        hitStrokeWidth={30}
-        lineCap="round"
-        lineJoin="round"
-        onMouseDown={() => isInteractive && onSelect(item.id)}
+      <LineItem
+        lineItem={lineItem}
+        isDraggable={isDraggable}
+        isListening={isListening}
+        isSelected={isSelected}
+        onSelect={() => onSelect(item.id)}
+        onChange={onChange}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        onDblClick={() => {
-          if (!isInteractive) return;
-          onArrowDblClick?.(item.id);
-        }}
-        onDragStart={() => {
-          if (!isInteractive) return;
-          onDragStart?.();
-        }}
-        onDragEnd={(e) => {
-          if (!isInteractive) return;
-          const pos = e.target.position();
-          const newPoints = lineItem.points.map((p, i) =>
-            i % 2 === 0 ? p + pos.x : p + pos.y,
-          );
-          e.target.position({ x: 0, y: 0 });
-          onChange({ points: newPoints });
-          onDragEnd?.();
-        }}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        onArrowDblClick={onArrowDblClick}
       />
     );
   }
 
   if (item.type === 'drawing') {
-    const drawingItem = item as DrawingItem;
+    const drawingItem = item as DrawingItemType;
     return (
-      <Line
-        {...drawingItem}
-        id={item.id}
-        draggable={isDraggable}
-        listening={isListening}
-        hitStrokeWidth={30}
-        tension={0.4}
-        lineCap="round"
-        lineJoin="round"
-        strokeScaleEnabled={true}
-        onMouseDown={() => isInteractive && onSelect(item.id)}
+      <DrawingItem
+        drawingItem={drawingItem}
+        isDraggable={isDraggable}
+        isListening={isListening}
+        isSelected={isSelected}
+        onSelect={() => onSelect(item.id)}
+        onChange={onChange}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        onDragEnd={(e) => {
-          if (!isInteractive) return;
-          const pos = e.target.position();
-          const newPoints = drawingItem.points.map((p, i) =>
-            i % 2 === 0 ? p + pos.x : p + pos.y,
-          );
-
-          e.target.position({ x: 0, y: 0 });
-
-          onChange({
-            points: newPoints,
-          });
-        }}
-        onTransform={(e) => {
-          if (!isInteractive) return;
-          const node = e.target;
-
-          if (node.getClassName() !== 'Line') return;
-          const lineNode = node as Konva.Line;
-
-          const scaleX = lineNode.scaleX();
-          const scaleY = lineNode.scaleY();
-
-          // 현재 points를 가져와서 scale 적용
-          const currentPoints = lineNode.points();
-          const newPoints = currentPoints.map((p, i) =>
-            i % 2 === 0 ? p * scaleX : p * scaleY,
-          );
-
-          lineNode.points(newPoints);
-          lineNode.scaleX(1);
-          lineNode.scaleY(1);
-        }}
-        onTransformEnd={(e) => {
-          if (!isInteractive) return;
-          const node = e.target;
-
-          if (node.getClassName() !== 'Line') return;
-          const lineNode = node as Konva.Line;
-
-          onChange({
-            points: lineNode.points(),
-            rotation: lineNode.rotation(),
-            scaleX: 1,
-            scaleY: 1,
-          });
-        }}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
       />
     );
   }
@@ -232,7 +127,8 @@ export default function RenderItem({
         shapeItem={shapeItem}
         isDraggable={isDraggable}
         isListening={isListening}
-        onSelect={() => isInteractive && onSelect(item.id)}
+        isSelected={isSelected}
+        onSelect={() => onSelect(item.id)}
         onChange={onChange}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -242,12 +138,14 @@ export default function RenderItem({
     );
   }
 
-  // Image Rendering
   if (item.type === 'image') {
     const imageItem = item as ImageItemType;
     return (
       <ImageItem
         imageItem={imageItem}
+        isDraggable={isDraggable}
+        isListening={isListening}
+        isSelected={isSelected}
         onSelect={() => onSelect(item.id)}
         onChange={onChange}
         onMouseEnter={handleMouseEnter}
@@ -258,12 +156,14 @@ export default function RenderItem({
     );
   }
 
-  // Video Rendering
   if (item.type === 'video') {
     const videoItem = item as VideoItemType;
     return (
       <VideoItem
         videoItem={videoItem}
+        isDraggable={isDraggable}
+        isListening={isListening}
+        isSelected={isSelected}
         onSelect={() => onSelect(item.id)}
         onChange={onChange}
         onMouseEnter={handleMouseEnter}
@@ -274,12 +174,14 @@ export default function RenderItem({
     );
   }
 
-  // Youtube Rendering
   if (item.type === 'youtube') {
     const youtubeItem = item as YoutubeItemType;
     return (
       <YoutubeItem
         youtubeItem={youtubeItem}
+        isDraggable={isDraggable}
+        isListening={isListening}
+        isSelected={isSelected}
         onSelect={() => onSelect(item.id)}
         onChange={onChange}
         onMouseEnter={handleMouseEnter}
@@ -292,3 +194,11 @@ export default function RenderItem({
 
   return null;
 }
+
+export default React.memo(RenderItem, (prevProps, nextProps) => {
+  // item, isSelected, onSelect, onChange 등이 변경되지 않으면 재렌더링 넘김
+  return (
+    prevProps.item === nextProps.item &&
+    prevProps.isSelected === nextProps.isSelected
+  );
+});

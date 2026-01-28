@@ -23,6 +23,7 @@ interface LocalState {
   currentDrawing: DrawingItem | null;
   drawingStroke: string;
   drawingSize: DrawingSize;
+  awarenessCallback: ((selectedId: string | null) => void) | null;
 }
 
 interface LocalActions {
@@ -37,6 +38,9 @@ interface LocalActions {
   startDrawing: (x: number, y: number) => void;
   continueDrawing: (x: number, y: number) => void;
   finishDrawing: () => void;
+  setAwarenessCallback: (
+    callback: ((selectedId: string | null) => void) | null,
+  ) => void;
 }
 
 type LocalStore = LocalState & LocalActions;
@@ -45,7 +49,16 @@ type LocalStore = LocalState & LocalActions;
 export const useWhiteboardLocalStore = create<LocalStore>((set, get) => ({
   // Select 초기값
   selectedId: null,
-  selectItem: (id) => set({ selectedId: id }),
+  awarenessCallback: null,
+  selectItem: (id) => {
+    set({ selectedId: id });
+    // Awareness 업데이트
+    const callback = get().awarenessCallback;
+    if (callback) {
+      callback(id);
+    }
+  },
+  setAwarenessCallback: (callback) => set({ awarenessCallback: callback }),
 
   // Text Editing 초기값
   editingTextId: null,

@@ -9,6 +9,7 @@ import type { WhiteboardItem, TextItem, ArrowItem } from '@/types/whiteboard';
 
 import { useWhiteboardSharedStore } from '@/store/useWhiteboardSharedStore';
 import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
+import { useWhiteboardAwarenessStore } from '@/store/useWhiteboardAwarenessStore';
 import { useItemActions } from '@/hooks/useItemActions';
 import { cn } from '@/utils/cn';
 
@@ -22,6 +23,7 @@ import { useCanvasMouseEvents } from '@/hooks/useCanvasMouseEvents';
 import RenderItem from '@/components/whiteboard/items/RenderItem';
 import TextArea from '@/components/whiteboard/items/text/TextArea';
 import ItemTransformer from '@/components/whiteboard/controls/ItemTransformer';
+import RemoteSelectionLayer from '@/components/whiteboard/remote/RemoteSelectionLayer';
 import ArrowHandles from '@/components/whiteboard/items/arrow/ArrowHandles';
 
 export default function Canvas() {
@@ -41,6 +43,7 @@ export default function Canvas() {
     (state) => state.setViewportSize,
   );
   const cursorMode = useWhiteboardLocalStore((state) => state.cursorMode);
+  const myUserId = useWhiteboardAwarenessStore((state) => state.myUserId);
 
   const stageRef = useRef<Konva.Stage | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -83,8 +86,10 @@ export default function Canvas() {
     handleArrowStartDrag,
     handleArrowControlPointDrag,
     handleArrowEndDrag,
+    handleHandleDragEnd,
     handleArrowDblClick,
     deleteControlPoint,
+    draggingPoints,
   } = useArrowHandles({
     arrow: isArrowOrLineSelected ? (selectedItem as ArrowItem) : null,
     stageRef,
@@ -217,30 +222,38 @@ export default function Canvas() {
           />
 
           {/* 아이템 렌더링 */}
-          {items.map((item) => (
-            <RenderItem
-              key={item.id}
-              item={item}
-              isSelected={item.id === selectedId}
-              onSelect={selectItem}
-              onChange={(newAttributes) =>
-                handleItemChange(item.id, newAttributes)
-              }
-              onArrowDblClick={handleArrowDblClick}
-              onDragStart={() => {
-                if (item.type === 'arrow' || item.type === 'line') {
-                  setIsDraggingArrow(true);
-                }
-              }}
-              onDragEnd={() => {
-                if (item.type === 'arrow' || item.type === 'line') {
-                  setIsDraggingArrow(false);
-                }
-              }}
-            />
-          ))}
+          {items.map((item) => {
+            // 드래그 중인 화살표/선이면 draggingPoints 적용
+            const displayItem =
+              item.id === selectedId &&
+              (item.type === 'arrow' || item.type === 'line') &&
+              draggingPoints
+                ? { ...item, points: draggingPoints }
+                : item;
 
-          {/* 화살표/선 핸들 (드래그 중이 아닐 때만 보임) */}
+            return (
+              <RenderItem
+                key={item.id}
+                item={displayItem}
+                isSelected={item.id === selectedId}
+                onSelect={selectItem}
+                onChange={(newAttributes) =>
+                  handleItemChange(item.id, newAttributes)
+                }
+                onArrowDblClick={handleArrowDblClick}
+                onDragStart={() => {
+                  if (item.type === 'arrow' || item.type === 'line') {
+                    setIsDraggingArrow(true);
+                  }
+                }}
+                onDragEnd={() => {
+                  if (item.type === 'arrow' || item.type === 'line') {
+                    setIsDraggingArrow(false);
+                  }
+                }}
+              />
+            );
+          })}
           {isArrowOrLineSelected && selectedItem && !isDraggingArrow && (
             <ArrowHandles
               arrow={selectedItem as ArrowItem}
@@ -249,6 +262,8 @@ export default function Canvas() {
               onStartDrag={handleArrowStartDrag}
               onControlPointDrag={handleArrowControlPointDrag}
               onEndDrag={handleArrowEndDrag}
+              onDragEnd={handleHandleDragEnd}
+              draggingPoints={draggingPoints}
             />
           )}
 
@@ -264,7 +279,15 @@ export default function Canvas() {
             />
           )}
 
-          {/* Transformer */}
+          {/* 다른 사용자의 선택 표시 */}
+          <RemoteSelectionLayer
+            myUserId={myUserId}
+            selectedId={selectedId}
+            items={items}
+            stageRef={stageRef}
+          />
+
+          {/* 내 Transformer */}
           <ItemTransformer
             selectedId={selectedId}
             items={items}

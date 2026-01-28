@@ -14,15 +14,9 @@ export const useAddWhiteboardItem = () => {
     addYoutube,
   } = useItemActions();
 
-  // Local Store 상태
-  const stagePos = useWhiteboardLocalStore((state) => state.stagePos);
-  const stageScale = useWhiteboardLocalStore((state) => state.stageScale);
-  const viewportWidth = useWhiteboardLocalStore((state) => state.viewportWidth);
-  const viewportHeight = useWhiteboardLocalStore(
-    (state) => state.viewportHeight,
-  );
-
   const getViewportCenter = () => {
+    const { stagePos, stageScale, viewportWidth, viewportHeight } =
+      useWhiteboardLocalStore.getState();
     return getCenterWorldPos(
       stagePos,
       stageScale,

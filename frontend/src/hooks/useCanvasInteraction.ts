@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { useWhiteboardSharedStore } from '@/store/useWhiteboardSharedStore';
 import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
@@ -18,6 +19,10 @@ export const useCanvasInteraction = (
   const canvasHeight = useWhiteboardSharedStore((state) => state.canvasHeight);
   const setStageScale = useWhiteboardLocalStore((state) => state.setStageScale);
   const setStagePos = useWhiteboardLocalStore((state) => state.setStagePos);
+
+  // 스로틀링을 위한 ref
+  const lastDragUpdateRef = useRef(0);
+  const DRAG_UPDATE_INTERVAL = 16; // 60fps (16ms)
 
   // stage 위치를 화면 범위 내로 제한
   const constrainStagePosition = (
@@ -107,7 +112,18 @@ export const useCanvasInteraction = (
     const stage = e.target.getStage();
     if (!stage) return;
 
-    stage.position(constrainStagePosition(stage.position(), stage.scaleX()));
+    const constrainedPos = constrainStagePosition(
+      stage.position(),
+      stage.scaleX(),
+    );
+    stage.position(constrainedPos);
+
+    // 스로틀링: 16ms마다만 store 업데이트
+    const now = Date.now();
+    if (now - lastDragUpdateRef.current >= DRAG_UPDATE_INTERVAL) {
+      setStagePos(constrainedPos);
+      lastDragUpdateRef.current = now;
+    }
   };
 
   const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {

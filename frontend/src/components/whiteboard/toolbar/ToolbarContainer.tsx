@@ -44,7 +44,6 @@ export default function ToolbarContainer() {
 
   // 커서 모드 상태
   const cursorMode = useWhiteboardLocalStore((state) => state.cursorMode);
-  const setCursorMode = useWhiteboardLocalStore((state) => state.setCursorMode);
 
   // 아이템 추가 훅
   const { handleAddText, handleAddArrow, handleAddLine } =
@@ -55,6 +54,7 @@ export default function ToolbarContainer() {
 
   // 토글 모드 (같은 모드면(버튼 다시 눌렀을때) select로, 아니면 해당 모드로)
   const toggleCursorMode = (mode: CursorMode) => {
+    const { cursorMode, setCursorMode } = useWhiteboardLocalStore.getState();
     if (cursorMode === mode) {
       setActiveTool('select');
       setCursorMode('select');
@@ -71,6 +71,7 @@ export default function ToolbarContainer() {
     e: React.MouseEvent<HTMLButtonElement>,
   ) => {
     togglePanel(panel, e);
+    const { setCursorMode } = useWhiteboardLocalStore.getState();
     setCursorMode('select');
     setActiveTool('select');
   };

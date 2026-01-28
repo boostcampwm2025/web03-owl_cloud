@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useMemo, useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 
 import Konva from 'konva';
 import { Image as KonvaImage, Group, Circle, Path } from 'react-konva';
 
 import { VideoItem as VideoItemType } from '@/types/whiteboard';
+import { useItemAnimation } from '@/hooks/useItemAnimation';
 
 // Mute Icon Paths
 const MUTE_PATHS = [
@@ -23,6 +24,9 @@ const UNMUTE_PATHS = [
 
 interface VideoItemProps {
   videoItem: VideoItemType;
+  isDraggable: boolean;
+  isListening: boolean;
+  isSelected: boolean;
   onSelect: () => void;
   onChange: (newAttrs: Partial<VideoItemType>) => void;
   onMouseEnter: (e: Konva.KonvaEventObject<MouseEvent>) => void;
@@ -33,6 +37,9 @@ interface VideoItemProps {
 
 export default function VideoItem({
   videoItem,
+  isDraggable,
+  isListening,
+  isSelected,
   onSelect,
   onChange,
   onMouseEnter,
@@ -42,9 +49,20 @@ export default function VideoItem({
 }: VideoItemProps) {
   // KonvaImage 이미지 객체 참조
   const imageRef = useRef<Konva.Image>(null);
-
   // 소리 상태 관리 (초기값:음소거 상태)
   const [isMuted, setIsMuted] = useState(true);
+
+  const [isDragging, setIsDragging] = useState(false);
+
+  // 애니메이션 훅
+  const groupRef = useItemAnimation({
+    x: videoItem.x,
+    y: videoItem.y,
+    width: videoItem.width,
+    height: videoItem.height,
+    isSelected,
+    isDragging,
+  });
 
   // HTML Video Element 생성
   // Konva에 Video 컴포넌트가 없어서 HTML video 태그를 만들어서 Image 컴포넌트에 전달ㄹ
@@ -119,6 +137,7 @@ export default function VideoItem({
 
   return (
     <Group
+      ref={groupRef as React.RefObject<Konva.Group>}
       id={videoItem.id}
       // 위치
       x={videoItem.x}
@@ -129,14 +148,19 @@ export default function VideoItem({
       // 회전
       rotation={videoItem.rotation}
       // 액션
-      draggable
+      draggable={isDraggable}
+      listening={isListening}
       onMouseDown={onSelect}
       onTouchStart={onSelect}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      onDragStart={onDragStart}
       // 이동
+      onDragStart={() => {
+        setIsDragging(true);
+        onDragStart?.();
+      }}
       onDragEnd={(e) => {
+        setIsDragging(false);
         onChange({ x: e.target.x(), y: e.target.y() });
         onDragEnd?.();
       }}

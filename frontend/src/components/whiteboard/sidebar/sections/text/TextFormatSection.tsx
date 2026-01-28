@@ -14,6 +14,10 @@ interface TextStyleSectionProps {
   textDecoration: string;
   onChangeFontStyle: (fontStyle: string) => void;
   onChangeTextDecoration: (textDecoration: string) => void;
+  onChangeTextFormat?: (format: {
+    fontStyle: string;
+    textDecoration: string;
+  }) => void;
 }
 
 type StyleValue = 'bold' | 'italic' | 'underline' | 'line-through';
@@ -23,6 +27,7 @@ export default function TextFormatSection({
   textDecoration,
   onChangeFontStyle,
   onChangeTextDecoration,
+  onChangeTextFormat,
 }: TextStyleSectionProps) {
   // 현재 선택된 스타일들을 배열로 변환
   const selectedStyles: StyleValue[] = [];
@@ -34,30 +39,43 @@ export default function TextFormatSection({
 
   // 배열을 fontStyle과 textDecoration으로 분리
   const handleChange = (styles: StyleValue[]) => {
-    // fontStyle 처리
+    // fontStyle 계산
     const hasBold = styles.includes('bold');
     const hasItalic = styles.includes('italic');
+    let newFontStyle: string;
     if (!hasBold && !hasItalic) {
-      onChangeFontStyle('normal');
+      newFontStyle = 'normal';
     } else if (hasBold && hasItalic) {
-      onChangeFontStyle('bold italic');
+      newFontStyle = 'bold italic';
     } else if (hasBold) {
-      onChangeFontStyle('bold');
+      newFontStyle = 'bold';
     } else {
-      onChangeFontStyle('italic');
+      newFontStyle = 'italic';
     }
 
-    // textDecoration 처리
+    // textDecoration 계산
     const hasUnderline = styles.includes('underline');
     const hasStrikeThrough = styles.includes('line-through');
+    let newTextDecoration: string;
     if (!hasUnderline && !hasStrikeThrough) {
-      onChangeTextDecoration('none');
+      newTextDecoration = 'none';
     } else if (hasUnderline && hasStrikeThrough) {
-      onChangeTextDecoration('underline line-through');
+      newTextDecoration = 'underline line-through';
     } else if (hasUnderline) {
-      onChangeTextDecoration('underline');
+      newTextDecoration = 'underline';
     } else {
-      onChangeTextDecoration('line-through');
+      newTextDecoration = 'line-through';
+    }
+
+    // 한 번에 업데이트 함
+    if (onChangeTextFormat) {
+      onChangeTextFormat({
+        fontStyle: newFontStyle,
+        textDecoration: newTextDecoration,
+      });
+    } else {
+      onChangeFontStyle(newFontStyle);
+      onChangeTextDecoration(newTextDecoration);
     }
   };
 

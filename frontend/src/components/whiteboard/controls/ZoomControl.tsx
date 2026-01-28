@@ -11,33 +11,40 @@ import {
 
 export default function ZoomControls() {
   const stageScale = useWhiteboardLocalStore((state) => state.stageScale);
-  const stagePos = useWhiteboardLocalStore((state) => state.stagePos);
-  const setStageScale = useWhiteboardLocalStore((state) => state.setStageScale);
-  const setStagePos = useWhiteboardLocalStore((state) => state.setStagePos);
 
   // 줌 인
   const handleZoomIn = () => {
+    const { stageScale, stagePos, setStageScale, setStagePos } =
+      useWhiteboardLocalStore.getState();
     const newScale = Math.min(stageScale + ZOOM_STEP, MAX_SCALE);
-    zoomToCenter(newScale);
+    zoomToCenter(newScale, stageScale, stagePos, setStageScale, setStagePos);
   };
 
   // 줌 아웃
   const handleZoomOut = () => {
+    const { stageScale, stagePos, setStageScale, setStagePos } =
+      useWhiteboardLocalStore.getState();
     const newScale = Math.max(stageScale - ZOOM_STEP, MIN_SCALE);
-    zoomToCenter(newScale);
+    zoomToCenter(newScale, stageScale, stagePos, setStageScale, setStagePos);
   };
 
   // 화면 중앙을 기준으로 줌
-  const zoomToCenter = (newScale: number) => {
-    if (newScale === stageScale) return;
+  const zoomToCenter = (
+    newScale: number,
+    currentScale: number,
+    currentPos: { x: number; y: number },
+    setStageScale: (scale: number) => void,
+    setStagePos: (pos: { x: number; y: number }) => void,
+  ) => {
+    if (newScale === currentScale) return;
 
     const centerX = window.innerWidth / 2;
     const centerY = window.innerHeight / 2;
 
     // 현재 화면 중앙 캔버스 좌표 계산
     const pointTo = {
-      x: (centerX - stagePos.x) / stageScale,
-      y: (centerY - stagePos.y) / stageScale,
+      x: (centerX - currentPos.x) / currentScale,
+      y: (centerY - currentPos.y) / currentScale,
     };
 
     // 확대, 축소 후에도 같은 캔버스 좌표가 중앙에 오도록

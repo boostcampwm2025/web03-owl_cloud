@@ -16,6 +16,8 @@ interface ArrowHandlesProps {
     e: KonvaEventObject<DragEvent>,
   ) => void;
   onEndDrag: (e: KonvaEventObject<DragEvent>) => void;
+  onDragEnd: () => void;
+  draggingPoints: number[] | null;
 }
 
 export default function ArrowHandles({
@@ -25,12 +27,16 @@ export default function ArrowHandles({
   onStartDrag,
   onControlPointDrag,
   onEndDrag,
+  onDragEnd,
+  draggingPoints,
 }: ArrowHandlesProps) {
-  const controlPoints = getControlPoints(arrow.points);
-  const startPoint = { x: arrow.points[0], y: arrow.points[1] };
+  // 드래그 중이면 draggingPoints 사용, 아니면 arrow.points 사용
+  const points = draggingPoints || arrow.points;
+  const controlPoints = getControlPoints(points);
+  const startPoint = { x: points[0], y: points[1] };
   const endPoint = {
-    x: arrow.points[arrow.points.length - 2],
-    y: arrow.points[arrow.points.length - 1],
+    x: points[points.length - 2],
+    y: points[points.length - 1],
   };
 
   const { handleMouseEnter, handleMouseLeave } = useCursorStyle('pointer');
@@ -47,6 +53,7 @@ export default function ArrowHandles({
         strokeWidth={2}
         draggable
         onDragMove={onStartDrag}
+        onDragEnd={onDragEnd}
         onClick={(e) => onHandleClick(e, 0)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -66,6 +73,7 @@ export default function ArrowHandles({
             strokeWidth={isHandleSelected ? 3 : 2}
             draggable
             onDragMove={(e) => onControlPointDrag(point.index, e)}
+            onDragEnd={onDragEnd}
             onClick={(e) => onHandleClick(e, point.index)}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
@@ -83,7 +91,8 @@ export default function ArrowHandles({
         strokeWidth={2}
         draggable
         onDragMove={onEndDrag}
-        onClick={(e) => onHandleClick(e, arrow.points.length - 2)}
+        onDragEnd={onDragEnd}
+        onClick={(e) => onHandleClick(e, points.length - 2)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       />

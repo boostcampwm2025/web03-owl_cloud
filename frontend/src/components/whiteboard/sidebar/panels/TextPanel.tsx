@@ -22,6 +22,10 @@ interface TextPanelProps {
   onChangeAlign: (align: TextAlignment) => void;
   onChangeFontStyle: (fontStyle: string) => void;
   onChangeTextDecoration: (textDecoration: string) => void;
+  onChangeTextFormat?: (format: {
+    fontStyle: string;
+    textDecoration: string;
+  }) => void;
   onChangeLayer: (direction: LayerDirection) => void;
 }
 
@@ -36,6 +40,7 @@ export default function TextPanel({
   onChangeAlign,
   onChangeFontStyle,
   onChangeTextDecoration,
+  onChangeTextFormat,
   onChangeLayer,
 }: TextPanelProps) {
   return (
@@ -60,6 +65,7 @@ export default function TextPanel({
         textDecoration={textDecoration}
         onChangeFontStyle={onChangeFontStyle}
         onChangeTextDecoration={onChangeTextDecoration}
+        onChangeTextFormat={onChangeTextFormat}
       />
 
       {/* 레이어 (Layer) */}

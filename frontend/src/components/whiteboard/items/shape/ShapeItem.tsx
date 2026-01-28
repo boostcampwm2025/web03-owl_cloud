@@ -1,14 +1,17 @@
 'use client';
 
+import { useState } from 'react';
 import Konva from 'konva';
 
 import { Rect, Ellipse, Line } from 'react-konva';
 import { ShapeItem as ShapeItemType } from '@/types/whiteboard';
+import { useItemAnimation } from '@/hooks/useItemAnimation';
 
 interface ShapeItemProps {
   shapeItem: ShapeItemType;
   isDraggable: boolean;
   isListening: boolean;
+  isSelected: boolean;
 
   onSelect: () => void;
   onChange: (newAttrs: Partial<ShapeItemType>) => void;
@@ -24,6 +27,7 @@ export default function ShapeItem({
   shapeItem,
   isDraggable,
   isListening,
+  isSelected,
   onSelect,
   onChange,
   onMouseEnter,
@@ -31,13 +35,28 @@ export default function ShapeItem({
   onDragStart,
   onDragEnd,
 }: ShapeItemProps) {
+  const [isDragging, setIsDragging] = useState(false);
+
+  const isCircle = shapeItem.shapeType === 'circle';
+  const displayX = isCircle ? shapeItem.x + shapeItem.width / 2 : shapeItem.x;
+  const displayY = isCircle ? shapeItem.y + shapeItem.height / 2 : shapeItem.y;
+
+  // 애니메이션 훅
+  const shapeRef = useItemAnimation({
+    x: displayX,
+    y: displayY,
+    width: shapeItem.width,
+    height: shapeItem.height,
+    isSelected,
+    isDragging,
+  });
+
   // 다각형 점 좌표
   let points: number[] = [];
   // w : 너비
   // h : 높이
   const w = shapeItem.width;
   const h = shapeItem.height;
-  const isCircle = shapeItem.shapeType === 'circle';
 
   // 모서리 둥글기 여부
   const isRoundEdge = !!shapeItem.cornerRadius && shapeItem.cornerRadius > 0;
@@ -46,8 +65,8 @@ export default function ShapeItem({
     id: shapeItem.id,
     draggable: isDraggable,
     listening: isListening,
-    x: isCircle ? shapeItem.x + shapeItem.width / 2 : shapeItem.x,
-    y: isCircle ? shapeItem.y + shapeItem.height / 2 : shapeItem.y,
+    x: displayX,
+    y: displayY,
     rotation: shapeItem.rotation,
     fill: shapeItem.fill,
     stroke: shapeItem.stroke,
@@ -64,13 +83,18 @@ export default function ShapeItem({
     onTouchStart: onSelect,
     onMouseEnter: onMouseEnter,
     onMouseLeave: onMouseLeave,
-    onDragStart: onDragStart,
+    onDragStart: () => {
+      setIsDragging(true);
+      onDragStart?.();
+    },
 
     // 이동 후 바뀐 위치 좌표 저장(드래그 끝난 이후 도형의 위치 좌표)
     // 위치 조정
     // 원형 : 원형 도형의 경우 중심점 기준이므로 보정 필요
     // 기타 도형 : 좌상단 기준이므로 보정 불필요
     onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => {
+      setIsDragging(false);
+
       let newX = e.target.x();
       let newY = e.target.y();
 
@@ -81,6 +105,7 @@ export default function ShapeItem({
       }
 
       onChange({ x: newX, y: newY });
+      onDragEnd?.();
     },
 
     // 도형 조절 : 크기 조절 및 회전
@@ -124,6 +149,7 @@ export default function ShapeItem({
     return (
       <Rect
         {...commonProps}
+        ref={shapeRef as React.RefObject<Konva.Rect>}
         width={shapeItem.width}
         height={shapeItem.height}
         cornerRadius={shapeItem.cornerRadius}
@@ -135,6 +161,7 @@ export default function ShapeItem({
     return (
       <Ellipse
         {...commonProps}
+        ref={shapeRef as React.RefObject<Konva.Ellipse>}
         radiusX={shapeItem.width / 2}
         radiusY={shapeItem.height / 2}
       />
@@ -148,6 +175,13 @@ export default function ShapeItem({
     points = [w / 2, 0, w, h * 0.38, w * 0.82, h, w * 0.18, h, 0, h * 0.38];
 
   return (
-    <Line {...commonProps} points={points} closed={true} width={w} height={h} />
+    <Line
+      {...commonProps}
+      points={points}
+      closed={true}
+      width={w}
+      height={h}
+      ref={shapeRef as React.RefObject<Konva.Line>}
+    />
   );
 }

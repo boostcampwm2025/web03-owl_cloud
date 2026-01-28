@@ -1,15 +1,19 @@
 'use client';
 
-import { useRef } from 'react';
+import { useState } from 'react';
 
 import Konva from 'konva';
 import { Image as KonvaImage } from 'react-konva';
 import useImage from 'use-image';
 
 import { ImageItem as ImageItemType } from '@/types/whiteboard';
+import { useItemAnimation } from '@/hooks/useItemAnimation';
 
 interface ImageItemProps {
   imageItem: ImageItemType;
+  isDraggable: boolean;
+  isListening: boolean;
+  isSelected: boolean;
   onSelect: () => void;
   onChange: (newAttrs: Partial<ImageItemType>) => void;
   onMouseEnter: (e: Konva.KonvaEventObject<MouseEvent>) => void;
@@ -20,6 +24,9 @@ interface ImageItemProps {
 
 export default function ImageItem({
   imageItem,
+  isDraggable,
+  isListening,
+  isSelected,
   onSelect,
   onChange,
   onMouseEnter,
@@ -38,9 +45,20 @@ export default function ImageItem({
   // 비동기적으로 이미지를 다운로드하거나 디코딩함
   // 로딩 완료시 imageBitmap변수에 이미지 객체를 담고 컴포넌트 렌더링 시 화면에 표시
   const [imageBitmap] = useImage(imageItem.src, 'anonymous');
-  const imageRef = useRef<Konva.Image>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // 애니메이션 훅
+  const imageRef = useItemAnimation({
+    x: imageItem.x,
+    y: imageItem.y,
+    width: imageItem.width,
+    height: imageItem.height,
+    isSelected,
+    isDragging,
+  });
 
   const commonProps = {
+    ref: imageRef as React.RefObject<Konva.Image>,
     id: imageItem.id,
 
     // 비트맵 연결
@@ -68,15 +86,20 @@ export default function ImageItem({
     // 테두리 스타일
     dash: imageItem.dash,
 
-    draggable: true,
+    draggable: isDraggable,
+    listening: isListening,
     onMouseDown: onSelect,
     onTouchStart: onSelect,
     onMouseEnter: onMouseEnter,
     onMouseLeave: onMouseLeave,
-    onDragStart: onDragStart,
+    onDragStart: () => {
+      setIsDragging(true);
+      onDragStart?.();
+    },
 
     // 이동
     onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => {
+      setIsDragging(false);
       onChange({ x: e.target.x(), y: e.target.y() });
       onDragEnd?.();
     },
@@ -105,5 +128,5 @@ export default function ImageItem({
     },
   };
 
-  return <KonvaImage ref={imageRef} {...commonProps} />;
+  return <KonvaImage {...commonProps} />;
 }

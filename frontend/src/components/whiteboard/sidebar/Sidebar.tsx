@@ -1,7 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
-
 // 패널 컴포넌트들 임포트
 import ShapePanel from '@/components/whiteboard/sidebar/panels/ShapePanel';
 import ArrowPanel from '@/components/whiteboard/sidebar/panels/ArrowPanel';
@@ -51,7 +49,6 @@ type SelectionType =
 export default function Sidebar() {
   // 스토어에서 선택된 아이템 정보 가져오기
   const selectedId = useWhiteboardLocalStore((state) => state.selectedId);
-  const items = useWhiteboardSharedStore((state) => state.items);
   const { updateItem, bringToFront, sendToBack, bringForward, sendBackward } =
     useItemActions();
 
@@ -65,10 +62,9 @@ export default function Sidebar() {
     (state) => state.setDrawingSize,
   );
 
-  // 선택된 아이템 찾기
-  const selectedItem = useMemo(
-    () => items.find((item) => item.id === selectedId),
-    [items, selectedId],
+  // 선택된 아이템 찾기 - items 전체를 구독하지 않고 선택된 아이템만 가져오기
+  const selectedItem = useWhiteboardSharedStore((state) =>
+    state.items.find((item) => item.id === selectedId),
   );
 
   // 선택된 아이템의 타입 결정
@@ -382,6 +378,12 @@ export default function Sidebar() {
             }
             onChangeTextDecoration={(textDecoration) =>
               updateItem(selectedId!, { textDecoration })
+            }
+            onChangeTextFormat={(format) =>
+              updateItem(selectedId!, {
+                fontStyle: format.fontStyle,
+                textDecoration: format.textDecoration,
+              })
             }
             onChangeLayer={handleLayerChange}
           />

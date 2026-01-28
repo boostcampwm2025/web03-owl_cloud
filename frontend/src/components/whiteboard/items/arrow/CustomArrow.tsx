@@ -1,10 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import { Group, Line } from 'react-konva';
+import Konva from 'konva';
 import type { ArrowItem, WhiteboardItem } from '@/types/whiteboard';
 import CustomArrowHead from './CustomArrowHead';
 import { useItemInteraction } from '@/hooks/useItemInteraction';
 import { useCursorStyle } from '@/hooks/useCursorStyle';
+import { usePointsAnimation } from '@/hooks/useItemAnimation';
 
 interface CustomArrowProps {
   item: ArrowItem;
@@ -13,6 +16,7 @@ interface CustomArrowProps {
   onDragStart?: () => void;
   onDragEnd?: () => void;
   onArrowDblClick?: (id: string) => void;
+  isSelected: boolean;
 }
 
 export default function CustomArrow({
@@ -22,7 +26,9 @@ export default function CustomArrow({
   onDragStart,
   onDragEnd,
   onArrowDblClick,
+  isSelected,
 }: CustomArrowProps) {
+  const [isDragging, setIsDragging] = useState(false);
   const startHeadType = item.startHeadType ?? 'none';
   const endHeadType = item.endHeadType ?? 'triangle';
 
@@ -31,6 +37,13 @@ export default function CustomArrow({
 
   // 커서 스타일 훅
   const { handleMouseEnter, handleMouseLeave } = useCursorStyle('move');
+
+  // 애니메이션 훅
+  const groupRef = usePointsAnimation({
+    points: item.points,
+    isDragging,
+    isSelected,
+  });
 
   const points = item.points;
   const n = points.length;
@@ -85,6 +98,7 @@ export default function CustomArrow({
 
   return (
     <Group
+      ref={groupRef as React.RefObject<Konva.Group>}
       id={item.id}
       name="arrow-group"
       draggable={isDraggable}
@@ -99,10 +113,12 @@ export default function CustomArrow({
       }}
       onDragStart={() => {
         if (!isInteractive) return;
+        setIsDragging(true);
         onDragStart?.();
       }}
       onDragEnd={(e) => {
         if (!isInteractive) return;
+        setIsDragging(false);
         const pos = e.target.position();
         const newPoints = item.points.map((p, i) =>
           i % 2 === 0 ? p + pos.x : p + pos.y,
