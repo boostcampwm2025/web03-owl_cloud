@@ -289,13 +289,10 @@ export default function ShapeTextArea({
       }
     };
 
-    const timer = setTimeout(() => {
-      window.addEventListener('mousedown', handleOutsideClick);
-    });
+    window.addEventListener('mousedown', handleOutsideClick);
 
     return () => {
       window.removeEventListener('mousedown', handleOutsideClick);
-      clearTimeout(timer);
     };
   }, [onChange, onClose, onSizeChange, shapeId, shapeItem, stageRef]);
 

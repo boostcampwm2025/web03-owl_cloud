@@ -164,9 +164,7 @@ export default function TextArea({
     stage.on('dragend', updatePosition);
     stage.on('wheel', updatePosition);
 
-    const timer = setTimeout(() => {
-      window.addEventListener('mousedown', handleOutsideClick);
-    });
+    window.addEventListener('mousedown', handleOutsideClick);
 
     return () => {
       textarea.removeEventListener('keydown', handleKeyDown);
@@ -175,7 +173,6 @@ export default function TextArea({
       stage.off('dragmove', updatePosition);
       stage.off('dragend', updatePosition);
       stage.off('wheel', updatePosition);
-      clearTimeout(timer);
     };
   }, [textId, textItem, onChange, onClose, onBoundsChange, stageRef]);
 
