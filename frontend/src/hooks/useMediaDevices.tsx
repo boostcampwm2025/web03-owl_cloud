@@ -12,10 +12,9 @@ export const useMediaDevices = () => {
   const [cameraId, setCameraId] = useState<string>('');
 
   useEffect(() => {
-    const init = async () => {
+    const updateDevices = async () => {
       const list = await navigator.mediaDevices.enumerateDevices();
 
-      // 버튼 disabled를 위해 빈 라벨 필터링
       const validDevices = list.filter((d) => d.label !== '');
       setDevices(validDevices);
 
@@ -28,7 +27,35 @@ export const useMediaDevices = () => {
       if (speaker) setSpeakerId(speaker.deviceId);
     };
 
-    init();
+    updateDevices();
+
+    navigator.mediaDevices.addEventListener('devicechange', updateDevices);
+
+    const watchPermissions = async () => {
+      try {
+        const camStatus = await navigator.permissions.query({
+          name: 'camera' as PermissionName,
+        });
+        const micStatus = await navigator.permissions.query({
+          name: 'microphone' as PermissionName,
+        });
+
+        camStatus.onchange = updateDevices;
+        micStatus.onchange = updateDevices;
+      } catch (error) {
+        console.warn(
+          'Permissions API is not fully supported in this browser.',
+          error,
+        );
+      }
+    };
+
+    watchPermissions();
+
+    // [추가] 컴포넌트 언마운트 시 이벤트 리스너 제거
+    return () => {
+      navigator.mediaDevices.removeEventListener('devicechange', updateDevices);
+    };
   }, []);
 
   const byKind = (kind: DeviceKind) => devices.filter((d) => d.kind === kind);

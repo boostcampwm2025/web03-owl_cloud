@@ -47,7 +47,7 @@ export default function MeetingLobby({
   };
 
   return (
-    <main className="flex min-h-screen items-center gap-20 px-6 max-lg:flex-col-reverse max-lg:justify-end max-lg:gap-12 max-lg:pt-32 lg:justify-center lg:pt-16">
+    <main className="flex min-h-screen items-center gap-20 px-6 max-lg:flex-col-reverse max-lg:justify-end max-lg:gap-12 max-lg:pt-32 max-lg:pb-8 lg:justify-center lg:pt-16">
       <Header />
 
       {/* 영상, 마이크 설정 부분 */}
