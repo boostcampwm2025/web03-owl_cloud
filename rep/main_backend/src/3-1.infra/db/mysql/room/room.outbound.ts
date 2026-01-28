@@ -263,3 +263,60 @@ export class UpdateRoomParticipantInfoToMysql extends UpdateValueToDb<Pool> {
     return updated;
   }
 }
+
+// 방의 비밀번호를 변경하는 로직
+@Injectable()
+export class UpdateRoomPasswordToMysql extends UpdateValueToDb<Pool> {
+  constructor(@Inject(MYSQL_DB) db: Pool) {
+    super(db);
+  }
+
+  private async updateValue({
+    db,
+    room_id,
+    user_id,
+    password_hash,
+  }: {
+    db: Pool;
+    room_id: string;
+    user_id: string;
+    password_hash: string | null;
+  }): Promise<boolean> {
+    const tableName: string = DB_TABLE_NAME.ROOMS;
+
+    const sql: string = `
+      UPDATE \`${tableName}\`
+      SET \`${DB_ROOMS_ATTRIBUTE_NAME.PASSWORD_HASH}\` = ?
+      WHERE \`${DB_ROOMS_ATTRIBUTE_NAME.ROOM_ID}\` = UUID_TO_BIN(?, true) AND 
+      \`${DB_ROOMS_ATTRIBUTE_NAME.OWNER_USER_ID}\` = UUID_TO_BIN(?, true) AND
+      \`${DB_ROOMS_ATTRIBUTE_NAME.STATUS}\` = 'open' AND
+      \`${DB_ROOMS_ATTRIBUTE_NAME.DELETED_AT}\` IS NULL
+      LIMIT 1
+    `;
+
+    // 안전하게 매핑
+    const normalized = password_hash && password_hash.trim().length > 0 ? password_hash : null;
+    const [result] = await db.execute<ResultSetHeader>(sql, [normalized, room_id, user_id]);
+
+    return result && result.affectedRows ? true : false;
+  }
+
+  // uniqueValue는 room_id updateColName은 user_id이고 updateValue는 비밀번호 해쉬
+  async update({
+    uniqueValue,
+    updateColName,
+    updateValue,
+  }: {
+    uniqueValue: string;
+    updateColName: string;
+    updateValue: string | null;
+  }): Promise<boolean> {
+    const db: Pool = this.db;
+    const room_id: string = uniqueValue;
+    const user_id: string = updateColName;
+    const password_hash: string | null = updateValue;
+
+    const updated: boolean = await this.updateValue({ db, room_id, user_id, password_hash });
+    return updated;
+  }
+}

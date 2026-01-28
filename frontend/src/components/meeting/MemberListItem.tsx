@@ -6,6 +6,8 @@ import {
   MicOnIcon,
 } from '@/assets/icons/meeting';
 import { useClickOutside } from '@/hooks/useClickOutside';
+import { useMeetingStore } from '@/store/useMeetingStore';
+import { useUserStore } from '@/store/useUserStore';
 import Image from 'next/image';
 import { useRef, useState } from 'react';
 
@@ -14,17 +16,24 @@ interface MemberListItemProps {
   name: string;
   audio: boolean;
   video: boolean;
-  profileImg: string;
+  profileImg: string | null;
   reverseDropdown?: boolean;
 }
 
 export default function MemberListItem({
+  id,
   name,
   audio,
   video,
   profileImg,
   reverseDropdown,
 }: MemberListItemProps) {
+  const { togglePin } = useMeetingStore();
+  const isPinned = useMeetingStore((state) =>
+    state.pinnedMemberIds.includes(id),
+  );
+  const { userId } = useUserStore();
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -37,19 +46,25 @@ export default function MemberListItem({
     <li className="group flex items-center gap-2 p-4">
       {/* 참가자 정보 */}
       <div className="flex flex-1 items-center gap-3">
-        <Image
-          width={32}
-          height={32}
-          className="h-8 w-8 rounded-full bg-white"
-          src={profileImg || 'https://picsum.photos/id/237/200/100'}
-          alt={`${name}의 프로필 사진`}
-        />
+        {profileImg ? (
+          <Image
+            width={64}
+            height={64}
+            className="aspect-square w-8 rounded-full object-cover"
+            src={profileImg}
+            alt={`${name}님의 프로필 사진`}
+          />
+        ) : (
+          <div className="flex-center aspect-square w-8 shrink-0 rounded-full bg-neutral-500 font-bold text-neutral-50">
+            {name[0]}
+          </div>
+        )}
         <span className="ellipsis w-full text-neutral-50">{name}</span>
       </div>
 
       {/* 참가자 상태 */}
       <div
-        className={`gap-4 text-neutral-400 group-hover:hidden ${isDropdownOpen ? 'hidden' : 'flex'}`}
+        className={`gap-4 text-neutral-400 ${userId !== id ? 'group-hover:hidden' : ''} ${isDropdownOpen ? 'hidden' : 'flex'}`}
       >
         {audio ? (
           <MicOnIcon className="h-5 w-5" />
@@ -66,7 +81,7 @@ export default function MemberListItem({
       {/* 더보기 버튼 */}
       <div
         ref={ref}
-        className={`relative group-hover:flex ${isDropdownOpen ? 'flex' : 'hidden'}`}
+        className={`relative ${userId !== id ? 'group-hover:flex' : ''} ${isDropdownOpen ? 'flex' : 'hidden'}`}
       >
         <button
           className="rounded-full p-1 hover:bg-neutral-600"
@@ -79,14 +94,14 @@ export default function MemberListItem({
           <menu
             className={`absolute right-0 w-40 rounded-sm border border-neutral-500 bg-neutral-600 ${reverseDropdown ? '-top-2 -translate-y-full' : 'top-[calc(100%+8px)]'}`}
           >
-            <button className="dropdown-btn" onClick={closeDropdown}>
-              드롭다운 메뉴1
-            </button>
-            <button className="dropdown-btn" onClick={closeDropdown}>
-              드롭다운 메뉴2
-            </button>
-            <button className="dropdown-btn" onClick={closeDropdown}>
-              드롭다운 메뉴3
+            <button
+              className="dropdown-btn"
+              onClick={() => {
+                togglePin(id);
+                closeDropdown();
+              }}
+            >
+              {isPinned ? '고정 해제' : '고정'}
             </button>
           </menu>
         )}

@@ -2,6 +2,7 @@ import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 import { useItemActions } from '@/hooks/useItemActions';
 import { getCenterWorldPos } from '@/utils/coordinate';
 import { ShapeType } from '@/types/whiteboard';
+import { StackIconInfo } from '@/constants/stackList';
 
 export const useAddWhiteboardItem = () => {
   const {
@@ -12,6 +13,7 @@ export const useAddWhiteboardItem = () => {
     addImage,
     addVideo,
     addYoutube,
+    addStack,
   } = useItemActions();
 
   const getViewportCenter = () => {
@@ -214,6 +216,23 @@ export const useAddWhiteboardItem = () => {
     });
   };
 
+  // Stack Item 추가 핸들러
+  const handleAddStack = (icon: StackIconInfo) => {
+    const worldPos = getViewportCenter();
+    const width = 240;
+    const height = 240;
+
+    addStack({
+      src: icon.src,
+      stackName: icon.name,
+      category: icon.category,
+      x: worldPos.x - width / 2,
+      y: worldPos.y - height / 2,
+      width,
+      height,
+    });
+  };
+
   return {
     handleAddText,
     handleAddArrow,
@@ -222,5 +241,6 @@ export const useAddWhiteboardItem = () => {
     handleAddImage,
     handleAddVideo,
     handleAddYoutube,
+    handleAddStack,
   };
 };

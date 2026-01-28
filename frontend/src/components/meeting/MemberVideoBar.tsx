@@ -2,7 +2,7 @@
 
 import { ChevronLeftIcon, ChevronRightIcon } from '@/assets/icons/common';
 import MyVideo from '@/components/meeting/MyVideo';
-import SmVideo from '@/components/meeting/SmVideo';
+import MemberVideo from '@/components/meeting/MemberVideo';
 import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
 import { useMeetingStore } from '@/store/useMeetingStore';
 import { ConsumerInfo } from '@/types/meeting';
@@ -11,9 +11,9 @@ import { useEffect, useMemo, useState } from 'react';
 
 export default function MemberVideoBar() {
   const MEMBERS_PER_PAGE = 6;
-  const { members, memberStreams, setMemberStream, removeMemberStream } =
+  const { members, setMemberStream, removeMemberStream, orderedMemberIds } =
     useMeetingStore();
-  const { socket, recvTransport, device, consumers, addConsumers } =
+  const { socket, recvTransport, device, addConsumers } =
     useMeetingSocketStore();
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -24,16 +24,23 @@ export default function MemberVideoBar() {
     return 1 + Math.ceil((memberCount - 5) / MEMBERS_PER_PAGE);
   }, [members]);
 
+  if (currentPage > totalPages) {
+    setCurrentPage(totalPages);
+  }
+
+  const sortedMembers = useMemo(() => {
+    return orderedMemberIds.map((id) => members[id]).filter(Boolean);
+  }, [orderedMemberIds, members]);
+
   // 현재 페이지에 보여야 할 멤버 리스트 계산
   const visibleMembers = useMemo(() => {
-    const memberArray = Object.values(members);
     const isFirstPage = currentPage === 1;
 
     const start = isFirstPage ? 0 : (currentPage - 2) * MEMBERS_PER_PAGE + 5;
     const end = isFirstPage ? 5 : start + MEMBERS_PER_PAGE;
 
-    return memberArray.slice(start, end);
-  }, [members, currentPage]);
+    return sortedMembers.slice(start, end);
+  }, [sortedMembers, currentPage]);
 
   const hasPrevPage = currentPage > 1;
   const hasNextPage = currentPage < totalPages;
@@ -118,7 +125,6 @@ export default function MemberVideoBar() {
     if (!hasNextPage) return;
     setCurrentPage((prev) => prev + 1);
   };
-  console.log(members, memberStreams, consumers);
 
   return (
     <header className="flex w-full justify-between px-4 py-2">
@@ -132,7 +138,7 @@ export default function MemberVideoBar() {
       <section className="flex gap-4">
         {currentPage === 1 && <MyVideo />}
         {visibleMembers.map((member) => (
-          <SmVideo key={member.user_id} {...member} />
+          <MemberVideo key={member.user_id} {...member} />
         ))}
       </section>
 

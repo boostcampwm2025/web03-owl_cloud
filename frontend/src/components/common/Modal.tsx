@@ -62,7 +62,7 @@ export default function Modal({
             {title}
           </h2>
           <section
-            className={`flex-1 ${isLightMode ? styles.section.light : styles.section.dark}`}
+            className={`flex-1 whitespace-pre-wrap ${isLightMode ? styles.section.light : styles.section.dark}`}
           >
             {children}
           </section>

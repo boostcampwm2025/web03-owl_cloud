@@ -45,7 +45,7 @@ export const mediaSoupRouterConfig: RouterOptions = {
       channels: 2,
     },
 
-    // video + 화면공유 설정
+    // video 설정
     {
       kind: 'video',
       mimeType: 'video/VP8',
@@ -64,8 +64,27 @@ export const mediaSoupRouterConfig: RouterOptions = {
         { type: 'transport-cc' },
       ],
       parameters: {
-        'x-google-start-bitrate': 1000, // 첫 시작에서 쓰일 bite_rate
+        'x-google-start-bitrate': 600, // 첫 시작에서 쓰일 bite_rate ( 화면 공유에서는 600이 적당 )
       },
+    },
+
+    // 화면 공유용 vp9 사용
+    {
+      kind: 'video',
+      // 같은 화질 대비 VP8보다 효율이 좋다.텍스트, 슬라이드와 같은 정적인 화면에서 좋다. 하지만 인코딩 CPU 부담이 큰편이다.
+      mimeType: 'video/VP9',
+      clockRate: 90000,
+      //  프레임은
+      rtcpFeedback: [
+        // nack 수신자가 이 RTP 패킷 번호가 누락 되었음을 알려준다.
+        { type: 'nack' },
+        // 프레임 복구를 할때 전체 프레임즉 i-frameㅡㅇㄹ 다시 보내달라는 것이다.
+        { type: 'nack', parameter: 'pli' },
+        // 패킷 도착 시간을 전송해서 비트레이트, 프레임 드랍, 레이어 변경을 실시한다.
+        { type: 'transport-cc' },
+      ],
+      // 가장 기본적인 호환이 되는 걸로 변경
+      parameters: { 'profile-id': 0 },
     },
   ],
 };

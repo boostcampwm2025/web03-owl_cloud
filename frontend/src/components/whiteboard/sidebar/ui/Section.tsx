@@ -10,7 +10,7 @@ interface SectionProps {
 
 export default function Section({ title, children }: SectionProps) {
   return (
-    <div className="flex flex-col gap-2 py-2">
+    <div className="flex flex-col gap-2 px-1 py-2">
       {title && (
         <h3 className="text-xs font-bold tracking-wide text-black uppercase select-none">
           {title}

@@ -19,4 +19,5 @@ export type InsertRoomDataDto = {
 
 export type ConnectResult = {
   room_id: string;
+  is_hosted: boolean;
 };

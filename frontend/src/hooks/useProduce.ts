@@ -1,18 +1,20 @@
 import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
 import { useMeetingStore } from '@/store/useMeetingStore';
 import { createProduceHelper } from '@/utils/createProduceHelpers';
+import { processAudioTrack, stopNoiseSuppressor } from '@/utils/noiseFilter';
 import { useMemo } from 'react';
 
 export const useProduce = () => {
-  const { socket, sendTransport, setProducer, setIsProducing } =
+  // device를 가져오도록 수정했습니다.
+  const { socket, sendTransport, setProducer, setIsProducing, device } =
     useMeetingSocketStore();
   const { setMedia } = useMeetingStore();
 
   // sendTransport가 초기화 된 이후 createProduceHelper 선언
   const helpers = useMemo(() => {
-    if (!socket || !sendTransport) return null;
-    return createProduceHelper(sendTransport);
-  }, [sendTransport]);
+    if (!socket || !sendTransport || !device) return null;
+    return createProduceHelper(sendTransport, device);
+  }, [sendTransport, device]);
 
   const startAudioProduce = async () => {
     // 함수가 호출되었을 시점의 값을 위해 getState() 사용
@@ -27,19 +29,31 @@ export const useProduce = () => {
       // audio produce에 대한 락 설정
       setIsProducing('audio', true);
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const audioTrack = stream.getAudioTracks()[0];
+      const constraints = {
+        echoCancellation: true,
+        autoGainControl: true,
+        sampleRate: 48000,
+        channelCount: 1,
+      };
 
-      const audioProducer = await helpers.produceMic(audioTrack);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: constraints,
+      });
+      const audioTrack = stream.getAudioTracks()[0];
+      const filteredAudioTrack = await processAudioTrack(audioTrack);
+
+      const audioProducer = await helpers.produceMic(filteredAudioTrack);
       setProducer('audioProducer', audioProducer);
       setMedia({ audioOn: true });
 
       // 중간에 연결이 끊겼을 때의 핸들링
       audioProducer.on('trackended', () => {
         stopAudioProduce();
+        stopNoiseSuppressor();
       });
     } catch (error) {
       console.error('마이크 시작 실패:', error);
+      stopNoiseSuppressor();
     } finally {
       // 락 해제
       setIsProducing('audio', false);
@@ -111,8 +125,13 @@ export const useProduce = () => {
     try {
       setIsProducing('screen', true);
 
+      // screen에 경우는 video의 설정을 적어서 보내준다. 
       stream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
+        video: {
+          frameRate : { max : 15 }, // 이건 고정하는게 좋다. 
+          width : { max : 1280 }, // 이부분은 나중에 회의실 등 상황에 따라서 조정이 가능하다 ( 이거 보다 크면 다운스케일 적용 회의 방이나 분위기에 따라 다름 ) 
+          height : { max : 720 } // 마찬 가지 
+        },
         audio: true,
       });
 

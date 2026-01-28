@@ -27,3 +27,11 @@ export class CreateRoomValidate {
   @MaxLength(16)
   password?: string;
 }
+
+export class UpdateRoomPasswordValidate {
+  @IsOptional()
+  @IsString()
+  @MinLength(6)
+  @MaxLength(16)
+  new_password?: string;
+}

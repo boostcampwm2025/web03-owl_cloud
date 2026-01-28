@@ -151,3 +151,21 @@ export class NotAllowUpdateFileData extends BaseError {
     });
   }
 }
+
+export class NotAllowUpdatePassword extends BaseError {
+  constructor() {
+    super({
+      message: '방이 존재하지 않거나, 해당 작업을 수행할 권한이 없습니다.',
+      status: 500,
+    });
+  }
+}
+
+export class NotChangePassword extends BaseError {
+  constructor() {
+    super({
+      message: '일시적인 서버 문제로 비밀번호를 변경하지 못했습니다. 잠시 후 다시 시도해주세요.',
+      status: 500,
+    });
+  }
+}

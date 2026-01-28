@@ -164,6 +164,7 @@ export class SignalingWebsocketGateway
       // 2. 일단 기본 세팅으로 응답
       client.emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.JOINED, {
         user_id: payload.user_id,
+        is_hosted: result.is_hosted,
         ok: true,
       });
 
@@ -526,7 +527,12 @@ export class SignalingWebsocketGateway
       const result = await this.signalingService.checkFileUpload(client, validate);
 
       // 모든 방에 정보를 알려야 한다.
-      const roomMessage: MessageResultProps = { ...result, message: undefined, type: 'file' };
+      const roomMessage: MessageResultProps = {
+        ...result,
+        thumbnail_url: result.thumnail_url,
+        message: undefined,
+        type: 'file',
+      };
       const room_id: string = client.data.room_id;
       const namespace: string = `${CHANNEL_NAMESPACE.SIGNALING}:${room_id}`;
       client.to(namespace).emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.RECV_MESSAGE, roomMessage); // 방에 파일을 전달한다.

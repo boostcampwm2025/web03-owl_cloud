@@ -14,8 +14,13 @@ import {
   InsertRoomDataToMysql,
   InsertRoomParticipantInfoDataToMysql,
   UpdateRoomParticipantInfoToMysql,
+  UpdateRoomPasswordToMysql,
 } from './room/room.outbound';
-import { SelectRoomDataFromMysql, SelectRoomIdFromMysql } from './room/room.inbound';
+import {
+  SelectRoomDataFromMysql,
+  SelectRoomIdFromMysql,
+  SelectUserInfoRoomFromMysql,
+} from './room/room.inbound';
 
 @Global()
 @Module({
@@ -58,6 +63,8 @@ import { SelectRoomDataFromMysql, SelectRoomIdFromMysql } from './room/room.inbo
     UpdateRoomParticipantInfoToMysql, // 회의방에 참가자 떠났다는 정보 기입
     SelectUserAndOauthFromMysql, // oauth에서 유저의 정보를 찾아주는
     SelectRoomIdFromMysql, // room_id를 찾아주는
+    SelectUserInfoRoomFromMysql, // user_id에 따른 방에 정보를 가져오는 로직
+    UpdateRoomPasswordToMysql, // 방에 password를 바꾸는 로직
   ],
   exports: [
     MYSQL_DB,
@@ -73,6 +80,8 @@ import { SelectRoomDataFromMysql, SelectRoomIdFromMysql } from './room/room.inbo
     UpdateRoomParticipantInfoToMysql,
     SelectUserAndOauthFromMysql,
     SelectRoomIdFromMysql,
+    SelectUserInfoRoomFromMysql,
+    UpdateRoomPasswordToMysql,
   ],
 })
 export class MysqlModule {}

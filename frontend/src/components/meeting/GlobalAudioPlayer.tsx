@@ -79,7 +79,11 @@ export const GlobalAudioPlayer = () => {
         if (!streams.mic) return null;
 
         return (
-          <AudioView key={`${userId}-remote-audio`} stream={streams.mic} />
+          <AudioView
+            key={`${userId}-remote-audio`}
+            stream={streams.mic}
+            userId={userId}
+          />
         );
       })}
     </div>

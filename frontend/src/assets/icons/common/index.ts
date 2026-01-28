@@ -4,8 +4,6 @@ export { default as ChevronRightIcon } from './chevronRightIcon.svg';
 export { default as CloseIcon } from './closeIcon.svg';
 export { default as CopyIcon } from './copyIcon.svg';
 export { default as EditIcon } from './editIcon.svg';
-export { default as EyeOffIcon } from './eyeOffIcon.svg';
-export { default as EyeOnIcon } from './eyeOnIcon.svg';
 export { default as ImageIcon } from './imageIcon.svg';
 export { default as MinusIcon } from './minusIcon.svg';
 export { default as MoreHoriIcon } from './moreHoriIcon.svg';

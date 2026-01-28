@@ -7,6 +7,7 @@ import LinePanel from '@/components/whiteboard/sidebar/panels/LinePanel';
 import MediaPanel from '@/components/whiteboard/sidebar/panels/MediaPanel';
 import TextPanel from '@/components/whiteboard/sidebar/panels/TextPanel';
 import DrawingPanel from '@/components/whiteboard/sidebar/panels/DrawingPanel';
+import StackPanel from '@/components/whiteboard/sidebar/panels/StackPanel';
 
 import { useWhiteboardSharedStore } from '@/store/useWhiteboardSharedStore';
 import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
@@ -20,6 +21,7 @@ import type {
   ImageItem,
   TextItem,
   DrawingItem,
+  StackItem,
 } from '@/types/whiteboard';
 import {
   ARROW_SIZE_PRESETS,
@@ -44,6 +46,7 @@ type SelectionType =
   | 'text'
   | 'drawing'
   | 'media'
+  | 'stack'
   | null;
 
 export default function Sidebar() {
@@ -91,6 +94,8 @@ export default function Sidebar() {
         return 'text';
       case 'drawing':
         return 'drawing';
+      case 'stack':
+        return 'stack';
       default:
         return null;
     }
@@ -148,6 +153,8 @@ export default function Sidebar() {
         return 'Text';
       case 'drawing':
         return 'Drawing';
+      case 'stack':
+        return 'Stack';
       default:
         return '';
     }
@@ -185,16 +192,19 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="absolute top-1/2 left-2 z-5 flex max-h-[calc(100vh-2rem)] w-56 -translate-y-1/2 flex-col overflow-y-auto rounded-lg border border-neutral-200 bg-white p-4 shadow-xl">
+    <aside
+      className="absolute top-1/2 left-2 z-5 flex w-60 -translate-y-1/2 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white p-4 shadow-xl"
+      style={{ maxHeight: 'calc(100vh - 220px)' }}
+    >
       {/* Sidebar Title */}
-      <div className="mb-1">
+      <div className="mb-2 shrink-0 border-b border-neutral-100 pb-2">
         <h2 className="text-lg font-bold text-neutral-800">
           {getHeaderTitle()}
         </h2>
       </div>
 
       {/* 패널 영역 */}
-      <div className="flex-1">
+      <div className="min-h-0 flex-1 overflow-y-auto px-1 pr-2">
         {/* shape */}
         {selectionType === 'shape' && !isEditingShapeText && (
           <ShapePanel
@@ -439,6 +449,7 @@ export default function Sidebar() {
             }}
           />
         )}
+        
         {/* drawing */}
         {(cursorMode === 'draw' || selectionType === 'drawing') && (
           <DrawingPanel
@@ -468,6 +479,20 @@ export default function Sidebar() {
               }
             }}
             onChangeLayer={selectedItem ? handleLayerChange : undefined}
+          />
+        )}
+
+        {/* stack */}
+        {selectionType === 'stack' && (
+          <StackPanel
+            src={(selectedItem as StackItem).src}
+            stackName={(selectedItem as StackItem).stackName}
+            category={(selectedItem as StackItem).category}
+            opacity={(selectedItem as StackItem).opacity ?? 1}
+            onChangeOpacity={(opacity) => {
+              updateItem(selectedId!, { opacity });
+            }}
+            onChangeLayer={handleLayerChange}
           />
         )}
       </div>

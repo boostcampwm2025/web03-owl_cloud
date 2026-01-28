@@ -5,6 +5,7 @@ import MeetingLobby from '@/components/meeting/MeetingLobby';
 import MeetingRoom from '@/components/meeting/MeetingRoom';
 import { useMeetingSocket } from '@/hooks/useMeetingSocket';
 import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
+import { useMeetingStore } from '@/store/useMeetingStore';
 import { useUserStore } from '@/store/useUserStore';
 import { MeetingInfoResponse } from '@/types/meeting';
 import { api } from '@/utils/apiClient';
@@ -21,11 +22,9 @@ export default function MeetingPage() {
   const { socket } = useMeetingSocket();
   const { setMediasoupTransports } = useMeetingSocketStore();
   const { isLoggedIn, setTempUser } = useUserStore();
+  const { meetingInfo, setMeetingInfo } = useMeetingStore();
 
   const { meetingId } = useParams<{ meetingId: string }>();
-  const [meetingInfo, setMeetingInfo] = useState<MeetingInfoResponse | null>(
-    null,
-  );
 
   const passwordRef = useRef<HTMLInputElement>(null);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -33,6 +32,10 @@ export default function MeetingPage() {
   const [isJoined, setIsJoined] = useState<boolean>(false);
 
   const router = useRouter();
+
+  useEffect(() => {
+    setMeetingInfo({ meetingId });
+  }, [meetingId]);
 
   const onJoin = (nickname: string) => {
     setTempUser({ nickname });
@@ -142,7 +145,7 @@ export default function MeetingPage() {
     <main className="min-h-screen">
       {!isJoined ? (
         <>
-          <MeetingLobby meetingInfo={meetingInfo} onJoin={onJoin} />
+          <MeetingLobby onJoin={onJoin} />
           {!joinError && isPasswordModalOpen && (
             <Modal
               title="비밀번호 입력"

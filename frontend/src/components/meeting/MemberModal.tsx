@@ -6,7 +6,7 @@ import { useMeetingStore } from '@/store/useMeetingStore';
 import { useUserStore } from '@/store/useUserStore';
 
 export default function MemberModal() {
-  const { setIsOpen } = useMeetingStore();
+  const { media, setIsOpen, memberStreams } = useMeetingStore();
 
   const { userId, nickname, profilePath } = useUserStore();
 
@@ -17,7 +17,6 @@ export default function MemberModal() {
     user_id: userId,
     nickname: nickname,
     profile_path: profilePath,
-    // TODO: 타입 맞춰야 함 -> me: MemberListItemProps
     is_guest: false,
   };
 
@@ -46,12 +45,13 @@ export default function MemberModal() {
             id={member.user_id}
             {...member}
             name={member.nickname}
-            audio={false}
-            video={false}
-            // TODO
-            // audio={!!member.mic && !member.mic.is_paused}
-            // video={!!member.cam && !member.cam.is_paused}
-            profileImg={member.profile_path as string}
+            audio={
+              index === 0 ? media.audioOn : !!memberStreams[member.user_id]?.mic
+            }
+            video={
+              index === 0 ? media.videoOn : !!memberStreams[member.user_id]?.cam
+            }
+            profileImg={member.profile_path}
             reverseDropdown={members.length > 3 && index >= members.length - 2}
           />
         ))}

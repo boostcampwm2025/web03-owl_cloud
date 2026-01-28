@@ -9,6 +9,7 @@ import {
 } from '../../db.constants';
 import { RoomProps } from '@domain/room/vo';
 import { GetRoomInfoDbResult } from '@/2.application/room/queries/dto';
+import { UpdateRoomInfoResult } from '@/2.application/room/commands/dto';
 
 interface RoomDataPacket extends RowDataPacket {
   [DB_ROOMS_ATTRIBUTE_NAME.ROOM_ID]: string;
@@ -146,6 +147,69 @@ export class SelectRoomIdFromMysql extends SelectDataFromDb<Pool> {
     const code: string = attributeValue;
 
     const roomInfo: GetRoomInfoDbResult | undefined = await this.selectData({ db, code });
+
+    return roomInfo;
+  }
+}
+
+// room에 있는 host가 맞는지 확인
+interface UserRoomInfoPacket extends RowDataPacket {
+  [DB_ROOMS_ATTRIBUTE_NAME.ROOM_ID]: string;
+  [DB_ROOMS_ATTRIBUTE_NAME.PASSWORD_HASH]: string | null;
+}
+@Injectable()
+export class SelectUserInfoRoomFromMysql extends SelectDataFromDb<Pool> {
+  constructor(@Inject(MYSQL_DB) db: Pool) {
+    super(db);
+  }
+
+  private async selectData({
+    db,
+    code,
+    user_id,
+  }: {
+    db: Pool;
+    code: string;
+    user_id: string;
+  }): Promise<UpdateRoomInfoResult | undefined> {
+    const roomTableName: string = DB_TABLE_NAME.ROOMS;
+
+    const sql: string = `
+    SELECT 
+    BIN_TO_UUID(\`${DB_ROOMS_ATTRIBUTE_NAME.ROOM_ID}\`, true) AS \`${DB_ROOMS_ATTRIBUTE_NAME.ROOM_ID}\`,
+    \`${DB_ROOMS_ATTRIBUTE_NAME.PASSWORD_HASH}\`
+    FROM \`${roomTableName}\`
+    WHERE 
+      \`${DB_ROOMS_ATTRIBUTE_NAME.CODE}\` = ? AND
+      \`${DB_ROOMS_ATTRIBUTE_NAME.STATUS}\` = 'open' AND 
+      \`${DB_ROOMS_ATTRIBUTE_NAME.OWNER_USER_ID}\` = UUID_TO_BIN(?, true) AND
+      \`${DB_ROOMS_ATTRIBUTE_NAME.DELETED_AT}\` IS NULL
+    LIMIT 1 
+    `;
+
+    const [roomInfo] = await db.query<UserRoomInfoPacket[]>(sql, [code, user_id]);
+
+    return roomInfo[0]
+      ? {
+          room_id: roomInfo[0][DB_ROOMS_ATTRIBUTE_NAME.ROOM_ID],
+          prev_password: roomInfo[0][DB_ROOMS_ATTRIBUTE_NAME.PASSWORD_HASH],
+        }
+      : undefined;
+  }
+
+  // attributeName은 code, attributeValue는 user_id 이다.
+  async select({
+    attributeName,
+    attributeValue,
+  }: {
+    attributeName: string;
+    attributeValue: string;
+  }): Promise<UpdateRoomInfoResult | undefined> {
+    const db: Pool = this.db;
+    const code: string = attributeName;
+    const user_id: string = attributeValue;
+
+    const roomInfo = await this.selectData({ db, code, user_id });
 
     return roomInfo;
   }

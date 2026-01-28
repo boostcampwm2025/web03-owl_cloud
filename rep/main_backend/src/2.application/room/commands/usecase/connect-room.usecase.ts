@@ -126,7 +126,7 @@ export class ConnectRoomUsecase<T, CT> {
       if (!insertCacheDataChecked) throw new NotAllowRoomDataUpdate();
 
       // 5. room_id에 대한 정보를 반환해야 한다.
-      return { room_id: room.room_id };
+      return { room_id: room.room_id, is_hosted: dto.user_id.trim() === room.owner_user_id.trim() };
     } catch (err) {
       // 4-1. 에러가 나면 해당 db에 접속정보를 삭제해야 한다. ( room_id - user_id - lefted_at이 비어있는값 삭제 ) -> 방이아닌 접속 기록을 해야함
       if (dbSaved)

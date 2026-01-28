@@ -8,3 +8,4 @@ export * from '@/assets/icons/whiteboard/text';
 export * from '@/assets/icons/whiteboard/media';
 export * from '@/assets/icons/whiteboard/eraser';
 export * from '@/assets/icons/whiteboard/control';
+export * from '@/assets/icons/whiteboard/stack';

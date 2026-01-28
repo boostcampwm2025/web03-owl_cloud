@@ -18,6 +18,7 @@ import type {
   ImageItem,
   VideoItem,
   YoutubeItem,
+  StackItem,
 } from '@/types/whiteboard';
 import type { YMapValue } from '@/types/whiteboard/yjs';
 
@@ -262,6 +263,32 @@ export function useItemActions() {
     }, yjsOrigin);
   };
 
+  // 스택 아이템(아이콘) 추가
+  const addStack = (payload: Partial<Omit<StackItem, 'id' | 'type'>>) => {
+    if (!yItems || !yItems.doc) return;
+
+    const id = uuidv4();
+    const newStack: StackItem = {
+      id,
+      type: 'stack',
+      src: payload.src ?? '',
+      stackName: payload.stackName ?? '',
+      category: payload.category ?? 'tool',
+      x: payload.x ?? CANVAS_WIDTH / 2 - 30,
+      y: payload.y ?? CANVAS_HEIGHT / 2 - 30,
+      width: payload.width ?? 60,
+      height: payload.height ?? 60,
+      rotation: payload.rotation ?? 0,
+      opacity: payload.opacity ?? 1,
+    };
+
+    yItems.doc.transact(() => {
+      yItems.push([itemToYMap(newStack)]);
+    }, yjsOrigin);
+
+    return id;
+  };
+
   // 그리기 완료 후 추가
   const addDrawing = (drawing: WhiteboardItem) => {
     if (!yItems || !yItems.doc) return;
@@ -299,6 +326,24 @@ export function useItemActions() {
 
     yItems.doc.transact(() => {
       yItems.delete(index, 1);
+    }, yjsOrigin);
+  };
+
+  // 여러 아이템 한번에 삭제 (지우개로 빠르게 각각 삭제하니까 몇 몇 아이템이 동기화가 안되는 문제가 있음)
+  const deleteItems = (ids: string[]) => {
+    if (!yItems || !yItems.doc || ids.length === 0) return;
+
+    yItems.doc.transact(() => {
+      const yMaps = yItems.toArray();
+      const idsToDelete = new Set(ids);
+
+      // 역순으로 순회하면서 삭제
+      for (let index = yMaps.length - 1; index >= 0; index--) {
+        const id = yMaps[index].get('id');
+        if (id && idsToDelete.has(id as string)) {
+          yItems.delete(index, 1);
+        }
+      }
     }, yjsOrigin);
   };
 
@@ -354,9 +399,11 @@ export function useItemActions() {
     addImage,
     addVideo,
     addYoutube,
+    addStack,
     addDrawing,
     updateItem,
     deleteItem,
+    deleteItems,
     bringToFront,
     sendToBack,
     bringForward,

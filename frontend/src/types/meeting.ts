@@ -1,5 +1,4 @@
 import {
-  Consumer,
   Device,
   MediaKind,
   Producer,

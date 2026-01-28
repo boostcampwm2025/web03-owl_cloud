@@ -19,6 +19,70 @@ type CodeEditorProps = {
   minimap?: boolean;
 };
 
+/**
+ * ---- wire types (server <-> client) ----
+ * 서버 코드 기준:
+ * - server -> client: 'yjs-init' { update: Buffer, seq: number, origin: 'INIT' }
+ * - server -> client: 'yjs-sync' ack|patch|full|error (+ origin)
+ * - server -> client: 'yjs-update' 단일/배치 브로드캐스트
+ * - client -> server: 'yjs-update' { last_seq, update? | updates? }
+ * - client -> server: 'yjs-sync-req' { last_seq, reason? }
+ * - client -> server: 'yjs-ready' (리스너 준비 완료 후 init 요청)
+ */
+
+type YjsInitPayload = {
+  update: ArrayBuffer;
+  seq: number;
+  origin?: 'INIT';
+};
+
+type YjsRemoteUpdateSingle = { seq: number; update: ArrayBuffer };
+type YjsRemoteUpdateBatch = {
+  from_seq: number;
+  to_seq: number;
+  updates: ArrayBuffer[];
+};
+type YjsRemoteUpdate = YjsRemoteUpdateSingle | YjsRemoteUpdateBatch;
+
+type YjsSyncOrigin = 'UPDATE_REJECTED' | 'SYNC_REQ' | 'INIT';
+
+type YjsSyncServerPayload =
+  | { type: 'ack'; ok: true; server_seq: number; origin?: YjsSyncOrigin }
+  | {
+      type: 'patch';
+      ok: true;
+      from_seq: number;
+      to_seq: number;
+      updates: ArrayBuffer[];
+      server_seq: number;
+      origin: YjsSyncOrigin;
+    }
+  | {
+      type: 'full';
+      ok: true;
+      server_seq: number;
+      update: ArrayBuffer;
+      origin: YjsSyncOrigin;
+    }
+  | {
+      type: 'error';
+      ok: false;
+      code: 'BAD_PAYLOAD' | 'ROOM_NOT_FOUND' | 'INTERNAL';
+      message?: string;
+      origin?: YjsSyncOrigin;
+    };
+
+type YjsSyncReqPayload = {
+  last_seq: number;
+  reason?: 'SEQ_GAP' | 'MANUAL' | 'UNKNOWN' | 'INIT';
+};
+
+type YjsUpdateClientPayload = {
+  last_seq: number;
+  update?: Uint8Array;
+  updates?: Uint8Array[];
+};
+
 export default function CodeEditor({
   autoComplete = true,
   minimap = true,
@@ -33,7 +97,7 @@ export default function CodeEditor({
 
   const cursorCollectionsRef = useRef<
     Map<number, monaco.editor.IEditorDecorationsCollection>
-  >(new Map()); // clientId -> 1 decoration collection
+  >(new Map());
   const onlyMyCursorRef = useRef(false);
   const cleanupRef = useRef<(() => void) | null>(null);
 
@@ -44,8 +108,20 @@ export default function CodeEditor({
     useState<EditorLanguage>('typescript');
   const [onlyMyCursor, setOnlyMyCursor] = useState<boolean>(false);
 
-  const { codeEditorSocket: socket } = useToolSocketStore(); // 시그널링 소켓
+  const { codeEditorSocket: socket } = useToolSocketStore();
   const { nickname } = useUserStore();
+
+  /**
+   * ---- sync control refs ----
+   */
+  const lastSeqRef = useRef<number>(0); // 내가 "적용 완료"한 서버 seq
+  const awaitingAckRef = useRef<boolean>(false); // 서버 ack 대기 중
+  const suppressSendRef = useRef<boolean>(false); // sync/remote apply 중 ydoc update 재전송 방지
+  const dirtyRef = useRef<boolean>(false); // ack 대기 중 변경이 더 생겼는지
+  const syncReqInFlightRef = useRef<boolean>(false); // sync-req 폭주 방지
+
+  // ✅ yjs-ready 중복 방지
+  const readySentRef = useRef<boolean>(false);
 
   const handleMount = async (
     editor: monaco.editor.IStandaloneCodeEditor,
@@ -58,6 +134,7 @@ export default function CodeEditor({
     const yLanguage = ydoc.getMap<LanguageState>('language');
     const yText = ydoc.getText('monaco');
     const awareness = new awarenessProtocol.Awareness(ydoc);
+
     const remoteOrigin = Symbol('remote');
 
     editor.getModel()?.pushStackElement();
@@ -66,18 +143,11 @@ export default function CodeEditor({
     if (!model) return;
 
     const { MonacoBinding } = await import('y-monaco');
-    // 양방향 바인딩 해주기
-    const binding = new MonacoBinding(
-      yText, // 원본 데이터
-      model, // 실제 에디터에 보이는 코드
-      new Set([editor]), // 바인딩할 에디터 인스턴스들
-      awareness, // 여기서 다른 유저들의 위치 정보를 받아온다.
-    );
+    const binding = new MonacoBinding(yText, model, new Set([editor]), awareness);
 
     const undoManager = new Y.UndoManager(yText, {
-      // 보통 y-monaco 바인딩 인스턴스를 지정 -> 내 키보드 입력만 추적하게
       trackedOrigins: new Set([binding]),
-      captureTimeout: 500, // 0.5초 이내의 연속 입력은 하나의 Undo 단위로 묶음
+      captureTimeout: 500,
     });
 
     providerRef.current = { ydoc, awareness };
@@ -85,7 +155,60 @@ export default function CodeEditor({
     socketRef.current = socket;
     if (!socket) return;
 
-    // 소켓 이벤트를 기다리지 않고 즉시 본인상태 설정
+    /**
+     * ---- helpers ----
+     */
+    const applyUpdatesNoSend = (updates: ArrayBuffer[]) => {
+      suppressSendRef.current = true;
+      try {
+        ydoc.transact(() => {
+          for (const u of updates) {
+            Y.applyUpdate(ydoc, new Uint8Array(u));
+          }
+        }, remoteOrigin);
+      } finally {
+        suppressSendRef.current = false;
+      }
+    };
+
+    const requestSync = (reason: YjsSyncReqPayload['reason'] = 'SEQ_GAP') => {
+      if (syncReqInFlightRef.current) return;
+      syncReqInFlightRef.current = true;
+
+      socket.emit('yjs-sync-req', {
+        last_seq: lastSeqRef.current,
+        reason,
+      } satisfies YjsSyncReqPayload);
+
+      // 타임아웃으로 inFlight 해제(서버/네트워크 이슈 대비)
+      setTimeout(() => {
+        syncReqInFlightRef.current = false;
+      }, 1500);
+    };
+
+    const sendFullStateOnce = () => {
+      if (!providerRef.current) return;
+
+      // ack 기다리는 중이면 큐 쌓지 말고 dirty만 표시
+      if (awaitingAckRef.current) {
+        dirtyRef.current = true;
+        return;
+      }
+
+      const full = Y.encodeStateAsUpdate(providerRef.current.ydoc);
+      awaitingAckRef.current = true;
+      dirtyRef.current = false;
+
+      const payload: YjsUpdateClientPayload = {
+        last_seq: lastSeqRef.current,
+        update: full,
+      };
+      socket.emit('yjs-update', payload);
+    };
+
+    /**
+     * ---- awareness: local init ----
+     */
     awareness.setLocalState({
       user: {
         name: nickname || '알 수 없음',
@@ -103,53 +226,159 @@ export default function CodeEditor({
       socket.emit('awareness-update', update);
     });
 
-    // Socket -> Yjs
-    socket.on('yjs-update', (update: ArrayBuffer) => {
-      // 트랜잭션 분리
-      ydoc.transact(() => {
-        Y.applyUpdate(ydoc, new Uint8Array(update));
-      }, remoteOrigin); // remote -> 로컬 수정과 구분
-    });
-
     // Socket -> Awareness
-    socket.on('awareness-update', (update: ArrayBuffer) => {
+    const onAwarenessUpdate = (update: ArrayBuffer) => {
       awarenessProtocol.applyAwarenessUpdate(
         awareness,
         new Uint8Array(update),
         socket,
       );
-    });
+    };
+    socket.on('awareness-update', onAwarenessUpdate);
 
-    // 초기 동기화 로직 (새 유저 진입 시)
-    socket.on('request-sync', () => {
-      const fullUpdate = Y.encodeStateAsUpdate(ydoc);
-      socket.emit('yjs-update', fullUpdate);
-    });
+    /**
+     * ---- Socket -> Yjs (init) ----
+     */
+    const onYjsInit = (data: YjsInitPayload) => {
+      applyUpdatesNoSend([data.update]);
+      lastSeqRef.current = data.seq;
 
-    // Yjs -> Socket
-    ydoc.on('update', (update: Uint8Array, origin) => {
-      if (origin === remoteOrigin) return;
+      awaitingAckRef.current = false;
+      dirtyRef.current = false;
+      syncReqInFlightRef.current = false;
 
-      socket.emit('yjs-update', update);
-    });
+      console.log(data);
+    };
+    socket.on('yjs-init', onYjsInit);
 
-    if (socket.connected) {
-      socket.emit('request-sync');
-    } else {
-      socket.once('connect', () => {
-        socket.emit('request-sync');
-      });
+    /**
+     * ---- Socket -> Yjs (sync) ----
+     */
+    const onYjsSync = (msg: YjsSyncServerPayload) => {
+      if (!msg.ok) {
+        awaitingAckRef.current = false;
+        syncReqInFlightRef.current = false;
+        return;
+      }
+
+      if (msg.type === 'ack') {
+        lastSeqRef.current = Math.max(lastSeqRef.current, msg.server_seq);
+        awaitingAckRef.current = false;
+        syncReqInFlightRef.current = false;
+
+        // ack 기다리는 동안 더 입력이 있었다면 full-state 한 방
+        if (dirtyRef.current) {
+          sendFullStateOnce();
+        }
+        return;
+      }
+
+      if (msg.type === 'full') {
+        applyUpdatesNoSend([msg.update]);
+        lastSeqRef.current = Math.max(lastSeqRef.current, msg.server_seq);
+
+        awaitingAckRef.current = false;
+        syncReqInFlightRef.current = false;
+
+        // ✅ UPDATE_REJECTED인 경우만 재전송(A안)
+        if (msg.origin === 'UPDATE_REJECTED') {
+          sendFullStateOnce();
+        }
+        return;
+      }
+
+      if (msg.type === 'patch') {
+        applyUpdatesNoSend(msg.updates);
+        lastSeqRef.current = Math.max(lastSeqRef.current, msg.to_seq);
+
+        awaitingAckRef.current = false;
+        syncReqInFlightRef.current = false;
+
+        // ✅ UPDATE_REJECTED인 경우만 재전송(A안)
+        if (msg.origin === 'UPDATE_REJECTED') {
+          sendFullStateOnce();
+        }
+        return;
+      }
+    };
+    socket.on('yjs-sync', onYjsSync);
+
+    /**
+     * ---- Socket -> Yjs (remote updates) ----
+     * 단일/배치 모두 커버 + seq gap이면 sync-req
+     */
+    const onYjsRemoteUpdate = (msg: YjsRemoteUpdate) => {
+      // 단일
+      if ('seq' in msg) {
+        const expected = lastSeqRef.current + 1;
+        if (msg.seq !== expected) {
+          requestSync('SEQ_GAP');
+          return;
+        }
+
+        applyUpdatesNoSend([msg.update]);
+        lastSeqRef.current = msg.seq;
+        syncReqInFlightRef.current = false;
+        return;
+      }
+
+      // 배치
+      const expectedFrom = lastSeqRef.current + 1;
+      if (msg.from_seq !== expectedFrom) {
+        requestSync('SEQ_GAP');
+        return;
+      }
+
+      applyUpdatesNoSend(msg.updates);
+      lastSeqRef.current = msg.to_seq;
+      syncReqInFlightRef.current = false;
+    };
+    socket.on('yjs-update', onYjsRemoteUpdate);
+
+    /**
+     * ---- ✅ Ready handshake ----
+     * 모든 리스너 등록이 끝난 뒤에 서버에 init 요청
+     */
+    if (!readySentRef.current) {
+      readySentRef.current = true;
+      socket.emit('yjs-ready');
     }
 
-    // 모나코 에디터 단축키 오버라이딩
+    /**
+     * ---- Yjs -> Socket (local updates) ----
+     * ack 기반 backpressure + A안
+     */
+    const onYdocUpdate = (update: Uint8Array, origin: any) => {
+      if (origin === remoteOrigin) return;
+      if (suppressSendRef.current) return;
+
+      dirtyRef.current = true;
+
+      // ack 기다리는 중이면 쌓지 않고 표시만
+      if (awaitingAckRef.current) return;
+
+      awaitingAckRef.current = true;
+      dirtyRef.current = false;
+
+      const payload: YjsUpdateClientPayload = {
+        last_seq: lastSeqRef.current,
+        update,
+      };
+      socket.emit('yjs-update', payload);
+    };
+    ydoc.on('update', onYdocUpdate);
+
+    /**
+     * ---- monaco shortcuts ----
+     */
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, () => {
       undoManager.undo();
     });
 
-    // 윈도우/맥 Redo 대응 (Ctrl+Y 또는 Ctrl+Shift+Z)
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyY, () => {
       undoManager.redo();
     });
+
     editor.addCommand(
       monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ,
       () => {
@@ -157,7 +386,9 @@ export default function CodeEditor({
       },
     );
 
-    // 커서 렌더링만 담당
+    /**
+     * ---- cursor rendering only (기존 로직 유지) ----
+     */
     const updateRemoteDecorations = (states: Map<number, AwarenessState>) => {
       if (!editorRef.current) return;
 
@@ -168,7 +399,6 @@ export default function CodeEditor({
       states.forEach((state, clientId) => {
         if (clientId === myId) return;
 
-        // 본인 제외 클라이언트들 collection 지우기
         if (!state.cursor || onlyMine) {
           collections.get(clientId)?.clear();
           return;
@@ -199,26 +429,23 @@ export default function CodeEditor({
           },
         ]);
 
-        // 사라진 client 정리 => GC용
-        for (const [clientId, collection] of collections) {
-          if (!states.has(clientId)) {
-            collection.clear();
-            collections.delete(clientId);
+        // GC for removed clients
+        for (const [cid, col] of collections) {
+          if (!states.has(cid)) {
+            col.clear();
+            collections.delete(cid);
           }
         }
       });
     };
 
     const updatePresenterState = (states: Map<number, AwarenessState>) => {
-      // 발표자 찾기
       const presenter = [...states.entries()].find(
         ([_, state]) => state.user?.role === 'presenter',
       );
 
       const presenterId = presenter?.[0] ?? null;
-
-      const amIPresenter =
-        presenterId === providerRef.current?.awareness.clientID;
+      const amIPresenter = presenterId === awareness.clientID;
 
       setHasPresenter(Boolean(presenterId));
       setIsPresenter(amIPresenter);
@@ -230,17 +457,14 @@ export default function CodeEditor({
 
     awareness.on('change', () => {
       const states = awareness.getStates();
-
       updateRemoteDecorations(states);
       updatePresenterState(states);
     });
 
-    // 커서 위치 전송
+    // cursor position -> awareness
     let cursorFrame: number | null = null;
-
     editor.onDidChangeCursorPosition((e) => {
       if (cursorFrame) return;
-
       cursorFrame = requestAnimationFrame(() => {
         awareness.setLocalStateField('cursor', {
           lineNumber: e.position.lineNumber,
@@ -250,6 +474,9 @@ export default function CodeEditor({
       });
     });
 
+    /**
+     * ---- language observe (기존 유지) ----
+     */
     yLanguage.observe(() => {
       const lang = yLanguage.get('current');
       if (!lang) return;
@@ -260,14 +487,27 @@ export default function CodeEditor({
       }
     });
 
+    /**
+     * ---- cleanup ----
+     */
     cleanupRef.current = () => {
+      // ✅ ready flag reset (선택이지만 깔끔)
+      readySentRef.current = false;
+
+      // socket handler 제거
+      socket.off('awareness-update', onAwarenessUpdate);
+      socket.off('yjs-init', onYjsInit);
+      socket.off('yjs-sync', onYjsSync);
+      socket.off('yjs-update', onYjsRemoteUpdate);
+
+      ydoc.off('update', onYdocUpdate);
+
       undoManager.destroy();
       binding.destroy();
       socket.disconnect();
       ydoc.destroy();
 
       cursorCollectionsRef.current.forEach((c) => c.clear());
-
       document
         .querySelectorAll('style[data-client-id]')
         .forEach((el) => el.remove());
@@ -278,16 +518,13 @@ export default function CodeEditor({
     return () => cleanupRef.current?.();
   }, []);
 
-  // react <-> monaco <-> awareness 사이 동기화 브릿지 로직
   useEffect(() => {
     onlyMyCursorRef.current = onlyMyCursor;
-
     if (editorRef.current) {
       cursorCollectionsRef.current.forEach((c) => c.clear());
     }
   }, [onlyMyCursor]);
 
-  // 자동완성 토글
   const toggleAutoComplete = useCallback(() => {
     setIsAutoCompleted((prev) => !prev);
   }, []);
@@ -296,7 +533,6 @@ export default function CodeEditor({
     setOnlyMyCursor((prev) => !prev);
   }, []);
 
-  // 발표자 되기
   const becomePresenter = () => {
     if (hasPresenter) return;
     if (!providerRef.current) return;
@@ -308,7 +544,6 @@ export default function CodeEditor({
     });
   };
 
-  // 발표자 취소
   const cancelPresenter = () => {
     if (!providerRef.current) return;
 
@@ -326,15 +561,12 @@ export default function CodeEditor({
     const provider = providerRef.current;
 
     if (!editor || !monaco || !model || !provider) return;
-
     if (model.getLanguageId() === lang) return;
 
-    // 로컬 반영
     monaco.editor.setModelLanguage(model, lang);
     setCodeLanguage(lang);
 
     const yLanguage = provider.ydoc.getMap<LanguageState>('language');
-
     yLanguage.set('current', {
       value: lang,
       updatedAt: Date.now(),
@@ -357,7 +589,6 @@ export default function CodeEditor({
         onToggleOnlyMyCursor={toggleOnlyMyCursor}
       />
 
-      {/* 코드에디터 */}
       <Editor
         width="100%"
         height="100%"
@@ -368,28 +599,28 @@ export default function CodeEditor({
           automaticLayout: true,
 
           // 편집
-          tabSize: 2, // 탭 크기 설정
-          insertSpaces: true, // 탭 입력 시 공백으로 처리
+          tabSize: 2,
+          insertSpaces: true,
           fontSize: 14,
 
           // UX
-          lineNumbers: 'on', // 줄번호 표시
-          wordWrap: 'off', // 자동 줄바꿈 비활성화
-          minimap: { enabled: minimap }, // 미니맵 활성화 여부
+          lineNumbers: 'on',
+          wordWrap: 'off',
+          minimap: { enabled: minimap },
 
           // 자동완성
           quickSuggestions: isAutoCompleted,
           suggestOnTriggerCharacters: isAutoCompleted,
-          acceptSuggestionOnEnter: isAutoCompleted ? 'on' : 'off', // 엔터키 자동완성
-          tabCompletion: isAutoCompleted ? 'on' : 'off', // 탭키 자동완성
+          acceptSuggestionOnEnter: isAutoCompleted ? 'on' : 'off',
+          tabCompletion: isAutoCompleted ? 'on' : 'off',
 
-          // 문서 안에 있는 “단어들”을 자동완성 후보로 쓸지에 대한 설정
-          wordBasedSuggestions: 'off', // 협업 중엔 끄는 게 깔끔해서 off로 설정
+          // 협업 중엔 끄는 게 깔끔
+          wordBasedSuggestions: 'off',
 
           // 기타
           cursorStyle: 'line',
           scrollBeyondLastLine: false,
-          mouseWheelZoom: true, // ctrl + 마우스 휠로 폰트 크기 확대/축소
+          mouseWheelZoom: true,
         }}
       />
     </div>

@@ -2,6 +2,7 @@ import {
   DeleteDatasToCache,
   DeleteDataToCache,
   InsertDataToCache,
+  UpdateDataToCache,
 } from '@app/ports/cache/cache.outbound';
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { type RedisClientType } from 'redis';
@@ -346,5 +347,40 @@ export class UpdateFileInfoToRedis extends InsertDataToCache<RedisClientType<any
       await this.cache.hDel(roomFileInfoNamespace, entity.file_id);
       return false;
     }
+  }
+}
+
+// redis에서 비밀번호를 변경하거나 null로 바꿀수 있습니다.
+@Injectable()
+export class UpdateRoomPasswordToRedis extends UpdateDataToCache<RedisClientType<any, any>> {
+  constructor(@Inject(REDIS_SERVER) cache: RedisClientType<any, any>) {
+    super(cache);
+  }
+
+  // namespace는 room_id updateValue는 password_hash 이다
+  async updateKey({
+    namespace,
+    keyName,
+    updateValue,
+  }: {
+    namespace: string;
+    keyName: string;
+    updateValue: string | null;
+  }): Promise<boolean> {
+    const room_id: string = namespace;
+    const namespaceInfo = `${CACHE_ROOM_NAMESPACE_NAME.CACHE_ROOM}:${room_id}:${CACHE_ROOM_SUB_NAMESPACE_NAME.INFO}`;
+
+    const password_hash: string | null = updateValue;
+
+    // 비밀번호가 있다면 비밀번호 변경해 주어야 합니다.
+    if (password_hash !== null) {
+      await this.cache.hSet(namespaceInfo, CACHE_ROOM_INFO_KEY_NAME.PASSWORD_HASH, password_hash);
+    }
+    // null인 경우 공개방으로 체인지
+    else {
+      await this.cache.hDel(namespaceInfo, CACHE_ROOM_INFO_KEY_NAME.PASSWORD_HASH);
+    }
+
+    return true;
   }
 }
