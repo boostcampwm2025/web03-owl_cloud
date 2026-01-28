@@ -7,6 +7,7 @@ import LinePanel from '@/components/whiteboard/sidebar/panels/LinePanel';
 import MediaPanel from '@/components/whiteboard/sidebar/panels/MediaPanel';
 import TextPanel from '@/components/whiteboard/sidebar/panels/TextPanel';
 import DrawingPanel from '@/components/whiteboard/sidebar/panels/DrawingPanel';
+import StackPanel from '@/components/whiteboard/sidebar/panels/StackPanel';
 
 import { useWhiteboardSharedStore } from '@/store/useWhiteboardSharedStore';
 import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
@@ -20,6 +21,7 @@ import type {
   ImageItem,
   TextItem,
   DrawingItem,
+  StackItem,
 } from '@/types/whiteboard';
 import {
   ARROW_SIZE_PRESETS,
@@ -44,6 +46,7 @@ type SelectionType =
   | 'text'
   | 'drawing'
   | 'media'
+  | 'stack'
   | null;
 
 export default function Sidebar() {
@@ -85,6 +88,8 @@ export default function Sidebar() {
         return 'text';
       case 'drawing':
         return 'drawing';
+      case 'stack':
+        return 'stack';
       default:
         return null;
     }
@@ -141,6 +146,8 @@ export default function Sidebar() {
         return 'Text';
       case 'drawing':
         return 'Drawing';
+      case 'stack':
+        return 'Stack';
       default:
         return '';
     }
@@ -417,6 +424,19 @@ export default function Sidebar() {
               }
             }}
             onChangeLayer={selectedItem ? handleLayerChange : undefined}
+          />
+        )}
+        {/* stack */}
+        {selectionType === 'stack' && (
+          <StackPanel
+            src={(selectedItem as StackItem).src}
+            stackName={(selectedItem as StackItem).stackName}
+            category={(selectedItem as StackItem).category}
+            opacity={(selectedItem as StackItem).opacity ?? 1}
+            onChangeOpacity={(opacity) => {
+              updateItem(selectedId!, { opacity });
+            }}
+            onChangeLayer={handleLayerChange}
           />
         )}
       </div>
