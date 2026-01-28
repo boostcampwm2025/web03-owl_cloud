@@ -24,6 +24,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useWhiteboardSocket } from '@/hooks/useWhiteboardSocket';
 import { useWindowSize } from '@/hooks/useWindowSize';
+import { useChatStore } from '@/store/useChatStore';
 
 export default function MeetingMenu() {
   const { width } = useWindowSize();
@@ -167,7 +168,10 @@ export default function MeetingMenu() {
   const router = useRouter();
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const toggleExitModal = () => setIsExitModalOpen((prev) => !prev);
-  const onExit = () => router.replace('/');
+  const onExit = () => {
+    useChatStore.getState().reset();
+    router.replace('/');
+  };
 
   const MENU_ITEMS = [
     {

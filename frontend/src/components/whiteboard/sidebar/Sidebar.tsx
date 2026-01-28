@@ -179,16 +179,19 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="absolute top-1/2 left-2 z-5 flex max-h-[calc(100vh-2rem)] w-56 -translate-y-1/2 flex-col overflow-y-auto rounded-lg border border-neutral-200 bg-white p-4 shadow-xl">
+    <aside
+      className="absolute top-1/2 left-2 z-5 flex w-60 -translate-y-1/2 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white p-4 shadow-xl"
+      style={{ maxHeight: 'calc(100vh - 220px)' }}
+    >
       {/* Sidebar Title */}
-      <div className="mb-1">
+      <div className="mb-2 shrink-0 border-b border-neutral-100 pb-2">
         <h2 className="text-lg font-bold text-neutral-800">
           {getHeaderTitle()}
         </h2>
       </div>
 
       {/* 패널 영역 */}
-      <div className="flex-1">
+      <div className="min-h-0 flex-1 overflow-y-auto px-1 pr-2">
         {/* shape */}
         {selectionType === 'shape' && (
           <ShapePanel
@@ -395,6 +398,7 @@ export default function Sidebar() {
             onChangeLayer={handleLayerChange}
           />
         )}
+
         {/* drawing */}
         {(cursorMode === 'draw' || selectionType === 'drawing') && (
           <DrawingPanel
@@ -426,6 +430,7 @@ export default function Sidebar() {
             onChangeLayer={selectedItem ? handleLayerChange : undefined}
           />
         )}
+
         {/* stack */}
         {selectionType === 'stack' && (
           <StackPanel

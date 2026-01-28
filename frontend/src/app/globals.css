@@ -72,3 +72,13 @@ button {
   font-family: var(--font-roboto);
   @apply text-sm leading-5 text-[#1F1F1F];
 }
+
+/* 채팅창 전용 커스텀 스크롤바 */
+.chat-scrollbar::-webkit-scrollbar {
+  width: 6px; /* 스크롤바 두께 */
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb {
+  background: #737373;
+  border-radius: 10px; /* 둥근 막대 */
+}

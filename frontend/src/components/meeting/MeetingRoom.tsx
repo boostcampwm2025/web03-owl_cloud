@@ -28,6 +28,7 @@ import { useEffect } from 'react';
 import VideoView from './media/VideoView';
 import AudioView from '@/components/meeting/media/AudioView';
 import MainVideo from '@/components/meeting/MainVideo';
+import { useChatSocket } from '@/hooks/chat/useChatSocket';
 
 export default function MeetingRoom() {
   const {
@@ -57,6 +58,8 @@ export default function MeetingRoom() {
   const { joinWhiteboard } = useWhiteboardSocket();
   const { socket: mainSocket } = useMeetingSocket();
   const { codeEditorSocket, whiteboardSocket } = useToolSocketStore();
+
+  useChatSocket(socket);
 
   const screenVideoStream = useMeetingStore((state) =>
     screenSharer ? state.memberStreams[screenSharer.id]?.screen_video : null,
