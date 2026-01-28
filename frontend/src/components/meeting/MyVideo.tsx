@@ -1,4 +1,5 @@
 import { MicOffIcon } from '@/assets/icons/meeting';
+import ProfileImg from '@/components/common/ProfileImg';
 import VideoView from '@/components/meeting/media/VideoView';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { useVoiceActivity } from '@/hooks/useVoiceActivity';
@@ -49,18 +50,8 @@ export default function MyVideo({ width = '160px' }: { width?: string }) {
         <div className="flex-center h-full w-full overflow-hidden rounded-lg">
           <VideoView stream={localVideoStream} />
         </div>
-      ) : profilePath ? (
-        <Image
-          width={64}
-          height={64}
-          className="aspect-square w-16 rounded-full object-cover"
-          src={profilePath}
-          alt={`${nickname}님의 프로필 사진`}
-        />
       ) : (
-        <div className="flex-center aspect-square w-16 rounded-full bg-neutral-500 text-2xl font-bold text-neutral-50">
-          {nickname[0]}
-        </div>
+        <ProfileImg profilePath={profilePath} nickname={nickname} size={64} />
       )}
 
       {/* 이름표 */}

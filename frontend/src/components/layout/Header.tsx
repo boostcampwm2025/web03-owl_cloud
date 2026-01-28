@@ -2,11 +2,10 @@
 
 import { useUserStore } from '@/store/useUserStore';
 import { apiWithToken } from '@/utils/apiClient';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import logoImg from '@/assets/logo.png';
 import { LogoIcon } from '@/assets/icons/common';
+import ProfileImg from '@/components/common/ProfileImg';
 
 interface UserResponse {
   email: string;
@@ -16,7 +15,7 @@ interface UserResponse {
 }
 
 export default function Header() {
-  const { nickname, isLoggedIn, isLoaded, setUser, setIsLoaded } =
+  const { nickname, isLoggedIn, isLoaded, setUser, setIsLoaded, profilePath } =
     useUserStore();
 
   useEffect(() => {
@@ -60,12 +59,10 @@ export default function Header() {
             className="relative h-10 w-10 rounded-full bg-neutral-200"
             onClick={onProfileClick}
           >
-            <Image
-              width={40}
-              height={40}
-              className="h-10 w-10 rounded-full object-cover"
-              src="https://picsum.photos/id/237/200/100"
-              alt="프로필 사진"
+            <ProfileImg
+              profilePath={profilePath}
+              nickname={nickname}
+              size={40}
             />
 
             {isProfileOpen && (

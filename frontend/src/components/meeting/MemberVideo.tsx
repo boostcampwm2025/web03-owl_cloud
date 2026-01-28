@@ -1,5 +1,6 @@
 import { MoreHoriIcon } from '@/assets/icons/common';
 import { MicOffIcon, PinIcon } from '@/assets/icons/meeting';
+import ProfileImg from '@/components/common/ProfileImg';
 import VideoView from '@/components/meeting/media/VideoView';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { useMeetingStore } from '@/store/useMeetingStore';
@@ -44,18 +45,8 @@ export default function MemberVideo({
         <div className="flex-center h-full w-full overflow-hidden rounded-lg">
           <VideoView stream={streams.cam} />
         </div>
-      ) : profile_path ? (
-        <Image
-          width={64}
-          height={64}
-          className="aspect-square w-16 rounded-full object-cover"
-          src={profile_path}
-          alt={`${nickname}님의 프로필 사진`}
-        />
       ) : (
-        <div className="flex-center aspect-square w-16 rounded-full bg-neutral-500 text-2xl font-bold text-neutral-50">
-          {nickname[0]}
-        </div>
+        <ProfileImg profilePath={profile_path} nickname={nickname} size={64} />
       )}
 
       {/* 이름표 */}
