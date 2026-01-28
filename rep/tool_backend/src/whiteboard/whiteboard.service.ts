@@ -123,7 +123,7 @@ export class WhiteboardService {
     };
   }  
   
-  // 아래는 queue에 쌓는 함수
+  // 아래는 queue에 쌓는 함수 ( whiteboard에경우 서버 자체이서도 데이터를 쌓아서 처리하는게 유리할 tn dl )
   queueUpdates(room_id: string, updates: Uint8Array[], user_id: string) {
     if (!updates.length) return;
 
@@ -205,6 +205,7 @@ export class WhiteboardService {
     // whiteboard는 시간 or 데이터가 일정수준일때 snapshot을 찍어야 하기때문에 아래와 같이 처리한다. 
     const now = Date.now();
     const st = this.snapState.get(room_id) ?? { lastTs: 0, lastSeq: 0 }; 
+    if (!this.snapState.get(room_id)) this.snapState.set(room_id, st);
 
     // 하나라도 충족하면 snapshot을 찍습니다.
     const enoughTime = now - st.lastTs >= WHITEBOARD_SNAPSHOT_EVERY_MS;
