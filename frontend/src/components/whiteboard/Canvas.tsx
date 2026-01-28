@@ -36,7 +36,7 @@ import ItemTransformer from '@/components/whiteboard/controls/ItemTransformer';
 import RemoteSelectionLayer from '@/components/whiteboard/remote/RemoteSelectionLayer';
 import ArrowHandles from '@/components/whiteboard/items/arrow/ArrowHandles';
 
-const GEOMETRY_KEYS = ['x', 'y', 'width', 'height'] as const;
+const GEOMETRY_KEYS = ['x', 'y', 'width', 'height', 'rotation'] as const;
 
 export default function Canvas() {
   const stageScale = useWhiteboardLocalStore((state) => state.stageScale);

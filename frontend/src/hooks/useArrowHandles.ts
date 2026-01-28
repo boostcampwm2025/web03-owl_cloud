@@ -114,6 +114,7 @@ export function useArrowHandles({
           width: shape.width,
           height: shape.height,
           rotation: shape.rotation,
+          type: shape.shapeType || shape.type,
         },
         { x, y },
       );
