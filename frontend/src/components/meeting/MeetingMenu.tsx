@@ -122,11 +122,10 @@ export default function MeetingMenu() {
 
   // 화이트보드 버튼 클릭 핸들러
   const onWhiteboardClick = () => {
-    if (screenShareOn || screenSharer || isCodeEditorOpen) {
+    if (screenShareOn || screenSharer) {
       setError({
         title: '화이트보드 실행 실패',
-        message:
-          '화면 공유 또는 코드 에디터 사용 중에는\n화이트보드 실행이 불가합니다.',
+        message: '화면 공유 사용 중에는\n화이트보드 실행이 불가합니다.',
       });
       return;
     }
@@ -143,20 +142,21 @@ export default function MeetingMenu() {
   };
 
   const onCodeEditorClick = () => {
-    if (screenShareOn || screenSharer || isWhiteboardOpen) {
+    if (screenShareOn || screenSharer) {
       setError({
         title: '코드 에디터 실행 실패',
-        message:
-          '화면 공유 또는 화이트보드 사용 중에는\n코드 에디터 실행이 불가합니다.',
+        message: '화면 공유 사용 중에는\n코드 에디터 실행이 불가합니다.',
       });
       return;
     }
 
     if (isCodeEditorOpen) {
       closeCodeEditor();
-      return;
+    } else {
+      openCodeEditor();
     }
-    openCodeEditor();
+
+    setIsOpen('isCodeEditorOpen', !isCodeEditorOpen);
     if (isMoreMenuOpen) setIsMoreMenuOpen(false);
   };
 

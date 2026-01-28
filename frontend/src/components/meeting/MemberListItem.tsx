@@ -46,7 +46,7 @@ export default function MemberListItem({
     <li className="group flex items-center gap-2 p-4">
       {/* 참가자 정보 */}
       <div className="flex flex-1 items-center gap-3">
-        <ProfileImg profilePath={profileImg} nickname={name} size={64} />
+        <ProfileImg profilePath={profileImg} nickname={name} size={32} />
         <span className="ellipsis w-full text-neutral-50">{name}</span>
       </div>
 

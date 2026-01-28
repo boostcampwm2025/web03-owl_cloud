@@ -22,7 +22,7 @@ export default function ProfileImg({
     />
   ) : (
     <div
-      className={`flex-center aspect-square rounded-full bg-neutral-500 font-bold text-neutral-50 ${size >= 64 ? 'text-2xl' : 'text-xl'}`}
+      className={`flex-center aspect-square rounded-full bg-neutral-500 font-bold text-neutral-50 ${size >= 64 ? 'text-2xl' : size > 32 ? 'text-xl' : 'text-base'}`}
       style={{ width: size, height: size }}
     >
       {nickname[0]}
