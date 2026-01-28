@@ -164,6 +164,7 @@ export class SignalingWebsocketGateway
       // 2. 일단 기본 세팅으로 응답
       client.emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.JOINED, {
         user_id: payload.user_id,
+        is_hosted : result.is_hosted,
         ok: true,
       });
 
