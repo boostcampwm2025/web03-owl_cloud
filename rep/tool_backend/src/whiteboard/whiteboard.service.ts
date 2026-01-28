@@ -112,9 +112,6 @@ export class WhiteboardService {
       await this.appendUpdatesToStream(room_id, p.updates, p.user_id);
       this.pending.delete(room_id);
 
-      // repo를 적용해서 일관성 높임
-      for (const u of p.updates) this.whiteboardRepo.applyAndAppendUpdate(room_id, u);
-
       // snapshot도 적용
       await this.maybeSnapShot(room_id);
     } catch (err) {
@@ -123,7 +120,7 @@ export class WhiteboardService {
     };
   }  
   
-  // 아래는 queue에 쌓는 함수 ( whiteboard에경우 서버 자체이서도 데이터를 쌓아서 처리하는게 유리할 tn dl )
+  // 아래는 queue에 쌓는 함수 ( whiteboard에경우 서버 자체이서도 데이터를 쌓아서 처리하는게 유리할 tn )
   queueUpdates(room_id: string, updates: Uint8Array[], user_id: string) {
     if (!updates.length) return;
 
@@ -147,8 +144,12 @@ export class WhiteboardService {
   // redis로 부터 docs를 가져오는 로직 ( 메모리에 없을 경우 cache에서 불러와서 저장한다. )
   async ensureDocFromRedis(room_id: string): Promise<UpdateEntry> {
     const existed = this.whiteboardRepo.get(room_id);
-    if (existed) return this.whiteboardRepo.encodeFull(room_id);
+    if (existed) {
+      console.log("메모리에서 가져옴")
+      return this.whiteboardRepo.encodeFull(room_id);
+    }
 
+    console.log("레디스에서 가져옴")
     // 없으면 생성한다. ( cache에서 채울 예정 )
     this.whiteboardRepo.ensure(room_id);
 

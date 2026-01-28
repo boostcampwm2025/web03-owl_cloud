@@ -17,7 +17,7 @@ import { EVENT_STREAM_NAME } from '@/infra/event-stream/event-stream.constants';
 import { WHITEBOARD_WEBSOCKET } from '@/infra/websocket/websocket.constants';
 import { WhiteboardWebsocket } from '@/infra/websocket/whiteboard/whiteboard.service';
 import { WhiteboardRepository } from '@/infra/memory/tool';
-import * as Y from 'yjs';
+
 
 @WebSocketGateway({
   namespace: process.env.NODE_BACKEND_WEBSOCKET_WHITEBOARD,
@@ -99,6 +99,7 @@ export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConne
 
     // 입장 허가 메시지 전송
     client.emit(WHITEBOARD_CLIENT_EVENT_NAME.PERMISSION, { ok: true });
+    client.emit('init-user', { userId: payload.user_id });
   }
 
   // 헬스 체크
@@ -118,10 +119,6 @@ export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConne
   @SubscribeMessage(WHITEBOARD_EVENT_NAME.CLIENT_READY)
   async onReady(@ConnectedSocket() client: Socket) {
     try {
-      // 중복 준비를 막는다. 
-      if (client.data.__yjsReadySent) return;
-      client.data.__yjsReadySent = true;
-
       const payload: ToolBackendPayload = client.data.payload;
       const full = await this.whiteboardService.ensureDocFromRedis(payload.room_id);
 

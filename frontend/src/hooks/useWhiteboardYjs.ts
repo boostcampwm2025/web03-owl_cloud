@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import * as Y from 'yjs';
 import * as awarenessProtocol from 'y-protocols/awareness';
-import { Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
+
 import { useWhiteboardSharedStore } from '@/store/useWhiteboardSharedStore';
 import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 import { useWhiteboardAwarenessStore } from '@/store/useWhiteboardAwarenessStore';
@@ -9,6 +10,7 @@ import { useUserStore } from '@/store/useUserStore';
 import { NO_TRANSPARENT_PALETTE } from '@/constants/colors';
 import type { WhiteboardItem } from '@/types/whiteboard';
 import type { YMapValue } from '@/types/whiteboard/yjs';
+// ↑ 예시야. 실제 너희 프로젝트에서 WHITEBOARD_EVENT_NAME.CLIENT_READY 를 import 가능한 경로로 바꿔.
 
 type YjsInitPayload = {
   update: ArrayBuffer | Uint8Array;
@@ -43,17 +45,41 @@ type YjsSyncOkPayload = {
   seq?: number;
 };
 
+export const WHITEBOARD_EVENT_NAME = Object.freeze({
+  HEALTH_CHECK: 'whiteboard:ws:health_check',
+  CLIENT_READY : "whiteboard:ws:yjs-ready",
+  CREATE_ELEMENT: 'whiteboard:element:create',
+  UPDATE_ELEMENT: 'whiteboard:element:update',
+  DELETE_ELEMENT: 'whiteboard:element:delete',
+  CHANGE_LAYER: 'whiteboard:element:layer',
+  CURSOR_MOVE: 'whiteboard:cursor:move',
+} as const);
+
+export const WHITEBOARD_CLIENT_EVENT_NAME = Object.freeze({
+  PERMISSION: 'whiteboard:permission',
+
+  REMOTE_CREATE_ELEMENT: 'whiteboard:remote:element:create',
+  REMOTE_UPDATE_ELEMENT: 'whiteboard:remote:element:update',
+  REMOTE_DELETE_ELEMENT: 'whiteboard:remote:element:delete',
+  REMOTE_CHANGE_LAYER: 'whiteboard:remote:element:layer',
+  REMOTE_CURSOR_MOVE: 'whiteboard:remote:cursor:move',
+} as const);
+
 const normalizeToU8 = (v: ArrayBuffer | Uint8Array): Uint8Array =>
   v instanceof Uint8Array ? v : new Uint8Array(v);
 
 export const useWhiteboardYjs = (socket: Socket | null) => {
-  const undoManagerRef = useRef<Y.UndoManager | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   const initializedRef = useRef(false);
+
+  const undoManagerRef = useRef<Y.UndoManager | null>(null);
 
   // ✅ 서버 seq 추적 (request-sync 복구에 사용)
   const serverSeqRef = useRef<number>(0);
   const syncingRef = useRef(false);
+
+  // ✅ ready는 “한 번만”
+  const readySentRef = useRef(false);
 
   const setItems = useWhiteboardSharedStore((state) => state.setItems);
   const { nickname } = useUserStore();
@@ -62,7 +88,6 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
     if (initializedRef.current) return;
     if (!socket?.connected) return;
 
-    console.log('[Yjs] 초기화 시작, 소켓 ID:', socket.id);
     initializedRef.current = true;
 
     // -------------------------
@@ -84,6 +109,22 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
     useWhiteboardSharedStore
       .getState()
       .setYjsInstances(yItems, awareness, undoManager, yjsOrigin);
+
+    // -------------------------
+    // ✅ CLIENT_READY 전송 로직 (핵심)
+    // - 서버가 이걸 받아야 yjs-init을 내려줌
+    // - permission 이후 / connect 이후 / reconnect 이후 안전하게 한 번만 보내기
+    // -------------------------
+    const sendReadyOnce = () => {
+      if (!socket?.connected) return;
+      if (readySentRef.current) return;
+
+      readySentRef.current = true;
+      socket.emit(WHITEBOARD_EVENT_NAME.CLIENT_READY); // "whiteboard:ws:yjs-ready"
+    };
+
+    // 연결된 즉시 한 번 시도 (permission이 더 늦게 오면 아래 onPermission에서 다시 한번 시도)
+    sendReadyOnce();
 
     // -------------------------
     // sync helper
@@ -124,6 +165,25 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
     };
     socket.on('init-user', onInitUser);
 
+    // ✅ permission 받고 ready 보내는 흐름을 원래 의도에 맞춰 추가
+    // (서버에서 PERMISSION을 emit하고 있음)
+    const onPermission = ({ ok }: { ok: boolean }) => {
+      if (!ok) return;
+      // permission 받은 이후 ready 보내는 게 가장 안정적
+      sendReadyOnce();
+    };
+    socket.on(WHITEBOARD_CLIENT_EVENT_NAME.PERMISSION as any, onPermission);
+    // ↑ 타입 안 맞으면 as any 제거하고 상수 타입 맞춰줘
+
+    // ✅ 재연결 시 ready 다시 보내야 함
+    const onReconnect = () => {
+      // reconnect면 서버 소켓 객체가 바뀌어서 다시 ready 필요
+      readySentRef.current = false;
+      sendReadyOnce();
+    };
+    socket.on('reconnect', onReconnect);
+    socket.on('connect', onReconnect); // socket.io는 connect에도 대응해두면 안정적
+
     // -------------------------
     // selection 콜백 (기존 의도 유지)
     // -------------------------
@@ -138,8 +198,9 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
     };
     useWhiteboardLocalStore.getState().setAwarenessCallback(updateAwarenessSelection);
 
-    // ✅ (추가) cursor 콜백도 동일한 방식으로 연결
-    // - store에 setCursorCallback 같은게 없다면, 아래 부분은 너희 store 네이밍에 맞춰 1줄만 바꾸면 됨
+    // ✅ cursor 콜백도 동일하게 연결 (커서 안되던 핵심 구간)
+    // - LocalStore에 setter가 없다면, store에 추가하거나
+    // - 커서 발생 컴포넌트에서 awareness.setLocalStateField('cursor', ...) 직접 호출해야 함
     const updateAwarenessCursor = (cursor: { x: number; y: number } | null) => {
       const currentState = awareness.getLocalState();
       if (!currentState) return;
@@ -150,9 +211,8 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
       });
     };
 
-    // 너희 LocalStore에 cursor용 콜백 setter가 이미 있으면 이걸로 연결해줘
-    // (없으면, 아래 줄은 주석처리하고 커서 업데이트는 컴포넌트에서 직접 updateAwarenessCursor를 호출하는 방식으로 해도 됨)
-    // @ts-ignore - 프로젝트에 맞는 함수명으로 바꿔
+    // 프로젝트에 맞는 네이밍으로 바꿔줘 (없으면 store에 추가하는 게 정석)
+    // @ts-ignore
     useWhiteboardLocalStore.getState().setCursorCallback?.(updateAwarenessCursor);
 
     // -------------------------
@@ -160,8 +220,7 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
     // -------------------------
     const onYjsInit = (payload: YjsInitPayload) => {
       try {
-        const u8 = normalizeToU8(payload.update);
-        Y.applyUpdate(ydoc, u8, 'remote-init');
+        Y.applyUpdate(ydoc, normalizeToU8(payload.update), 'remote-init');
 
         if (typeof payload.seq === 'number') {
           serverSeqRef.current = payload.seq;
@@ -184,8 +243,7 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
     ydoc.on('update', onDocUpdate);
 
     // -------------------------
-    // Server -> Yjs : yjs-update
-    // (서버가 {update, seq} 보내는 구조 지원)
+    // Server -> Yjs : yjs-update (seq 포함 지원)
     // -------------------------
     const onYjsUpdate = (payload: YjsUpdatePayload) => {
       try {
@@ -199,15 +257,10 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
           seq = payload.seq;
         }
 
-        // ✅ seq mismatch 감지 → request-sync
+        // seq mismatch 감지 → request-sync
         if (typeof seq === 'number') {
           const expected = serverSeqRef.current + 1;
           if (serverSeqRef.current > 0 && seq !== expected) {
-            console.warn('[Yjs] seq mismatch', {
-              expected,
-              got: seq,
-              last_seq: serverSeqRef.current,
-            });
             requestSync(serverSeqRef.current);
           }
           serverSeqRef.current = seq;
@@ -222,7 +275,7 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
     socket.on('yjs-update', onYjsUpdate);
 
     // -------------------------
-    // request-sync 복구: yjs-sync-full / delta / ok
+    // request-sync 복구
     // -------------------------
     const onSyncFull = (payload: YjsSyncFullPayload) => {
       try {
@@ -313,8 +366,7 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
       setItems(uniqueItems);
     };
 
-    // ✅ observeDeep를 바로 handleYjsChange에 연결하지 말고,
-    // ✅ raf로 한 프레임에 한 번만 setItems 하도록 한다.
+    // ✅ 한 프레임에 한 번만 setItems
     let dirty = false;
     const schedule = () => {
       if (dirty) return;
@@ -329,7 +381,7 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
     handleYjsChange();
 
     // -------------------------
-    // Awareness change -> store 반영 (기존 의도 유지)
+    // Awareness change -> store 반영
     // -------------------------
     const onAwarenessChange = () => {
       const states = awareness.getStates();
@@ -349,8 +401,6 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
     };
     awareness.on('change', onAwarenessChange);
 
-    console.log('[Yjs] 초기화 완료');
-
     // -------------------------
     // cleanup
     // -------------------------
@@ -358,6 +408,7 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
       initializedRef.current = false;
       syncingRef.current = false;
       serverSeqRef.current = 0;
+      readySentRef.current = false;
 
       undoManagerRef.current?.destroy();
 
@@ -372,6 +423,8 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
       awareness.off('change', onAwarenessChange);
 
       socket.off('init-user', onInitUser);
+      socket.off(WHITEBOARD_CLIENT_EVENT_NAME.PERMISSION as any, onPermission);
+
       socket.off('yjs-init', onYjsInit);
       socket.off('yjs-update', onYjsUpdate);
 
@@ -380,6 +433,9 @@ export const useWhiteboardYjs = (socket: Socket | null) => {
       socket.off('yjs-sync-ok', onSyncOk);
 
       socket.off('awareness-update', onAwarenessUpdateRemote);
+
+      socket.off('reconnect', onReconnect);
+      socket.off('connect', onReconnect);
 
       ydoc.off('update', onDocUpdate);
       ydoc.destroy();
