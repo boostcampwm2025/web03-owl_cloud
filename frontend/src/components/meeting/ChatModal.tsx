@@ -172,7 +172,10 @@ export default function ChatModal() {
       </section>
 
       {/* 채팅 입력 부분 */}
-      <form className="border-t border-neutral-600" onSubmit={onSubmit}>
+      <form
+        className="flex flex-col border-t border-neutral-600"
+        onSubmit={onSubmit}
+      >
         {/* 파일 업로드 현황 */}
         {pendingFiles.length > 0 && (
           <div className="flex flex-wrap gap-3 bg-neutral-700/50 p-3">
@@ -248,7 +251,7 @@ export default function ChatModal() {
         {/* 텍스트 input */}
         <textarea
           ref={textareaRef}
-          className="peer w-full resize-none px-2 pt-3 pb-1 text-sm text-neutral-50 placeholder:text-neutral-400 focus:outline-none"
+          className="peer chat-scrollbar max-h-30 w-full resize-none overflow-y-auto px-2 pt-3 pb-1 text-sm text-neutral-50 placeholder:text-neutral-400 focus:outline-none"
           placeholder="메세지를 입력해주세요"
           onKeyDown={handleKeyDown}
           onInput={handleInput}
