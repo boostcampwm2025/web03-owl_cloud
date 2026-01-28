@@ -11,10 +11,9 @@ import NavButton from '@/components/whiteboard/common/NavButton';
 // Panel import
 import ShapePanel from '@/components/whiteboard/toolbar/panels/ShapePanel';
 import MediaPanel from '@/components/whiteboard/toolbar/panels/MediaPanel';
-//import StackPanel from '@/components/whiteboard/toolbar/panels/StackPanel';
+import StackPanel from '@/components/whiteboard/toolbar/panels/StackPanel';
 
 // Icon import
-// TODO : 필요한 아이콘 추가 : 화살표 / 기술 스택 아이콘 / line 아이콘
 import { ImageIcon } from '@/assets/icons/common';
 import {
   CursorIcon,
@@ -25,6 +24,7 @@ import {
   PenIcon,
   TextBoxIcon,
   EraserIcon,
+  StackIcon,
 } from '@/assets/icons/whiteboard';
 
 // Type import
@@ -32,7 +32,7 @@ import { ToolType, PanelType } from '@/types/whiteboard/whiteboardUI';
 import { CursorMode } from '@/types/whiteboard/base';
 
 // Constants import
-import { SHAPE_TOOLS, MEDIA_TOOLS } from '@/constants/whiteboard';
+import { SHAPE_TOOLS, MEDIA_TOOLS, STACK_TOOLS } from '@/constants/whiteboard';
 
 export default function ToolbarContainer() {
   // 상태 관리 로직
@@ -180,14 +180,15 @@ export default function ToolbarContainer() {
           activeBgColor="bg-sky-200"
         />
 
-        {/* <NavButton
+        <NavButton
           icon={StackIcon}
           label="아키텍처"
           isActive={STACK_TOOLS.includes(activeTool) || activePanel === 'stack'}
-          onClick={() => togglePanel('stack')}
+          onClick={(e) => togglePanelWithSelect('stack', e)}
           bgColor="bg-white"
-          activeBgColor="bg-sky-100 text-sky-600"
-        /> */}
+          hvColor="bg-neutral-100"
+          activeBgColor="bg-sky-200"
+        />
 
         <NavButton
           icon={EraserIcon}
@@ -200,44 +201,43 @@ export default function ToolbarContainer() {
         />
       </div>
 
-      {activePanel === 'shape' && (
+      {/* 하단 패널 렌더링 영역 - 좌표 계산(panelLeft) 적용 */}
+      {activePanel && (
         <div
           className="absolute top-full mt-2"
           style={{ left: `${panelLeft}px`, transform: 'translateX(-50%)' }}
         >
-          <ShapePanel
-            selectedTool={activeTool}
-            onSelect={() => {
-              toggleCursorMode('select');
-              setActivePanel(null);
-            }}
-          />
+          {activePanel === 'shape' && (
+            <ShapePanel
+              selectedTool={activeTool}
+              onSelect={() => {
+                toggleCursorMode('select');
+                setActivePanel(null);
+              }}
+            />
+          )}
+
+          {activePanel === 'media' && (
+            <MediaPanel
+              selectedTool={activeTool}
+              onSelect={() => {
+                toggleCursorMode('select');
+                setActivePanel(null);
+              }}
+            />
+          )}
+
+          {activePanel === 'stack' && (
+            <StackPanel
+              selectedTool={activeTool}
+              onSelect={() => {
+                toggleCursorMode('select');
+                setActivePanel(null);
+              }}
+            />
+          )}
         </div>
       )}
-
-      {activePanel === 'media' && (
-        <div
-          className="absolute top-full mt-2"
-          style={{ left: `${panelLeft}px`, transform: 'translateX(-50%)' }}
-        >
-          <MediaPanel
-            selectedTool={activeTool}
-            onSelect={() => {
-              toggleCursorMode('select');
-              setActivePanel(null);
-            }}
-          />
-        </div>
-      )}
-
-      {/* {activePanel === 'stack' && (
-        <div className="absolute mt-2 top-full">
-          <StackPanel
-            selectedTool={activeTool}
-            onSelect={(tool) => handleToolSelect(tool)}
-          />
-        </div>
-      )} */}
     </div>
   );
 }

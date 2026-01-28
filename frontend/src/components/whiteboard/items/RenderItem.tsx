@@ -11,6 +11,7 @@ import DrawingItem from '@/components/whiteboard/items/drawing/DrawingItem';
 import ImageItem from '@/components/whiteboard/items/image/ImageItem';
 import VideoItem from '@/components/whiteboard/items/video/VideoItem';
 import YoutubeItem from '@/components/whiteboard/items/youtube/YoutubeItem';
+import StackItem from '@/components/whiteboard/items/stack/StackItem';
 
 import type {
   TextItem as TextItemType,
@@ -21,6 +22,7 @@ import type {
   ImageItem as ImageItemType,
   VideoItem as VideoItemType,
   YoutubeItem as YoutubeItemType,
+  StackItem as StackItemType,
   WhiteboardItem,
 } from '@/types/whiteboard';
 
@@ -179,6 +181,24 @@ function RenderItem({
     return (
       <YoutubeItem
         youtubeItem={youtubeItem}
+        isDraggable={isDraggable}
+        isListening={isListening}
+        isSelected={isSelected}
+        onSelect={() => onSelect(item.id)}
+        onChange={onChange}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+      />
+    );
+  }
+
+  if (item.type === 'stack') {
+    const stackItem = item as StackItemType;
+    return (
+      <StackItem
+        stackItem={stackItem}
         isDraggable={isDraggable}
         isListening={isListening}
         isSelected={isSelected}

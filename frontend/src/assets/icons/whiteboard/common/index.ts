@@ -12,3 +12,5 @@ export { default as layerBringForwardIcon } from '@/assets/icons/whiteboard/comm
 export { default as layerBringToFrontIcon } from '@/assets/icons/whiteboard/common/layerBringToFront.svg';
 export { default as layerSendBackwardIcon } from '@/assets/icons/whiteboard/common/layerSendBackward.svg';
 export { default as layerSendToBackIcon } from '@/assets/icons/whiteboard/common/layerSendToBack.svg';
+
+export { default as SearchIcon } from '@/assets/icons/whiteboard/common/search.svg';

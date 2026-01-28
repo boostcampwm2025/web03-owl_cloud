@@ -17,6 +17,7 @@ import type {
   ImageItem,
   VideoItem,
   YoutubeItem,
+  StackItem,
 } from '@/types/whiteboard';
 import type { YMapValue } from '@/types/whiteboard/yjs';
 
@@ -261,6 +262,32 @@ export function useItemActions() {
     }, yjsOrigin);
   };
 
+  // 스택 아이템(아이콘) 추가
+  const addStack = (payload: Partial<Omit<StackItem, 'id' | 'type'>>) => {
+    if (!yItems || !yItems.doc) return;
+
+    const id = uuidv4();
+    const newStack: StackItem = {
+      id,
+      type: 'stack',
+      src: payload.src ?? '',
+      stackName: payload.stackName ?? '',
+      category: payload.category ?? 'tool',
+      x: payload.x ?? CANVAS_WIDTH / 2 - 30,
+      y: payload.y ?? CANVAS_HEIGHT / 2 - 30,
+      width: payload.width ?? 60,
+      height: payload.height ?? 60,
+      rotation: payload.rotation ?? 0,
+      opacity: payload.opacity ?? 1,
+    };
+
+    yItems.doc.transact(() => {
+      yItems.push([itemToYMap(newStack)]);
+    }, yjsOrigin);
+
+    return id;
+  };
+
   // 그리기 완료 후 추가
   const addDrawing = (drawing: WhiteboardItem) => {
     if (!yItems || !yItems.doc) return;
@@ -371,6 +398,7 @@ export function useItemActions() {
     addImage,
     addVideo,
     addYoutube,
+    addStack,
     addDrawing,
     updateItem,
     deleteItem,

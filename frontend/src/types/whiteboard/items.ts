@@ -106,6 +106,7 @@ export interface VideoItem extends BaseItem {
   dash?: number[];
 }
 
+// youtube Item
 export interface YoutubeItem extends BaseItem {
   type: 'youtube';
   // 원본 유튜브 URL
@@ -122,4 +123,18 @@ export interface YoutubeItem extends BaseItem {
   cornerRadius?: number;
   opacity?: number;
   dash?: number[];
+}
+
+// stack item
+export interface StackItem extends BaseItem {
+  type: 'stack';
+  src: string;
+  stackName: string;
+  category: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  opacity: number;
 }

@@ -38,7 +38,7 @@ export default function YoutubeItem({
   const [thumbnailImage, setThumbnailImage] = useState<HTMLImageElement | null>(
     null,
   );
-  const [playIconBitmap] = useImage('/icons/youtubeIcon.svg');
+  const [playIconBitmap] = useImage('/icons/youtube/youtubeIcon.svg');
   const [isDragging, setIsDragging] = useState(false);
 
   // 애니메이션 훅

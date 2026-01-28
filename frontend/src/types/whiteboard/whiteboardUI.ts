@@ -10,6 +10,7 @@ export type PanelType = 'shape' | 'media' | 'stack' | null;
 // 텍스트(text) 관련 : text
 // 미디어(media) 관련 : image / video / youtube
 // 지우개(eraser) 관련 : eraser
+// 스택(stack) 관련 : stack
 export type ToolType =
   | 'move'
   | 'select'
@@ -28,7 +29,8 @@ export type ToolType =
   | 'video'
   | 'youtube'
   | 'stack'
-  | 'eraser';
+  | 'eraser'
+  | null;
 
 export interface PanelProps {
   selectedTool: ToolType;
