@@ -93,37 +93,38 @@ export function ChatListItem({
           </span>
         )}
 
-        {content.type === 'file' && content.category === 'binary' && (
-          <div className="group flex items-center gap-4 rounded-sm bg-neutral-600 px-3 py-2">
-            <a
-              href={content.fileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex flex-1 items-center gap-3"
-              download
-            >
-              <FileIcon className="h-6 w-6 text-neutral-50" />
+        {content.type === 'file' &&
+          (content.category === 'binary' || content.category === 'text') && (
+            <div className="group flex items-center gap-4 rounded-sm bg-neutral-600 px-3 py-2">
+              <a
+                href={content.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex flex-1 items-center gap-3"
+                download
+              >
+                <FileIcon className="h-6 w-6 text-neutral-50" />
 
-              <div className="flex flex-1 flex-col items-start gap-1">
-                <span className="text-left text-sm font-bold break-all whitespace-pre-wrap text-neutral-50">
-                  {content.filename}
-                </span>
-                <span className="text-xs text-neutral-300">
-                  {formatFileSize(content.size)}
-                </span>
-              </div>
-            </a>
+                <div className="flex flex-1 flex-col items-start gap-1">
+                  <span className="text-left text-sm font-bold break-all whitespace-pre-wrap text-neutral-50">
+                    {content.filename}
+                  </span>
+                  <span className="text-xs text-neutral-300">
+                    {formatFileSize(content.size)}
+                  </span>
+                </div>
+              </a>
 
-            <button
-              type="button"
-              aria-label="파일 다운로드"
-              onClick={handleDownload}
-              className="rounded-full p-1 group-hover:bg-neutral-500"
-            >
-              <DownloadIcon className="h-6 w-6 text-neutral-50" />
-            </button>
-          </div>
-        )}
+              <button
+                type="button"
+                aria-label="파일 다운로드"
+                onClick={handleDownload}
+                className="rounded-full p-1 group-hover:bg-neutral-500"
+              >
+                <DownloadIcon className="h-6 w-6 text-neutral-50" />
+              </button>
+            </div>
+          )}
       </section>
     </div>
   );
