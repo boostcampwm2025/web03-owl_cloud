@@ -143,7 +143,12 @@ export default function CodeEditor({
     if (!model) return;
 
     const { MonacoBinding } = await import('y-monaco');
-    const binding = new MonacoBinding(yText, model, new Set([editor]), awareness);
+    const binding = new MonacoBinding(
+      yText,
+      model,
+      new Set([editor]),
+      awareness,
+    );
 
     const undoManager = new Y.UndoManager(yText, {
       trackedOrigins: new Set([binding]),
@@ -348,7 +353,7 @@ export default function CodeEditor({
      * ---- Yjs -> Socket (local updates) ----
      * ack 기반 backpressure + A안
      */
-    const onYdocUpdate = (update: Uint8Array, origin: any) => {
+    const onYdocUpdate = (update: Uint8Array, origin: unknown) => {
       if (origin === remoteOrigin) return;
       if (suppressSendRef.current) return;
 
