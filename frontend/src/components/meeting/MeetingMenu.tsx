@@ -140,7 +140,7 @@ export default function MeetingMenu() {
       // 닫혀있으면 -> 연결 시도
       openWhiteboard();
     }
-    setIsOpen('isWhiteboardOpen', !isWhiteboardOpen);
+    // setIsOpen('isWhiteboardOpen', !isWhiteboardOpen);
     if (isMoreMenuOpen) setIsMoreMenuOpen(false);
   };
 
@@ -162,7 +162,7 @@ export default function MeetingMenu() {
       openCodeEditor();
     }
 
-    setIsOpen('isCodeEditorOpen', !isCodeEditorOpen);
+    // setIsOpen('isCodeEditorOpen', !isCodeEditorOpen);
     if (isMoreMenuOpen) setIsMoreMenuOpen(false);
   };
 
