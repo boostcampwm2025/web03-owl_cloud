@@ -20,8 +20,6 @@ import type {
 } from '@/types/whiteboard';
 import type { YMapValue } from '@/types/whiteboard/yjs';
 
-import { extractYoutubeId } from '@/utils/youtube';
-
 // 아이템 액션 훅
 export function useItemActions() {
   // Store에서 Yjs 인스턴스 가져옴
