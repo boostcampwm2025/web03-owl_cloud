@@ -252,8 +252,8 @@ export const useMeetingStore = create<MeetingState & MeetingActions>((set) => ({
   setSpeakerId: (speakerId) =>
     set((state) => ({ media: { ...state.media, speakerId } })),
   setMicId: (micId) => set((state) => ({ media: { ...state.media, micId } })),
-  setCameraId: (camId) =>
-    set((state) => ({ media: { ...state.media, camId } })),
+  setCameraId: (cameraId) =>
+    set((state) => ({ media: { ...state.media, cameraId } })),
 
   setHasNewChat: (state) => set({ hasNewChat: state }),
   setIsOpen: (type, state) => set({ [type]: state }),

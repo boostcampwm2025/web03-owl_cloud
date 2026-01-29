@@ -16,13 +16,23 @@ export const useMediaDevices = () => {
       const validDevices = list.filter((d) => d.label !== '');
       setDevices(validDevices);
 
-      const mic = list.find((d) => d.kind === 'audioinput');
-      const cam = list.find((d) => d.kind === 'videoinput');
-      const speaker = list.find((d) => d.kind === 'audiooutput');
+      if (validDevices.length === 0) return;
 
-      if (mic) setMicId(mic.deviceId);
-      if (cam) setCameraId(cam.deviceId);
-      if (speaker) setSpeakerId(speaker.deviceId);
+      const mic = validDevices.find((d) => d.kind === 'audioinput');
+      const cam = validDevices.find((d) => d.kind === 'videoinput');
+      const speaker = validDevices.find((d) => d.kind === 'audiooutput');
+
+      const currentMedia = useMeetingStore.getState().media;
+
+      if (mic && !currentMedia.micId) {
+        setMicId(mic.deviceId);
+      }
+      if (cam && !currentMedia.cameraId) {
+        setCameraId(cam.deviceId);
+      }
+      if (speaker && !currentMedia.speakerId) {
+        setSpeakerId(speaker.deviceId);
+      }
     };
 
     updateDevices();
