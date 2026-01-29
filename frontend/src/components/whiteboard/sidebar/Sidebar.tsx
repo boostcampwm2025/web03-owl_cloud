@@ -1,6 +1,7 @@
 'use client';
 
 // 패널 컴포넌트들 임포트
+
 import ShapePanel from '@/components/whiteboard/sidebar/panels/ShapePanel';
 import ArrowPanel from '@/components/whiteboard/sidebar/panels/ArrowPanel';
 import LinePanel from '@/components/whiteboard/sidebar/panels/LinePanel';
@@ -449,7 +450,7 @@ export default function Sidebar() {
             }}
           />
         )}
-        
+
         {/* drawing */}
         {(cursorMode === 'draw' || selectionType === 'drawing') && (
           <DrawingPanel
