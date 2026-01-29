@@ -16,7 +16,7 @@ interface ArrowHandlesProps {
     e: KonvaEventObject<DragEvent>,
   ) => void;
   onEndDrag: (e: KonvaEventObject<DragEvent>) => void;
-  onDragEnd: () => void;
+  onDragEnd: (handleType: 'start' | 'end' | 'mid') => void;
   draggingPoints: number[] | null;
 }
 
@@ -53,7 +53,7 @@ export default function ArrowHandles({
         strokeWidth={2}
         draggable
         onDragMove={onStartDrag}
-        onDragEnd={onDragEnd}
+        onDragEnd={() => onDragEnd('start')}
         onClick={(e) => onHandleClick(e, 0)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -73,7 +73,7 @@ export default function ArrowHandles({
             strokeWidth={isHandleSelected ? 3 : 2}
             draggable
             onDragMove={(e) => onControlPointDrag(point.index, e)}
-            onDragEnd={onDragEnd}
+            onDragEnd={() => onDragEnd('mid')}
             onClick={(e) => onHandleClick(e, point.index)}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
@@ -91,7 +91,7 @@ export default function ArrowHandles({
         strokeWidth={2}
         draggable
         onDragMove={onEndDrag}
-        onDragEnd={onDragEnd}
+        onDragEnd={() => onDragEnd('end')}
         onClick={(e) => onHandleClick(e, points.length - 2)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}

@@ -125,12 +125,12 @@ export const useProduce = () => {
     try {
       setIsProducing('screen', true);
 
-      // screen에 경우는 video의 설정을 적어서 보내준다. 
+      // screen에 경우는 video의 설정을 적어서 보내준다.
       stream = await navigator.mediaDevices.getDisplayMedia({
         video: {
-          frameRate : { max : 15 }, // 이건 고정하는게 좋다. 
-          width : { max : 1280 }, // 이부분은 나중에 회의실 등 상황에 따라서 조정이 가능하다 ( 이거 보다 크면 다운스케일 적용 회의 방이나 분위기에 따라 다름 ) 
-          height : { max : 720 } // 마찬 가지 
+          frameRate: { max: 15 }, // 이건 고정하는게 좋다.
+          width: { max: 1280 }, // 이부분은 나중에 회의실 등 상황에 따라서 조정이 가능하다 ( 이거 보다 크면 다운스케일 적용 회의 방이나 분위기에 따라 다름 )
+          height: { max: 720 }, // 마찬 가지
         },
         audio: true,
       });
@@ -154,13 +154,11 @@ export const useProduce = () => {
       });
 
       setMedia({ screenShareOn: true });
-    } catch (error) {
+    } catch {
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
       }
       stopScreenProduce();
-
-      console.error('화면 공유 시작 실패:', error);
     } finally {
       setIsProducing('screen', false);
     }

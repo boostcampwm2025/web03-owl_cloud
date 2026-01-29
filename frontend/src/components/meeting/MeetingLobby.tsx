@@ -47,11 +47,13 @@ export default function MeetingLobby({
   };
 
   return (
-    <main className="box-border flex min-h-screen items-center justify-center gap-20 px-6 py-4">
+    <main className="flex min-h-screen items-center gap-20 px-6 max-lg:flex-col-reverse max-lg:justify-end max-lg:gap-12 max-lg:pt-32 max-lg:pb-8 lg:justify-center lg:pt-16">
       <Header />
 
       {/* 영상, 마이크 설정 부분 */}
       <MediaSettingSection />
+
+      <div className="h-px w-full max-w-160 bg-neutral-200 px-6 lg:hidden" />
 
       {/* 회의 참여 부분 */}
       <section className="flex min-w-60 flex-col items-center justify-center gap-6">

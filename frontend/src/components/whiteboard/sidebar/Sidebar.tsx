@@ -52,6 +52,7 @@ type SelectionType =
 export default function Sidebar() {
   // 스토어에서 선택된 아이템 정보 가져오기
   const selectedId = useWhiteboardLocalStore((state) => state.selectedId);
+  const editingTextId = useWhiteboardLocalStore((state) => state.editingTextId);
   const { updateItem, bringToFront, sendToBack, bringForward, sendBackward } =
     useItemActions();
 
@@ -68,6 +69,11 @@ export default function Sidebar() {
   // 선택된 아이템 찾기 - items 전체를 구독하지 않고 선택된 아이템만 가져오기
   const selectedItem = useWhiteboardSharedStore((state) =>
     state.items.find((item) => item.id === selectedId),
+  );
+
+  // 편집 중인 아이템 찾기 (도형 텍스트 편집용)
+  const editingItem = useWhiteboardSharedStore((state) =>
+    state.items.find((item) => item.id === editingTextId),
   );
 
   // 선택된 아이템의 타입 결정
@@ -130,6 +136,7 @@ export default function Sidebar() {
   // 선택 타입에 따른 표시될 헤더 제목
   const getHeaderTitle = () => {
     if (cursorMode === 'draw') return 'Drawing';
+    if (isEditingShapeText) return 'Text';
 
     switch (selectionType) {
       case 'shape':
@@ -154,7 +161,13 @@ export default function Sidebar() {
   };
 
   // 사이드바 표시 여부
-  if (!(selectedItem && selectionType) && cursorMode !== 'draw') {
+  const isEditingShapeText = editingTextId && editingItem?.type === 'shape';
+
+  if (
+    !(selectedItem && selectionType) &&
+    cursorMode !== 'draw' &&
+    !isEditingShapeText
+  ) {
     return null;
   }
 
@@ -193,7 +206,7 @@ export default function Sidebar() {
       {/* 패널 영역 */}
       <div className="min-h-0 flex-1 overflow-y-auto px-1 pr-2">
         {/* shape */}
-        {selectionType === 'shape' && (
+        {selectionType === 'shape' && !isEditingShapeText && (
           <ShapePanel
             // 테두리 색상
             strokeColor={(selectedItem as ShapeItem).stroke ?? '#000000'}
@@ -399,6 +412,44 @@ export default function Sidebar() {
           />
         )}
 
+        {/* 도형 내부 텍스트 편집중일때 */}
+        {isEditingShapeText && editingItem && (
+          <TextPanel
+            fill={(editingItem as ShapeItem).textColor ?? '#000000'}
+            size={getTextSize({
+              fontSize: (editingItem as ShapeItem).fontSize,
+            } as TextItem)}
+            align={(editingItem as ShapeItem).textAlign ?? 'center'}
+            fontStyle={(editingItem as ShapeItem).fontStyle ?? 'normal'}
+            textDecoration={(editingItem as ShapeItem).textDecoration ?? 'none'}
+            onChangeFill={(color) =>
+              updateItem(editingTextId!, { textColor: color })
+            }
+            onChangeSize={(size) => {
+              const preset = TEXT_SIZE_PRESETS[size];
+              updateItem(editingTextId!, { fontSize: preset.fontSize });
+            }}
+            onChangeAlign={(align) =>
+              updateItem(editingTextId!, { textAlign: align })
+            }
+            onChangeFontStyle={(fontStyle) =>
+              updateItem(editingTextId!, { fontStyle })
+            }
+            onChangeTextDecoration={(textDecoration) =>
+              updateItem(editingTextId!, { textDecoration })
+            }
+            onChangeTextFormat={(format) =>
+              updateItem(editingTextId!, {
+                fontStyle: format.fontStyle,
+                textDecoration: format.textDecoration,
+              })
+            }
+            onChangeLayer={() => {
+              if (editingTextId) handleLayerChange;
+            }}
+          />
+        )}
+        
         {/* drawing */}
         {(cursorMode === 'draw' || selectionType === 'drawing') && (
           <DrawingPanel

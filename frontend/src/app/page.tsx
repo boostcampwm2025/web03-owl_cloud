@@ -1,3 +1,4 @@
+import { LogoIcon } from '@/assets/icons/common';
 import ParticipateMeetingForm from '@/components/landing/ParticipateMeetingForm';
 import StartMeetingButton from '@/components/landing/StartMeetingButton';
 import Header from '@/components/layout/Header';
@@ -7,20 +8,22 @@ export default function Home() {
     <div className="flex min-h-dvh flex-col">
       <Header />
 
-      <main className="mt-16 flex flex-1 items-center justify-center px-20">
-        <div className="flex w-full max-w-350 gap-2">
-          <section className="flex w-full flex-col items-center justify-center">
-            <h1 className="mb-6 text-8xl font-extrabold tracking-tighter text-neutral-700">
-              <span className="text-[#0084D1]">dev:</span>meet
-            </h1>
+      <main className="flex w-full flex-1 items-center px-4 pt-16 max-md:justify-center">
+        <div className="flex h-full w-full max-w-300 items-center py-12 max-md:flex-col max-md:justify-center max-md:gap-12 max-sm:gap-12 md:gap-4">
+          <section className="flex w-full max-w-200 flex-col items-center justify-center gap-4">
+            <LogoIcon
+              className="h-16 w-auto max-md:h-12"
+              width="100%"
+              height="100%"
+            />
 
-            <p className="max-w-md text-center text-lg leading-relaxed font-medium text-neutral-400">
+            <p className="text-center text-lg leading-relaxed font-medium text-neutral-400">
               개발자를 위한 실시간 그룹 화상 회의 서비스
             </p>
           </section>
 
-          <section className="flex w-full justify-center">
-            <div className="flex w-full max-w-md flex-col gap-14 rounded-2xl border border-neutral-200 bg-white p-12 shadow-sm">
+          <section className="flex w-full max-w-90 justify-center md:max-w-90">
+            <div className="flex w-full flex-col gap-14 rounded-2xl border border-neutral-200 bg-white px-6 py-12 shadow-sm">
               <section
                 className="flex flex-col items-center gap-6"
                 aria-labelledby="start-meeting-title"

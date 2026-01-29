@@ -48,49 +48,46 @@ export default function TextArea({
     if (!textNode) return;
 
     const textarea = ref.current;
+    const stage = textNode.getStage()!;
 
-    //textNode와 스타일 동기화
-    const stage = textNode.getStage();
-    const stageScale = stage ? stage.scaleX() : 1;
-    const absPos = textNode.getAbsolutePosition();
+    // 위치 업데이트 함수
+    const updatePosition = () => {
+      if (!textarea || !textNode) return;
 
-    textarea.value = textNode.text();
-
-    textarea.style.position = 'absolute';
-
-    // 크기
-    const nodeWidth = textNode.width() * stageScale;
-    const nodeHeight = textNode.height() * stageScale;
-    const keepCentered = Boolean(textItem.parentPolygonId);
-
-    const positionTextarea = () => {
-      if (keepCentered) {
-        const centerX = absPos.x + nodeWidth / 2;
-        const centerY = absPos.y + nodeHeight / 2;
-        const currentHeight = textarea.offsetHeight;
-        textarea.style.left = `${centerX - nodeWidth / 2}px`;
-        textarea.style.top = `${centerY - currentHeight / 2}px`;
-      } else {
-        textarea.style.left = `${absPos.x}px`;
-        textarea.style.top = `${absPos.y}px`;
-      }
+      const containerRect = stage.container().getBoundingClientRect();
+      const m = textNode.getAbsoluteTransform().getMatrix();
+      textarea.style.transform = `matrix(${m[0]}, ${m[1]}, ${m[2]}, ${m[3]}, ${m[4] + containerRect.left}, ${m[5] + containerRect.top})`;
     };
 
-    textarea.style.width = `${nodeWidth}px`;
+    // 초기값 설정
+    textarea.value = textNode.text();
 
-    // 폰트 스타일
-    textarea.style.fontSize = `${textNode.fontSize() * stageScale}px`;
+    // 핼렬 기반 변환 (위치, 회전, 배율)
+    const containerRect = stage.container().getBoundingClientRect();
+    const m = textNode.getAbsoluteTransform().getMatrix();
+    textarea.style.position = 'absolute';
+    textarea.style.left = '0';
+    textarea.style.top = '0';
+    textarea.style.transformOrigin = '0 0';
+    textarea.style.transform = `matrix(${m[0]}, ${m[1]}, ${m[2]}, ${m[3]}, ${m[4] + containerRect.left}, ${m[5] + containerRect.top})`;
+
+    // 스타일 설정 (Matrix가 배율을 처리하므로 raw 값 사용)
+    textarea.style.width = `${textNode.width()}px`;
+    textarea.style.fontSize = `${textNode.fontSize()}px`;
     textarea.style.fontFamily = textNode.fontFamily();
     textarea.style.textAlign = textNode.align();
     textarea.style.color = textNode.fill() as string;
     textarea.style.caretColor = '#000000';
+    textarea.style.backgroundColor = 'transparent';
+    textarea.style.border = 'none';
+    textarea.style.outline = 'none';
+    textarea.style.resize = 'none';
+    textarea.style.overflow = 'hidden';
+    textarea.style.boxSizing = 'border-box';
+    textarea.style.lineHeight = `${textNode.lineHeight()}`;
+    textarea.style.padding = `${textNode.padding()}px`;
 
-    // Line Height 계산
-    const lineHeightPx =
-      textNode.fontSize() * textNode.lineHeight() * stageScale;
-    textarea.style.lineHeight = `${lineHeightPx}px`;
-
-    // 굵기 및 기울임 파싱 ('normal' | 'italic' | 'bold' | 'bold italic' 기준)
+    // fontStyle 파싱
     const fontStyle = textNode.fontStyle();
     textarea.style.fontWeight = fontStyle.includes('bold') ? 'bold' : 'normal';
     textarea.style.fontStyle = fontStyle.includes('italic')
@@ -98,42 +95,42 @@ export default function TextArea({
       : 'normal';
     textarea.style.textDecoration = textNode.textDecoration();
 
-    // Padding 동기화 (Konva 패딩 * 스케일)
-    const padding = textNode.padding() * stageScale;
-    textarea.style.padding = `${padding}px`;
+    // 높이 및 스크롤 제한
+    const adjustHeightAndBounds = () => {
+      textarea.style.height = 'auto';
+      const scrollHeight = textarea.scrollHeight;
 
-    // 박스 사이징
-    textarea.style.boxSizing = 'border-box';
+      const absScale = textNode.getAbsoluteScale();
+      const scaleY = absScale.y;
 
-    // 회전
-    textarea.style.transformOrigin = 'left top';
-    textarea.style.transform = `rotate(${textNode.rotation()}deg)`;
+      // 워크스페이스 화면 기준 Y 위치를 계산해 하단 여백(90px)을 제외 남은 높이 계산
+      const screenY = containerRect.top + m[5];
+      const maxAvailableScreenHeight = window.innerHeight - screenY - 90;
 
-    // 높이
-    textarea.style.height = 'auto';
-    textarea.style.height = `${textarea.scrollHeight}px`;
+      // 로컬 스케일로 변환
+      const maxAvailableLocalHeight = maxAvailableScreenHeight / scaleY;
 
-    positionTextarea();
+      textarea.style.maxHeight = `${maxAvailableLocalHeight}px`;
+      textarea.style.overflowY =
+        scrollHeight > maxAvailableLocalHeight ? 'auto' : 'hidden';
+      textarea.style.height = `${Math.min(scrollHeight, maxAvailableLocalHeight)}px`;
 
-    const notifyBounds = () => {
-      if (!keepCentered || !onBoundsChange) return;
+      // 실제 크기 변경 시에만 bounds 업데이트
+      if (onBoundsChange) {
+        const canvasWidth = textNode.width();
+        const canvasHeight = textarea.offsetHeight;
 
-      const canvasWidth = nodeWidth / stageScale;
-      const canvasHeight = textarea.offsetHeight / stageScale;
-
-      const hasWidthChanged =
-        Math.abs(canvasWidth - lastBoundsRef.current.width) > 0.5;
-      const hasHeightChanged =
-        Math.abs(canvasHeight - lastBoundsRef.current.height) > 0.5;
-
-      if (!hasWidthChanged && !hasHeightChanged) return;
-
-      lastBoundsRef.current = { width: canvasWidth, height: canvasHeight };
-      onBoundsChange(canvasWidth, canvasHeight);
+        if (
+          Math.abs(canvasWidth - lastBoundsRef.current.width) > 0.1 ||
+          Math.abs(canvasHeight - lastBoundsRef.current.height) > 0.1
+        ) {
+          lastBoundsRef.current = { width: canvasWidth, height: canvasHeight };
+          onBoundsChange(canvasWidth, canvasHeight);
+        }
+      }
     };
 
-    notifyBounds();
-
+    adjustHeightAndBounds();
     textarea.focus();
 
     // 이벤트 핸들러
@@ -146,21 +143,13 @@ export default function TextArea({
     };
 
     const handleInput = () => {
-      textarea.style.height = 'auto';
-      textarea.style.height = `${textarea.scrollHeight}px`;
-
+      adjustHeightAndBounds();
       onChange(textarea.value);
-      positionTextarea();
-      notifyBounds();
     };
 
     const handleOutsideClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-
-      if (target.closest('aside')) {
-        return;
-      }
-
+      if (target.closest('aside')) return;
       if (e.target !== textarea) {
         onChange(textarea.value);
         onClose();
@@ -170,17 +159,20 @@ export default function TextArea({
     textarea.addEventListener('keydown', handleKeyDown);
     textarea.addEventListener('input', handleInput);
 
-    // 외부 영역 클릭 시 textarea가 즉시 blur 되면서 onChange가 누락되는 문제가 있어
-    // 이벤트 등록 시점을 다음 이벤트 루프로 미룸
-    const timer = setTimeout(() => {
-      window.addEventListener('mousedown', handleOutsideClick);
-    });
+    // Stage 이벤트 구독 (pan/zoom 시 위치 업데이트)
+    stage.on('dragmove', updatePosition);
+    stage.on('dragend', updatePosition);
+    stage.on('stageTransformChange', updatePosition);
+
+    window.addEventListener('mousedown', handleOutsideClick);
 
     return () => {
       textarea.removeEventListener('keydown', handleKeyDown);
       textarea.removeEventListener('input', handleInput);
       window.removeEventListener('mousedown', handleOutsideClick);
-      clearTimeout(timer);
+      stage.off('dragmove', updatePosition);
+      stage.off('dragend', updatePosition);
+      stage.off('stageTransformChange', updatePosition);
     };
   }, [textId, textItem, onChange, onClose, onBoundsChange, stageRef]);
 
@@ -188,7 +180,11 @@ export default function TextArea({
     <textarea
       ref={ref}
       spellCheck={false}
-      className="wrap-break-words absolute z-1000 m-0 box-border resize-none overflow-hidden border-none bg-transparent p-0 break-all whitespace-pre-wrap outline-none focus:outline-none"
+      className="wrap-break-words scrollbar-hide absolute z-0 m-0 box-border resize-none overflow-hidden border-none bg-transparent p-0 break-all whitespace-pre-wrap outline-none focus:outline-none"
+      style={{
+        msOverflowStyle: 'none',
+        scrollbarWidth: 'none',
+      }}
     />
   );
 }

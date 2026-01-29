@@ -10,7 +10,7 @@ function ErrorContent() {
 
   const status = searchParams.get('status');
   const message = searchParams.get('message');
-  const onClick = () => router.replace('/landing');
+  const onClick = () => router.replace('/');
 
   return (
     <div className="flex w-full max-w-90 flex-col gap-8 px-6 py-4">

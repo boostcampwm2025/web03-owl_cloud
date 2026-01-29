@@ -77,9 +77,63 @@ export default function ItemTransformer({
         const stage = stageRef.current;
         const stageScale = stage ? stage.scaleX() : 1;
 
-        // 화면 확대 시 최소 크기도 함께 증가시켜야 더 못줄임
+        // 기본 최소 크기
         const minWidth = 30 * stageScale;
-        const minHeight = 30 * stageScale;
+        let minHeight = 30 * stageScale;
+
+        // 도형에 텍스트가 있으면 텍스트 높이 고려
+        if (selectedItem?.type === 'shape' && selectedItem.text && stage) {
+          const shapeNode = stage.findOne('#' + selectedId) as Konva.Group;
+          if (shapeNode) {
+            const textNode = shapeNode.findOne('Text') as Konva.Text;
+            if (textNode) {
+              // 새로운 너비로 텍스트 노드 너비 임시 설정
+              const originalWidth = textNode.width();
+              const originalHeight = textNode.height();
+              const newTextWidth = (newBox.width / stageScale) * 0.8;
+
+              textNode.width(newTextWidth);
+              // @ts-expect-error 라이브러리 타입 정의에는 없지만 실제로 'auto' 값을 허용함
+              textNode.height('auto');
+
+              // 텍스트 실제 높이 계산
+              const requiredTextHeight = textNode.height() + 8;
+
+              // 원래 크기로 복원
+              textNode.width(originalWidth);
+              textNode.height(originalHeight);
+
+              // 좌우 앵커 드래그 감지
+              const activeAnchor = transformerRef.current?.getActiveAnchor();
+              const isHorizontalResize =
+                activeAnchor === 'middle-left' ||
+                activeAnchor === 'middle-right';
+
+              if (isHorizontalResize) {
+                // 원래 높이와 텍스트 필요 높이 중 큰 값으로 자동 조절
+                const shapeItem = selectedItem as { height: number };
+                const originalShapeHeight = shapeItem.height * stageScale;
+                const targetHeight = Math.max(
+                  originalShapeHeight,
+                  requiredTextHeight * stageScale,
+                );
+
+                if (Math.abs(newBox.height - targetHeight) > 1) {
+                  const heightDiff = targetHeight - newBox.height;
+                  newBox.height = targetHeight;
+
+                  // y 위치 보정 (위쪽 앵커 드래그 시)
+                  if (newBox.y !== oldBox.y) {
+                    newBox.y = oldBox.y - heightDiff;
+                  }
+                }
+              }
+
+              // 텍스트 표시 위한 최소 높이
+              minHeight = Math.max(minHeight, requiredTextHeight * stageScale);
+            }
+          }
+        }
 
         // 너비가 최소값보다 작으면 제한하고 위치 보정
         if (newBox.width < minWidth) {

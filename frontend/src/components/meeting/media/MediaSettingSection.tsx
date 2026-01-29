@@ -17,7 +17,7 @@ export default function MediaSettingSection() {
   } = useMediaDevices();
 
   return (
-    <section className="flex w-full max-w-160 flex-col gap-6">
+    <section className="flex w-full max-w-160 min-w-0 flex-col gap-6">
       <MediaPreview />
 
       <div className="flex w-full items-center gap-4 text-sm">

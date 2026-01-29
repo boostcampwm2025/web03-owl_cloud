@@ -45,7 +45,11 @@ export default function CustomArrow({
     isSelected,
   });
 
-  const points = item.points;
+  const points = item?.points;
+  if (!points || !Array.isArray(points) || points.length < 2) {
+    return null;
+  }
+
   const n = points.length;
 
   // 시작점과 각도 계산
@@ -124,7 +128,12 @@ export default function CustomArrow({
           i % 2 === 0 ? p + pos.x : p + pos.y,
         );
         e.target.position({ x: 0, y: 0 });
-        onChange({ points: newPoints });
+
+        const updates: Partial<ArrowItem> = { points: newPoints };
+        if (item.startBinding) updates.startBinding = null;
+        if (item.endBinding) updates.endBinding = null;
+
+        onChange(updates);
         onDragEnd?.();
       }}
     >

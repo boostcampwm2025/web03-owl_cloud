@@ -50,7 +50,7 @@ export default function MediaPanel({ selectedTool, onSelect }: PanelProps) {
           }}
           {...commonProps}
         />
-        <NavButton
+        {/* <NavButton
           icon={VideoIcon}
           label="비디오 업로드"
           isActive={selectedTool === 'video'}
@@ -60,7 +60,7 @@ export default function MediaPanel({ selectedTool, onSelect }: PanelProps) {
             handleAddVideo();
           }}
           {...commonProps}
-        />
+        /> */}
         <NavButton
           icon={YoutubeIcon}
           label="유튜브 링크"

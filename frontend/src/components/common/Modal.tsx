@@ -48,7 +48,7 @@ export default function Modal({
   return (
     <Portal>
       <div
-        className="flex-center fixed top-0 left-0 z-50 h-screen w-screen bg-neutral-900/30"
+        className="flex-center fixed top-0 left-0 z-50 h-screen w-screen bg-neutral-900/30 px-4 py-4"
         onMouseDown={handleMouseDown} // onClick 대신 MouseDown/Up 사용
         onMouseUp={handleMouseUp}
       >

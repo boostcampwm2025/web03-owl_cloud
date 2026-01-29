@@ -2,10 +2,11 @@
 
 import { useUserStore } from '@/store/useUserStore';
 import { apiWithToken } from '@/utils/apiClient';
-import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import logoImg from '@/assets/logo.png';
+import { useEffect, useRef, useState } from 'react';
+import { LogoIcon } from '@/assets/icons/common';
+import ProfileImg from '@/components/common/ProfileImg';
+import { useClickOutside } from '@/hooks/useClickOutside';
 
 interface UserResponse {
   email: string;
@@ -15,7 +16,7 @@ interface UserResponse {
 }
 
 export default function Header() {
-  const { nickname, isLoggedIn, isLoaded, setUser, setIsLoaded } =
+  const { nickname, isLoggedIn, isLoaded, setUser, setIsLoaded, profilePath } =
     useUserStore();
 
   useEffect(() => {
@@ -44,27 +45,29 @@ export default function Header() {
 
   const logout = async () => {
     await apiWithToken.delete('/auth/logout');
-    window.location.href = '/landing';
+    window.location.href = '/';
   };
 
+  const profileBtnRef = useRef<HTMLButtonElement | null>(null);
+  useClickOutside(profileBtnRef, onProfileClick, isProfileOpen);
+
   return (
-    <header className="fixed top-0 left-0 flex h-16 w-screen items-center justify-between border-b border-neutral-200 px-6">
+    <header className="fixed top-0 left-0 z-5 flex h-16 w-screen items-center justify-between border-b border-neutral-200 bg-white px-6">
       <Link href="/">
-        <Image width={127} height={30} src={logoImg} alt="logo" />
+        <LogoIcon className="h-7.5 w-auto" width="100%" height="100%" />
       </Link>
 
       {isLoaded &&
         (isLoggedIn ? (
           <button
+            ref={profileBtnRef}
             className="relative h-10 w-10 rounded-full bg-neutral-200"
             onClick={onProfileClick}
           >
-            <Image
-              width={40}
-              height={40}
-              className="h-10 w-10 rounded-full object-cover"
-              src="https://picsum.photos/id/237/200/100"
-              alt="프로필 사진"
+            <ProfileImg
+              profilePath={profilePath}
+              nickname={nickname}
+              size={40}
             />
 
             {isProfileOpen && (

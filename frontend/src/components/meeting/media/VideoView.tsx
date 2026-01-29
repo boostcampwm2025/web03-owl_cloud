@@ -6,12 +6,14 @@ interface VideoViewProps {
   stream: MediaStream;
   muted?: boolean;
   mirrored?: boolean;
+  objectFit?: 'object-cover' | 'object-contain';
 }
 
 export default function VideoView({
   stream,
   muted = true,
   mirrored = true,
+  objectFit = 'object-cover',
 }: VideoViewProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -40,7 +42,7 @@ export default function VideoView({
       muted={muted}
       playsInline
       autoPlay
-      className={`h-full w-full object-cover ${mirrored ? '-scale-x-100' : ''}`}
+      className={`h-full w-full ${objectFit} ${mirrored ? '-scale-x-100' : ''}`}
     />
   );
 }

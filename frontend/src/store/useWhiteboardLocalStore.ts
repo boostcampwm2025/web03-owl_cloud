@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
+import Konva from 'konva';
 
 import {
   CANVAS_HEIGHT,
@@ -24,6 +25,7 @@ interface LocalState {
   drawingStroke: string;
   drawingSize: DrawingSize;
   awarenessCallback: ((selectedId: string | null) => void) | null;
+  stageRef: React.RefObject<Konva.Stage | null> | null;
 }
 
 interface LocalActions {
@@ -41,6 +43,7 @@ interface LocalActions {
   setAwarenessCallback: (
     callback: ((selectedId: string | null) => void) | null,
   ) => void;
+  setStageRef: (ref: React.RefObject<Konva.Stage | null>) => void;
 }
 
 type LocalStore = LocalState & LocalActions;
@@ -80,12 +83,14 @@ export const useWhiteboardLocalStore = create<LocalStore>((set, get) => ({
       : { x: 0, y: 0 },
   viewportWidth: typeof window !== 'undefined' ? window.innerWidth : 0,
   viewportHeight: typeof window !== 'undefined' ? window.innerHeight : 0,
+  stageRef: null,
 
   // Stage Transform
   setStageScale: (scale) => set({ stageScale: scale }),
   setStagePos: (pos) => set({ stagePos: pos }),
   setViewportSize: (width, height) =>
     set({ viewportWidth: width, viewportHeight: height }),
+  setStageRef: (ref) => set({ stageRef: ref }),
 
   // 그리기 초기값
   currentDrawing: null,

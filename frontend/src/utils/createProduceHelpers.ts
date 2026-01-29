@@ -5,7 +5,7 @@ export function createProduceHelper(sendTransport: Transport, device: Device) {
   // vpc 9을 사용할 수 있는지 확인이 필요하다. ( vpc9을 사용할 수 있는지 확인하는 로직 )
   const findVp9Codec = () =>
     device.rtpCapabilities.codecs?.find(
-      (c) => c.kind === 'video' && c.mimeType.toLowerCase() === 'video/vp9'
+      (c) => c.kind === 'video' && c.mimeType.toLowerCase() === 'video/vp9',
     );
 
   // 2) 실제 track produce 함수들
@@ -14,7 +14,7 @@ export function createProduceHelper(sendTransport: Transport, device: Device) {
       track,
       appData: { type: 'mic' },
     });
-  
+
   // 웹캠 같이 움직임이 많은 경우 VP8이 오히려 좋을 수 있다. ( vp9은 따로 추가 조건이 있을때 사용하면 좋을예정 )
   const produceCam = (track: MediaStreamTrack) => {
     // VP9이 가능한지 체크
@@ -45,8 +45,7 @@ export function createProduceHelper(sendTransport: Transport, device: Device) {
         videoGoogleStartBitrate: 600,
       },
     });
-
-  }
+  };
 
   // 가능하면 VP9 안되면 VP8로 전달
   const produceScreenVideo = (track: MediaStreamTrack) => {
@@ -62,7 +61,7 @@ export function createProduceHelper(sendTransport: Transport, device: Device) {
         ],
         codecOptions: { videoGoogleStartBitrate: 400 },
       });
-    };    
+    }
 
     return sendTransport.produce({
       track,
@@ -73,10 +72,10 @@ export function createProduceHelper(sendTransport: Transport, device: Device) {
         },
       ],
       codecOptions: {
-        videoGoogleStartBitrate: 400,  // 화면공유에 시작 비트레이트는 낮게 
+        videoGoogleStartBitrate: 400, // 화면공유에 시작 비트레이트는 낮게
       },
     });
-  }
+  };
 
   const produceScreenAudio = (track: MediaStreamTrack) =>
     sendTransport.produce({

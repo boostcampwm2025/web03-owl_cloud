@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Konva from 'konva';
 
-import { Rect, Ellipse, Line } from 'react-konva';
+import { Rect, Ellipse, Line, Group, Text } from 'react-konva';
 import { ShapeItem as ShapeItemType } from '@/types/whiteboard';
 import { useItemAnimation } from '@/hooks/useItemAnimation';
 
@@ -15,11 +15,20 @@ interface ShapeItemProps {
 
   onSelect: () => void;
   onChange: (newAttrs: Partial<ShapeItemType>) => void;
+  onDblClick?: () => void;
 
   onMouseEnter: (e: Konva.KonvaEventObject<MouseEvent>) => void;
   onMouseLeave: (e: Konva.KonvaEventObject<MouseEvent>) => void;
 
   onDragStart?: () => void;
+  onDragMove?: (x: number, y: number) => void;
+  onTransformMove?: (
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    rotation: number,
+  ) => void;
   onDragEnd?: () => void;
 }
 
@@ -30,16 +39,24 @@ export default function ShapeItem({
   isSelected,
   onSelect,
   onChange,
+  onDblClick,
   onMouseEnter,
   onMouseLeave,
   onDragStart,
+  onDragMove,
+  onTransformMove,
   onDragEnd,
 }: ShapeItemProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const [isTransforming, setIsTransforming] = useState(false);
 
-  const isCircle = shapeItem.shapeType === 'circle';
-  const displayX = isCircle ? shapeItem.x + shapeItem.width / 2 : shapeItem.x;
-  const displayY = isCircle ? shapeItem.y + shapeItem.height / 2 : shapeItem.y;
+  const width = shapeItem.width || 0;
+  const height = shapeItem.height || 0;
+  const x = shapeItem.x || 0;
+  const y = shapeItem.y || 0;
+
+  const displayX = x;
+  const displayY = y;
 
   // 애니메이션 훅
   const shapeRef = useItemAnimation({
@@ -48,17 +65,137 @@ export default function ShapeItem({
     width: shapeItem.width,
     height: shapeItem.height,
     isSelected,
-    isDragging,
+    isDragging: isDragging || isTransforming,
   });
 
-  // 다각형 점 좌표
-  let points: number[] = [];
-  // w : 너비
-  // h : 높이
-  const w = shapeItem.width;
-  const h = shapeItem.height;
+  const handleTransform = useCallback(
+    (e: Konva.KonvaEventObject<Event>) => {
+      const group = e.target as Konva.Group;
+      const groupScaleX = group.scaleX();
+      const groupScaleY = group.scaleY();
 
-  // 모서리 둥글기 여부
+      const newWidth = Math.max(5, shapeItem.width * groupScaleX);
+      const newHeight = Math.max(5, shapeItem.height * groupScaleY);
+
+      const newX = group.x();
+      const newY = group.y();
+      const newRotation = group.rotation();
+
+      onTransformMove?.(newX, newY, newWidth, newHeight, newRotation);
+
+      // 2. 텍스트 자동 크기 조절 (있는 경우)
+      if (!shapeItem.text) return;
+
+      // 회전만 하는 경우 넘김(계산 안함)
+      if (
+        Math.abs(groupScaleX - 1) < 0.001 &&
+        Math.abs(groupScaleY - 1) < 0.001
+      )
+        return;
+
+      const textNode = group.findOne('Text') as Konva.Text;
+      if (!textNode) return;
+
+      textNode.scaleX(1 / groupScaleX);
+      textNode.scaleY(1 / groupScaleY);
+
+      const textWidth = shapeItem.width * 0.8 * groupScaleX;
+      const textHeight = shapeItem.height * groupScaleY;
+      textNode.width(textWidth);
+      textNode.height(textHeight);
+
+      const offsetX = (shapeItem.width - shapeItem.width * 0.8) / 2;
+
+      textNode.x(offsetX);
+      textNode.y(0);
+    },
+    [shapeItem.text, shapeItem.width, shapeItem.height, onTransformMove],
+  );
+
+  const handleTransformEnd = useCallback(
+    (e: Konva.KonvaEventObject<Event>) => {
+      setIsTransforming(false);
+      const node = e.target as Konva.Group;
+      const scaleX = node.scaleX();
+      const scaleY = node.scaleY();
+      node.scaleX(1);
+      node.scaleY(1);
+
+      const newWidth = Math.max(5, shapeItem.width * scaleX);
+      let newHeight = Math.max(5, shapeItem.height * scaleY);
+
+      // 텍스트 있으면 텍스트 노드 크기에 맞춰 높이 조절
+      if (shapeItem.text) {
+        const textNode = node.findOne('Text') as Konva.Text;
+        if (textNode) {
+          const originalWidth = textNode.width();
+          const originalHeight = textNode.height();
+          const textWidth = newWidth * 0.8;
+
+          textNode.width(textWidth);
+          // @ts-expect-error 라이브러리 타입 정의에는 없지만 실제로 'auto' 값을 허용함
+          textNode.height('auto');
+
+          const requiredHeight = textNode.height() + 8;
+
+          // 원래 크기로 복원
+          textNode.width(originalWidth);
+          textNode.height(originalHeight);
+
+          // 텍스트를 모두 표시하기 위한 최소 높이
+          newHeight = Math.max(newHeight, requiredHeight);
+
+          // 텍스트 노드 스케일 리셋
+          textNode.scaleX(1);
+          textNode.scaleY(1);
+        }
+      }
+
+      const newX = node.x();
+      const newY = node.y();
+
+      onChange({
+        x: newX,
+        y: newY,
+        width: newWidth,
+        height: newHeight,
+        rotation: node.rotation(),
+      });
+    },
+    [shapeItem.width, shapeItem.height, shapeItem.text, onChange],
+  );
+
+  // 공통 Drag 핸들러
+  const handleDragStart = useCallback(() => {
+    setIsDragging(true);
+    onDragStart?.();
+  }, [onDragStart]);
+
+  const handleDragMove = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => {
+      const newX = e.target.x();
+      const newY = e.target.y();
+
+      onDragMove?.(newX, newY);
+    },
+    [onDragMove],
+  );
+
+  const handleDragEnd = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => {
+      setIsDragging(false);
+
+      const newX = e.target.x();
+      const newY = e.target.y();
+
+      onChange({ x: newX, y: newY });
+      onDragEnd?.();
+    },
+    [onChange, onDragEnd],
+  );
+
+  const w = shapeItem.width || 0;
+  const h = shapeItem.height || 0;
   const isRoundEdge = !!shapeItem.cornerRadius && shapeItem.cornerRadius > 0;
 
   const commonProps = {
@@ -71,117 +208,152 @@ export default function ShapeItem({
     fill: shapeItem.fill,
     stroke: shapeItem.stroke,
     strokeWidth: shapeItem.strokeWidth,
-
     opacity: shapeItem.opacity ?? 1,
     dash: shapeItem.dash,
-
-    // 모서리 둥글기 설정 : round - 둥근 모서리 / miter - 각진 모서리
     lineJoin: (isRoundEdge ? 'round' : 'miter') as 'round' | 'miter',
     lineCap: 'round' as const,
-
     onMouseDown: onSelect,
     onTouchStart: onSelect,
+    onDblClick: onDblClick,
     onMouseEnter: onMouseEnter,
     onMouseLeave: onMouseLeave,
-    onDragStart: () => {
-      setIsDragging(true);
-      onDragStart?.();
-    },
+  };
 
-    // 이동 후 바뀐 위치 좌표 저장(드래그 끝난 이후 도형의 위치 좌표)
-    // 위치 조정
-    // 원형 : 원형 도형의 경우 중심점 기준이므로 보정 필요
-    // 기타 도형 : 좌상단 기준이므로 보정 불필요
-    onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => {
-      setIsDragging(false);
+  // 텍스트 렌더링
+  const renderText = () => {
+    if (!shapeItem.text) return null;
 
-      let newX = e.target.x();
-      let newY = e.target.y();
+    const textWidth = width * 0.8;
+    const offsetX = (width - textWidth) / 2;
 
-      if (isCircle) {
-        // 원인 경우 중심점 좌표에서 반지름만큼 빼서 좌표 보정
-        newX -= shapeItem.width / 2;
-        newY -= shapeItem.height / 2;
-      }
+    return (
+      <Text
+        text={shapeItem.text}
+        fontSize={shapeItem.fontSize || 16}
+        fontFamily={shapeItem.fontFamily || 'Arial'}
+        fontStyle={shapeItem.fontStyle || 'normal'}
+        textDecoration={shapeItem.textDecoration || ''}
+        fill={shapeItem.textColor || '#000000'}
+        align={shapeItem.textAlign || 'center'}
+        verticalAlign="middle"
+        width={textWidth}
+        height={height}
+        x={offsetX}
+        y={0}
+        listening={false}
+        wrap="word"
+        ellipsis={false}
+        lineHeight={1.2}
+        padding={4}
+        scaleX={1}
+        scaleY={1}
+        perfectDrawEnabled={false}
+        shadowForStrokeEnabled={false}
+        hitStrokeWidth={0}
+      />
+    );
+  };
 
-      onChange({ x: newX, y: newY });
-      onDragEnd?.();
-    },
-
-    // 도형 조절 : 크기 조절 및 회전
-    onTransformEnd: (e: Konva.KonvaEventObject<Event>) => {
-      const node = e.target;
-      const scaleX = node.scaleX();
-      const scaleY = node.scaleY();
-
-      // 크기 보정
-      // scale은 변형 시 임시로 크기를 조절하는 값이므로
-      // 실제 크기 조절 시에는 원래 크기에 scale 값을 곱한 후
-      // 다시 scale을 1로 초기화해야 함
-      node.scaleX(1);
-      node.scaleY(1);
-
-      // 실제 크기 계산(크기 / 높이)
-      const newWidth = Math.max(5, shapeItem.width * scaleX);
-      const newHeight = Math.max(5, shapeItem.height * scaleY);
-
-      // 크기 조절 후 위치 보정
-      let newX = node.x();
-      let newY = node.y();
-
-      // 원형 도형인 경우 중심점 기준이므로 위치 보정 필요(위의 onDragEnd 로직 참고)
-      if (isCircle) {
-        newX -= newWidth / 2;
-        newY -= newHeight / 2;
-      }
-
-      onChange({
-        x: newX,
-        y: newY,
-        width: newWidth,
-        height: newHeight,
-        rotation: node.rotation(),
-      });
-    },
+  const groupProps = {
+    ...commonProps,
+    ref: shapeRef as React.RefObject<Konva.Group>,
+    onDragStart: handleDragStart,
+    // 도형 타입별 onDragMove 처리를 위해 여기서는 할당하지 않음
+    onTransformStart: () => setIsTransforming(true),
+    onTransform: handleTransform,
   };
 
   if (shapeItem.shapeType === 'rect') {
     return (
-      <Rect
-        {...commonProps}
-        ref={shapeRef as React.RefObject<Konva.Rect>}
-        width={shapeItem.width}
-        height={shapeItem.height}
-        cornerRadius={shapeItem.cornerRadius}
-      />
+      <Group
+        {...groupProps}
+        onDragEnd={(e) => handleDragEnd(e)}
+        onDragMove={(e) => handleDragMove(e)}
+        onTransformEnd={(e) => handleTransformEnd(e)}
+      >
+        <Rect
+          width={width}
+          height={height}
+          fill={shapeItem.fill}
+          stroke={shapeItem.stroke}
+          strokeWidth={shapeItem.strokeWidth}
+          cornerRadius={shapeItem.cornerRadius}
+          opacity={shapeItem.opacity ?? 1}
+          dash={shapeItem.dash}
+          lineJoin={(isRoundEdge ? 'round' : 'miter') as 'round' | 'miter'}
+          lineCap="round"
+          perfectDrawEnabled={false}
+          shadowForStrokeEnabled={false}
+          hitStrokeWidth={0}
+        />
+        {renderText()}
+      </Group>
     );
   }
 
   if (shapeItem.shapeType === 'circle') {
     return (
-      <Ellipse
-        {...commonProps}
-        ref={shapeRef as React.RefObject<Konva.Ellipse>}
-        radiusX={shapeItem.width / 2}
-        radiusY={shapeItem.height / 2}
-      />
+      <Group
+        {...groupProps}
+        onDragEnd={(e) => handleDragEnd(e)}
+        onDragMove={(e) => handleDragMove(e)}
+        onTransformEnd={(e) => handleTransformEnd(e)}
+      >
+        <Ellipse
+          x={width / 2}
+          y={height / 2}
+          radiusX={width / 2}
+          radiusY={height / 2}
+          fill={shapeItem.fill}
+          stroke={shapeItem.stroke}
+          strokeWidth={shapeItem.strokeWidth}
+          opacity={shapeItem.opacity ?? 1}
+          dash={shapeItem.dash}
+          lineJoin={(isRoundEdge ? 'round' : 'miter') as 'round' | 'miter'}
+          lineCap="round"
+          perfectDrawEnabled={false}
+          shadowForStrokeEnabled={false}
+          hitStrokeWidth={0}
+        />
+        {renderText()}
+      </Group>
     );
   }
 
+  // 다각형 points 계산
+  let points: number[] = [];
   if (shapeItem.shapeType === 'triangle') points = [w / 2, 0, w, h, 0, h];
   if (shapeItem.shapeType === 'diamond')
     points = [w / 2, 0, w, h / 2, w / 2, h, 0, h / 2];
   if (shapeItem.shapeType === 'pentagon')
     points = [w / 2, 0, w, h * 0.38, w * 0.82, h, w * 0.18, h, 0, h * 0.38];
 
+  if (points.some((p) => !isFinite(p))) return null;
+
   return (
-    <Line
-      {...commonProps}
-      points={points}
-      closed={true}
-      width={w}
-      height={h}
-      ref={shapeRef as React.RefObject<Konva.Line>}
-    />
+    <Group
+      {...groupProps}
+      onDragEnd={(e) => handleDragEnd(e)}
+      onDragMove={(e) => handleDragMove(e)}
+      onTransformEnd={(e) => handleTransformEnd(e)}
+    >
+      <Line
+        points={points}
+        closed={true}
+        width={w}
+        height={h}
+        fill={shapeItem.fill}
+        stroke={shapeItem.stroke}
+        strokeWidth={shapeItem.strokeWidth}
+        opacity={shapeItem.opacity ?? 1}
+        dash={shapeItem.dash}
+        lineJoin={(isRoundEdge ? 'round' : 'miter') as 'round' | 'miter'}
+        lineCap="round"
+        perfectDrawEnabled={false}
+        shadowForStrokeEnabled={false}
+        hitStrokeWidth={0}
+      />
+      {renderText()}
+    </Group>
   );
 }

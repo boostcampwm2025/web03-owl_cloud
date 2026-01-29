@@ -98,3 +98,12 @@ export const getConsumerInstances = async (
 
   return consumerInstances;
 };
+
+export const getMembersPerPage = (width: number) => {
+  if (width < 480) return 1;
+  if (width < 640) return 2;
+  if (width < 800) return 3;
+  if (width < 1024) return 4;
+  if (width < 1280) return 5;
+  return 6;
+};

@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from 'react';
 interface JoinError {
   title: string;
   message: string;
+  isPasswordError?: boolean;
 }
 
 export default function MeetingPage() {
@@ -55,7 +56,11 @@ export default function MeetingPage() {
   const onPasswordConfirm = () => {
     const value = passwordRef.current?.value;
     if (!value) {
-      setJoinError({ title: '입장 실패', message: '비밀번호를 입력해주세요' });
+      setJoinError({
+        title: '입장 실패',
+        message: '비밀번호를 입력해주세요',
+        isPasswordError: true,
+      });
       return;
     }
 
@@ -81,9 +86,11 @@ export default function MeetingPage() {
     const onRoomJoined = async ({
       ok,
       user_id,
+      is_hosted,
     }: {
       ok: boolean;
       user_id: string;
+      is_hosted: boolean;
     }) => {
       if (ok) {
         // 비회원인 경우 임시 id 저장
@@ -92,6 +99,7 @@ export default function MeetingPage() {
         // SDP / ICE / DTLS 초기화 진행
         const transports = await initMediasoupTransports(socket);
         setMediasoupTransports(socket, transports);
+        setMeetingInfo({ isHosted: is_hosted });
 
         // 회의실로 이동
         setIsPasswordModalOpen(false);
@@ -169,7 +177,7 @@ export default function MeetingPage() {
               cancelText="확인"
               onCancel={() => {
                 setJoinError(null);
-                setIsPasswordModalOpen(true);
+                if (joinError.isPasswordError) setIsPasswordModalOpen(true);
               }}
               isLightMode
             >
@@ -178,7 +186,7 @@ export default function MeetingPage() {
           )}
         </>
       ) : (
-        <MeetingRoom meetingId={meetingId} />
+        <MeetingRoom />
       )}
     </main>
   );

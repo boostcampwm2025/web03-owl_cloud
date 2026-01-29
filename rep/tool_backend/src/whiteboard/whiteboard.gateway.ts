@@ -28,6 +28,7 @@ import * as Y from 'yjs';
   },
   transports: ['websocket'],
   pingTimeout: 20 * 1000,
+  maxHttpBufferSize: 10 * 1024 * 1024,
 })
 export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConnection {
   private readonly logger = new Logger(WhiteboardWebsocketGateway.name);

@@ -5,10 +5,10 @@ import {
   MicOffIcon,
   MicOnIcon,
 } from '@/assets/icons/meeting';
+import ProfileImg from '@/components/common/ProfileImg';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { useMeetingStore } from '@/store/useMeetingStore';
 import { useUserStore } from '@/store/useUserStore';
-import Image from 'next/image';
 import { useRef, useState } from 'react';
 
 interface MemberListItemProps {
@@ -46,19 +46,7 @@ export default function MemberListItem({
     <li className="group flex items-center gap-2 p-4">
       {/* 참가자 정보 */}
       <div className="flex flex-1 items-center gap-3">
-        {profileImg ? (
-          <Image
-            width={64}
-            height={64}
-            className="aspect-square w-8 rounded-full object-cover"
-            src={profileImg}
-            alt={`${name}님의 프로필 사진`}
-          />
-        ) : (
-          <div className="flex-center aspect-square w-8 shrink-0 rounded-full bg-neutral-500 font-bold text-neutral-50">
-            {name[0]}
-          </div>
-        )}
+        <ProfileImg profilePath={profileImg} nickname={name} size={32} />
         <span className="ellipsis w-full text-neutral-50">{name}</span>
       </div>
 

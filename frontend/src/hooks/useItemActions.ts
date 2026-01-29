@@ -6,6 +6,7 @@ import {
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
 } from '@/components/whiteboard/constants/canvas';
+import { TEXT_SIZE_PRESETS } from '@/constants/textPresets';
 
 import type {
   WhiteboardItem,
@@ -78,7 +79,6 @@ export function useItemActions() {
       wrap: payload?.wrap ?? 'char',
       rotation: payload?.rotation ?? 0,
       width: payload?.width ?? 200,
-      parentPolygonId: payload?.parentPolygonId,
     };
 
     yItems.doc.transact(() => {
@@ -157,6 +157,7 @@ export function useItemActions() {
       stroke: payload?.stroke ?? '#000000',
       strokeWidth: payload?.strokeWidth ?? 2,
       rotation: payload?.rotation ?? 0,
+      fontSize: payload?.fontSize ?? TEXT_SIZE_PRESETS.S.fontSize,
     };
 
     yItems.doc.transact(() => {
@@ -308,7 +309,9 @@ export function useItemActions() {
 
     yItems.doc.transact(() => {
       Object.entries(changes).forEach(([key, value]) => {
-        if (value !== undefined) {
+        if (value === null) {
+          yMap.delete(key);
+        } else if (value !== undefined) {
           yMap.set(key, value);
         }
       });
@@ -390,6 +393,14 @@ export function useItemActions() {
     reorderItems(index, index - 1);
   };
 
+  const performTransaction = (fn: () => void) => {
+    if (!yItems || !yItems.doc) {
+      fn();
+      return;
+    }
+    yItems.doc.transact(fn, yjsOrigin);
+  };
+
   return {
     addText,
     addArrow,
@@ -407,5 +418,6 @@ export function useItemActions() {
     sendToBack,
     bringForward,
     sendBackward,
+    performTransaction,
   };
 }

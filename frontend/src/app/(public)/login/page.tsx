@@ -17,7 +17,7 @@ export default function Login() {
           >
             로그인
           </h2>
-          <form className="flex w-full flex-col gap-6">
+          {/* <form className="flex w-full flex-col gap-6">
             <div className="flex flex-col gap-4">
               <input
                 id="meeting-code"
@@ -37,25 +37,25 @@ export default function Login() {
                 <Link href="/sign-up">회원가입</Link>
               </Button>
             </div>
-          </form>
+          </form> */}
         </section>
 
         {/* 구분선 */}
-        <div
+        {/* <div
           className="flex w-full items-center gap-4 text-neutral-500"
           aria-hidden
         >
           <span className="h-px flex-1 bg-neutral-500" />
           <span className="text-sm font-bold">또는</span>
           <span className="h-px flex-1 bg-neutral-500" />
-        </div>
+        </div> */}
 
         <section
           className="flex flex-col items-center gap-4"
           aria-labelledby="oauth-login"
         >
           <KakaoLoginButton />
-          <GoogleLoginButton />
+          {/* <GoogleLoginButton /> */}
         </section>
       </div>
     </main>

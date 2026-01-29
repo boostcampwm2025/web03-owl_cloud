@@ -33,8 +33,18 @@ interface RenderItemProps {
   onSelect: (id: string) => void;
   onChange: (newAttributes: Partial<WhiteboardItem>) => void;
   onDragStart?: () => void;
+  onDragMove?: (id: string, x: number, y: number) => void;
+  onTransformMove?: (
+    id: string,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    rotation: number,
+  ) => void;
   onDragEnd?: () => void;
   onArrowDblClick?: (id: string) => void;
+  onShapeDblClick?: (id: string) => void;
 }
 
 function RenderItem({
@@ -43,8 +53,11 @@ function RenderItem({
   onSelect,
   onChange,
   onDragStart,
+  onDragMove,
+  onTransformMove,
   onDragEnd,
   onArrowDblClick,
+  onShapeDblClick,
 }: RenderItemProps) {
   // 아이템 인터랙션 상태
   const { isDraggable, isListening } = useItemInteraction();
@@ -132,9 +145,14 @@ function RenderItem({
         isSelected={isSelected}
         onSelect={() => onSelect(item.id)}
         onChange={onChange}
+        onDblClick={() => onShapeDblClick?.(item.id)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onDragStart={onDragStart}
+        onDragMove={(x, y) => onDragMove?.(item.id, x, y)}
+        onTransformMove={(x, y, w, h, rotation) =>
+          onTransformMove?.(item.id, x, y, w, h, rotation)
+        }
         onDragEnd={onDragEnd}
       />
     );

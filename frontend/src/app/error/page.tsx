@@ -13,7 +13,7 @@ function ErrorContent() {
   const message =
     searchParams.get('message') ?? '예기치 못한 오류가 발생했습니다.';
 
-  const onClick = () => router.replace('/landing');
+  const onClick = () => router.replace('/');
 
   return (
     <div className="flex w-full max-w-90 flex-col gap-8 px-6 py-4">

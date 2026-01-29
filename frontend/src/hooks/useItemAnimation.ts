@@ -22,6 +22,7 @@ export function useItemAnimation({
   const prevPosRef = useRef({ x, y, width, height });
   const isDraggingRef = useRef(isDragging);
   const isSelectedRef = useRef(isSelected);
+  const tweenRef = useRef<Konva.Tween | null>(null);
 
   useEffect(() => {
     isDraggingRef.current = isDragging;
@@ -57,6 +58,12 @@ export function useItemAnimation({
       !isDraggingRef.current &&
       !isSelectedRef.current
     ) {
+      // 이전 애니메이션 정리
+      if (tweenRef.current) {
+        tweenRef.current.destroy();
+        tweenRef.current = null;
+      }
+
       // 이전 위치로 설정
       node.x(prevX);
       node.y(prevY);
@@ -79,42 +86,66 @@ export function useItemAnimation({
           node.scaleX(prevScaleX);
           node.scaleY(prevScaleY);
 
-          node.to({
+          tweenRef.current = new Konva.Tween({
+            node: node,
             duration: 0.15,
             easing: Konva.Easings.EaseOut,
             x: x,
             y: y,
             scaleX: 1,
             scaleY: 1,
+            onFinish: () => {
+              tweenRef.current = null;
+            },
           });
+          tweenRef.current.play();
         } else {
           // 일반 노드는 width/height 사용
           node.width(prevPosRef.current.width);
           node.height(prevPosRef.current.height);
 
-          node.to({
+          tweenRef.current = new Konva.Tween({
+            node: node,
             duration: 0.15,
             easing: Konva.Easings.EaseOut,
             x: x,
             y: y,
             width: width,
             height: height,
+            onFinish: () => {
+              tweenRef.current = null;
+            },
           });
+          tweenRef.current.play();
         }
       } else {
         // 위치만 애니메이션
-        node.to({
+        tweenRef.current = new Konva.Tween({
+          node: node,
           duration: 0.15,
           easing: Konva.Easings.EaseOut,
           x: x,
           y: y,
+          onFinish: () => {
+            tweenRef.current = null;
+          },
         });
+        tweenRef.current.play();
       }
     }
 
     // 이전 값 업데이트
     prevPosRef.current = { x, y, width, height };
   }, [x, y, width, height]);
+
+  useEffect(() => {
+    return () => {
+      if (tweenRef.current) {
+        tweenRef.current.destroy();
+        tweenRef.current = null;
+      }
+    };
+  }, []);
 
   return nodeRef;
 }

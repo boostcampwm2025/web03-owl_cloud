@@ -80,8 +80,14 @@ export const useCanvasInteraction = (
         y: pointer.y - mousePointTo.y * newScale,
       };
 
+      const constrainedPos = constrainStagePosition(newPos, newScale);
+
+      stage.scale({ x: newScale, y: newScale });
+      stage.position(constrainedPos);
+      stage.batchDraw();
+
       setStageScale(newScale);
-      setStagePos(constrainStagePosition(newPos, newScale));
+      setStagePos(constrainedPos);
     } else if (e.evt.shiftKey) {
       // shift키 있으면 좌우 스크롤
       const currentPos = stage.position();
@@ -93,7 +99,12 @@ export const useCanvasInteraction = (
         y: currentPos.y,
       };
 
-      setStagePos(constrainStagePosition(newPos, currentScale));
+      const constrainedPos = constrainStagePosition(newPos, currentScale);
+
+      stage.position(constrainedPos);
+      stage.batchDraw();
+
+      setStagePos(constrainedPos);
     } else {
       // Ctrl 키가 없으면 캔버스 위아래 스크롤
       const currentPos = stage.position();
@@ -104,7 +115,12 @@ export const useCanvasInteraction = (
         y: currentPos.y - e.evt.deltaY, // 위 아래 이동
       };
 
-      setStagePos(constrainStagePosition(newPos, currentScale));
+      const constrainedPos = constrainStagePosition(newPos, currentScale);
+
+      stage.position(constrainedPos);
+      stage.batchDraw();
+
+      setStagePos(constrainedPos);
     }
   };
 
@@ -116,7 +132,17 @@ export const useCanvasInteraction = (
       stage.position(),
       stage.scaleX(),
     );
-    stage.position(constrainedPos);
+
+    // 위치가 실제로 변경되었는지 확인
+    const currentPos = stage.position();
+    const hasChanged =
+      Math.abs(currentPos.x - constrainedPos.x) > 0.01 ||
+      Math.abs(currentPos.y - constrainedPos.y) > 0.01;
+
+    if (hasChanged) {
+      stage.position(constrainedPos);
+      stage.batchDraw();
+    }
 
     // 스로틀링: 16ms마다만 store 업데이트
     const now = Date.now();
@@ -130,7 +156,8 @@ export const useCanvasInteraction = (
     const stage = e.target.getStage();
     if (!stage) return;
 
-    setStagePos(stage.position());
+    const finalPos = stage.position();
+    setStagePos(finalPos);
   };
 
   return {

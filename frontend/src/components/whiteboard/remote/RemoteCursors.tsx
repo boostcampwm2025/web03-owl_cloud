@@ -7,8 +7,8 @@ import RemoteCursor from './RemoteCursor';
 export default function RemoteCursors() {
   const users = useWhiteboardAwarenessStore((state) => state.users);
   const myUserId = useWhiteboardAwarenessStore((state) => state.myUserId);
-  const stageScale = useWhiteboardLocalStore((state) => state.stageScale);
   const stagePos = useWhiteboardLocalStore((state) => state.stagePos);
+  const stageScale = useWhiteboardLocalStore((state) => state.stageScale);
 
   return (
     <>

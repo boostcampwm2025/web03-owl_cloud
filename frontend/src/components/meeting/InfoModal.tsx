@@ -4,9 +4,10 @@ import { CopyIcon, EditIcon } from '@/assets/icons/common';
 import Modal from '@/components/common/Modal';
 import ToastMessage from '@/components/common/ToastMessage';
 import { useMeetingStore } from '@/store/useMeetingStore';
+import { apiWithToken } from '@/utils/apiClient';
 import { useEffect, useState } from 'react';
 
-export default function InfoModal({ meetingId }: { meetingId: string }) {
+export default function InfoModal() {
   const { setIsOpen, meetingInfo, setMeetingInfo } = useMeetingStore();
   const [currentModal, setCurrentModal] = useState<
     'INFO' | 'PASSWORD' | 'PASSWORD_ERROR'
@@ -17,7 +18,7 @@ export default function InfoModal({ meetingId }: { meetingId: string }) {
   const onModalClose = () => setIsOpen('isInfoOpen', false);
 
   const onCodeCopyClick = () => {
-    navigator.clipboard.writeText(meetingId);
+    navigator.clipboard.writeText(meetingInfo.meetingId);
     setHasCopied(true);
   };
 
@@ -30,14 +31,17 @@ export default function InfoModal({ meetingId }: { meetingId: string }) {
   }, [hasCopied]);
 
   const onPasswordChangeClick = () => {
+    if (!meetingInfo.isHosted) return;
     setCurrentModal((prev) => (prev === 'PASSWORD' ? 'INFO' : 'PASSWORD'));
   };
 
-  const onPasswordConfirm = (password: string) => {
+  const onPasswordConfirm = async (password: string) => {
     try {
-      if (password.trim()) {
-        // 비밀번호 API 호출
+      await apiWithToken.post(`/rooms/${meetingInfo.meetingId}/password`, {
+        new_password: password.trim() ? password : undefined,
+      });
 
+      if (password.trim()) {
         setMeetingInfo({ has_password: true });
       } else {
         setMeetingInfo({ has_password: false });
@@ -73,13 +77,13 @@ export default function InfoModal({ meetingId }: { meetingId: string }) {
             >
               <span className="text-sm text-neutral-200">회의 코드</span>
               <div className="flex w-full items-center gap-2 overflow-hidden">
-                <span className="w-full text-left font-bold text-neutral-50">{`${meetingId}`}</span>
+                <span className="w-full truncate text-left font-bold text-neutral-50">{`${meetingInfo.meetingId}`}</span>
                 <CopyIcon className="h-5 w-5 shrink-0 text-neutral-200" />
               </div>
             </li>
 
             <li
-              className="flex w-full cursor-pointer flex-col gap-1 overflow-hidden rounded-sm px-2 py-1 hover:bg-neutral-500"
+              className={`flex w-full flex-col gap-1 overflow-hidden rounded-sm px-2 py-1 ${meetingInfo.isHosted ? 'cursor-pointer hover:bg-neutral-500' : ''}`}
               onClick={onPasswordChangeClick}
             >
               <span className="text-sm text-neutral-200">비밀번호</span>
@@ -87,7 +91,9 @@ export default function InfoModal({ meetingId }: { meetingId: string }) {
                 <span className="w-full text-left font-bold text-neutral-50">
                   {meetingInfo.has_password ? '••••' : '없음'}
                 </span>
-                <EditIcon className="h-5 w-5 shrink-0 text-neutral-200" />
+                {meetingInfo.isHosted && (
+                  <EditIcon className="h-5 w-5 shrink-0 text-neutral-200" />
+                )}
               </div>
             </li>
           </ul>

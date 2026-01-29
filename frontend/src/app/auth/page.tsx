@@ -15,7 +15,7 @@ export default function AuthPage() {
 
       if (accessToken) {
         sessionStorage.setItem('access_token', accessToken);
-        router.replace('/landing');
+        router.replace('/');
       } else {
         router.replace('/auth/error');
       }

@@ -16,14 +16,20 @@ export const GlobalAudioPlayer = () => {
   const isInitialSynced = useRef(false);
 
   useEffect(() => {
+    let isCancelled = false;
+
     if (!socket || !recvTransport || !device || isInitialSynced.current) return;
 
     const syncExistingAudio = async () => {
+      if (!socket.connected) return;
+
       const currentConsumers = useMeetingSocketStore.getState().consumers;
       const { newAudioConsumers } = getAudioConsumerIds(
         members,
         currentConsumers,
       );
+
+      if (newAudioConsumers.length === 0) return;
 
       try {
         const payload = {
@@ -38,10 +44,18 @@ export const GlobalAudioPlayer = () => {
         const { consumerInfos }: { consumerInfos: ConsumerInfo[] } =
           await socket.emitWithAck('signaling:ws:consumes', payload);
 
+        if (isCancelled) return;
+
         const newInstances = await getConsumerInstances(
           recvTransport,
           consumerInfos,
         );
+
+        if (isCancelled) {
+          newInstances.forEach((i) => i.consumer.close());
+          return;
+        }
+
         addConsumers(newInstances);
 
         newInstances.forEach(({ producerId, consumer }) => {
@@ -66,11 +80,22 @@ export const GlobalAudioPlayer = () => {
 
         isInitialSynced.current = true;
       } catch (error) {
-        console.error('초기 오디오 동기화 실패:', error);
+        // 단순 페이지 이탈 시 소켓 연결 해제로 인한 오류 표시 방지
+        if (
+          !isCancelled &&
+          error instanceof Error &&
+          error.message !== 'socket has been disconnected'
+        ) {
+          console.error('초기 오디오 동기화 실패:', error);
+        }
       }
     };
 
     syncExistingAudio();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [members, socket, recvTransport, device]);
 
   return (
