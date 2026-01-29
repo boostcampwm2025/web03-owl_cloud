@@ -8,7 +8,7 @@ export default function Home() {
     <div className="flex min-h-dvh flex-col">
       <Header />
 
-      <main className="flex w-full flex-1 items-center px-4 pt-16 max-md:justify-center">
+      <main className="flex w-full flex-1 items-center justify-center px-4 pt-16">
         <div className="flex h-full w-full max-w-300 items-center py-12 max-md:flex-col max-md:justify-center max-md:gap-12 max-sm:gap-12 md:gap-4">
           <section className="flex w-full max-w-200 flex-col items-center justify-center gap-4">
             <LogoIcon
