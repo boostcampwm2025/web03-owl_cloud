@@ -3,7 +3,6 @@
 import dynamic from 'next/dynamic';
 
 import HistoryControl from '@/components/whiteboard/controls/HistoryControl';
-import OverlayControl from '@/components/whiteboard/controls/OverlayControl';
 import ZoomControls from '@/components/whiteboard/controls/ZoomControl';
 import Sidebar from '@/components/whiteboard/sidebar/Sidebar';
 import ToolbarContainer from '@/components/whiteboard/toolbar/ToolbarContainer';
@@ -20,7 +19,6 @@ export default function Home() {
       <Sidebar />
       <HistoryControl />
       <ZoomControls />
-      <OverlayControl />
       <Canvas />
     </div>
   );
