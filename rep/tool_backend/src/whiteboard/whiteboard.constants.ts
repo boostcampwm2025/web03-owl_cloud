@@ -5,7 +5,7 @@ export const WHITEBOARD_GROUP = Object.freeze({
 // [Client -> Server] : 클라이언트가 보내는 이벤트
 export const WHITEBOARD_EVENT_NAME = Object.freeze({
   HEALTH_CHECK: 'whiteboard:ws:health_check',
-  CLIENT_READY : "whiteboard:ws:yjs-ready",
+  CLIENT_READY: 'whiteboard:ws:yjs-ready',
   CREATE_ELEMENT: 'whiteboard:element:create',
   UPDATE_ELEMENT: 'whiteboard:element:update',
   DELETE_ELEMENT: 'whiteboard:element:delete',

@@ -1,5 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { UpdateEntry, WHITEBOARD_RING_SIZE, YJS_ENTITY_MAX_NUMBER, YjsRepository, YjsRoomEntry, YjsWhiteboardRoomEntry } from './yjs-repo';
+import {
+  UpdateEntry,
+  WHITEBOARD_RING_SIZE,
+  YJS_ENTITY_MAX_NUMBER,
+  YjsRepository,
+  YjsRoomEntry,
+  YjsWhiteboardRoomEntry,
+} from './yjs-repo';
 import * as Y from 'yjs';
 
 // 두 repo는 현재 동일하다

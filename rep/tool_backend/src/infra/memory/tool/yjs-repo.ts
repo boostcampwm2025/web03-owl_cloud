@@ -4,7 +4,7 @@ import * as Y from 'yjs';
 export const YJS_ENTITY_MAX_NUMBER = 1000; // 최대 사이즈
 
 // 아래는 화이트 보드용이다.
-export const WHITEBOARD_RING_SIZE = 20_000; // whiteboad에 최대 사이즈 ( 키울때 업데이트 스로틀/배치가 필요하다. ) 
+export const WHITEBOARD_RING_SIZE = 20_000; // whiteboad에 최대 사이즈 ( 키울때 업데이트 스로틀/배치가 필요하다. )
 
 // yjs에서 저장할 map 모양
 export type UpdateEntry = {
@@ -20,7 +20,6 @@ export type YjsRoomEntry = {
   ring: Array<UpdateEntry | undefined>;
   ringSize: number;
 };
-
 
 // 다른 곳에서 실수 하지 않게 틀을 작성
 export interface YjsRepository {
@@ -91,7 +90,7 @@ export class YjsSyncReqPayload {
   last_seq: number;
 }
 
-// 아래는 화이트 보드용 
+// 아래는 화이트 보드용
 
 // 화이트 보드용 entry
 export type YjsWhiteboardRoomEntry = {
@@ -99,15 +98,15 @@ export type YjsWhiteboardRoomEntry = {
   seq: number;
   ringSize: number;
   ring: Array<UpdateEntry | undefined>;
-  baseSeq: number; 
+  baseSeq: number;
 };
 
 // 화이트 보드에서 room_id 기준으로 버퍼를 쌓을때 사용하는 type
 export type Pending = {
   updates: Uint8Array[];
   timer?: NodeJS.Timeout;
-  user_id: string; 
+  user_id: string;
 };
 
-// snap이 필요할때 
+// snap이 필요할때
 export type SnapState = { lastTs: number; lastSeq: number };

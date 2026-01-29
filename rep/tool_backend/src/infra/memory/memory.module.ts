@@ -1,5 +1,10 @@
 import { Global, Module } from '@nestjs/common';
-import { CodeeditorRepository, PendingRepository, SnapStateRepository, WhiteboardRepository } from './tool';
+import {
+  CodeeditorRepository,
+  PendingRepository,
+  SnapStateRepository,
+  WhiteboardRepository,
+} from './tool';
 
 @Global()
 @Module({

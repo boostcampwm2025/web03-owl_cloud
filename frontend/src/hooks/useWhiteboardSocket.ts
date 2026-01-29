@@ -21,6 +21,7 @@ export const useWhiteboardSocket = () => {
       const currentSocket = useToolSocketStore.getState().whiteboardSocket;
       if (currentSocket?.connected) return;
 
+      const meetingId = useMeetingStore.getState().meetingInfo.meetingId;
       // 소켓 인스턴스 생성 및 연결 시도
       const newSocket: Socket = io(`${TOOL_BACKEND_URL}${NAMESPACE}`, {
         path: SOCKET_PATH,
@@ -29,6 +30,7 @@ export const useWhiteboardSocket = () => {
           token: ticket,
           type: type,
         },
+        query: { room_code : meetingId }
       });
 
       // 이벤트 리스너 설정
