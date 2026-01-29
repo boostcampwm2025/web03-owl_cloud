@@ -102,6 +102,19 @@ export const useAddWhiteboardItem = () => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
 
+      // GIF 파일 업로드 제한
+      if (file.type === 'image/gif') {
+        alert('GIF 파일은 업로드할 수 없습니다.');
+        return;
+      }
+
+      // 용량 제한 로직 추가
+      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB를 바이트 단위로 계산
+      if (file.size > MAX_FILE_SIZE) {
+        alert('이미지 용량은 10MB를 초과할 수 없습니다.');
+        return;
+      }
+
       // 파일 읽기
       const reader = new FileReader();
       // 파일 읽기 완료 후 실행
