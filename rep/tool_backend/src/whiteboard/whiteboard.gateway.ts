@@ -4,6 +4,7 @@ import {
   ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
+  OnGatewayDisconnect,
   OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
@@ -29,7 +30,9 @@ import { WhiteboardRepository } from '@/infra/memory/tool';
   pingTimeout: 20 * 1000,
   maxHttpBufferSize: 10 * 1024 * 1024,
 })
-export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConnection {
+export class WhiteboardWebsocketGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   private readonly logger = new Logger(WhiteboardWebsocketGateway.name);
 
   constructor(
@@ -100,6 +103,18 @@ export class WhiteboardWebsocketGateway implements OnGatewayInit, OnGatewayConne
     // 입장 허가 메시지 전송
     client.emit(WHITEBOARD_CLIENT_EVENT_NAME.PERMISSION, { ok: true });
     client.emit('init-user', { userId: payload.user_id });
+  }
+
+  // 연결 해제 처리
+  handleDisconnect(client: Socket) {
+    const payload: ToolBackendPayload = client.data.payload;
+    const roomName = client.data.roomName;
+
+    if (!payload || !roomName) return;
+
+    this.logger.log(`[Disconnect] User ${payload.user_id} left ${roomName}`);
+
+    client.to(roomName).emit('user-disconnected', { userId: payload.user_id });
   }
 
   // 헬스 체크
