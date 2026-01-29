@@ -10,7 +10,6 @@ import NavButton from '@/components/whiteboard/common/NavButton';
 
 // Panel import
 import ShapePanel from '@/components/whiteboard/toolbar/panels/ShapePanel';
-import MediaPanel from '@/components/whiteboard/toolbar/panels/MediaPanel';
 import StackPanel from '@/components/whiteboard/toolbar/panels/StackPanel';
 
 // Icon import
@@ -32,7 +31,7 @@ import { ToolType, PanelType } from '@/types/whiteboard/whiteboardUI';
 import { CursorMode } from '@/types/whiteboard/base';
 
 // Constants import
-import { SHAPE_TOOLS, MEDIA_TOOLS, STACK_TOOLS } from '@/constants/whiteboard';
+import { SHAPE_TOOLS, STACK_TOOLS } from '@/constants/whiteboard';
 
 export default function ToolbarContainer() {
   // 상태 관리 로직
@@ -46,7 +45,7 @@ export default function ToolbarContainer() {
   const cursorMode = useWhiteboardLocalStore((state) => state.cursorMode);
 
   // 아이템 추가 훅
-  const { handleAddText, handleAddArrow, handleAddLine } =
+  const { handleAddText, handleAddArrow, handleAddLine, handleAddImage } =
     useAddWhiteboardItem();
 
   // 외부 클릭 시 패널 닫기
@@ -172,12 +171,10 @@ export default function ToolbarContainer() {
 
         <NavButton
           icon={ImageIcon}
-          label="미디어"
-          isActive={MEDIA_TOOLS.includes(activeTool) || activePanel === 'media'}
-          onClick={(e) => togglePanelWithSelect('media', e)}
+          label="이미지"
+          onClick={() => handleAddItem(handleAddImage)}
           bgColor="bg-white"
           hvColor="bg-neutral-100"
-          activeBgColor="bg-sky-200"
         />
 
         <NavButton
@@ -201,7 +198,7 @@ export default function ToolbarContainer() {
         />
       </div>
 
-      {/* 하단 패널 렌더링 영역 - 좌표 계산(panelLeft) 적용 */}
+      {/* 하단 패널 렌더링 영역 */}
       {activePanel && (
         <div
           className="absolute top-full mt-2"
@@ -209,16 +206,6 @@ export default function ToolbarContainer() {
         >
           {activePanel === 'shape' && (
             <ShapePanel
-              selectedTool={activeTool}
-              onSelect={() => {
-                toggleCursorMode('select');
-                setActivePanel(null);
-              }}
-            />
-          )}
-
-          {activePanel === 'media' && (
-            <MediaPanel
               selectedTool={activeTool}
               onSelect={() => {
                 toggleCursorMode('select');

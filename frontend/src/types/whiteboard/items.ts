@@ -104,41 +104,6 @@ export interface ImageItem extends BaseItem {
   dash?: number[];
 }
 
-// Video Item
-export interface VideoItem extends BaseItem {
-  type: 'video';
-  src: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  rotation: number;
-  stroke?: string;
-  strokeWidth?: number;
-  cornerRadius?: number;
-  opacity?: number;
-  dash?: number[];
-}
-
-// youtube Item
-export interface YoutubeItem extends BaseItem {
-  type: 'youtube';
-  // 원본 유튜브 URL
-  url: string;
-  // 유튜브 비디오 ID : 썸네일 표시용
-  videoId: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  rotation: number;
-  stroke?: string;
-  strokeWidth?: number;
-  cornerRadius?: number;
-  opacity?: number;
-  dash?: number[];
-}
-
 // stack item
 export interface StackItem extends BaseItem {
   type: 'stack';

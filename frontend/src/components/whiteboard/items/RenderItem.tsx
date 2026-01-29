@@ -9,8 +9,6 @@ import CustomArrow from '@/components/whiteboard/items/arrow/CustomArrow';
 import LineItem from '@/components/whiteboard/items/line/LineItem';
 import DrawingItem from '@/components/whiteboard/items/drawing/DrawingItem';
 import ImageItem from '@/components/whiteboard/items/image/ImageItem';
-import VideoItem from '@/components/whiteboard/items/video/VideoItem';
-import YoutubeItem from '@/components/whiteboard/items/youtube/YoutubeItem';
 import StackItem from '@/components/whiteboard/items/stack/StackItem';
 
 import type {
@@ -20,8 +18,6 @@ import type {
   DrawingItem as DrawingItemType,
   ShapeItem as ShapeItemType,
   ImageItem as ImageItemType,
-  VideoItem as VideoItemType,
-  YoutubeItem as YoutubeItemType,
   StackItem as StackItemType,
   WhiteboardItem,
 } from '@/types/whiteboard';
@@ -163,42 +159,6 @@ function RenderItem({
     return (
       <ImageItem
         imageItem={imageItem}
-        isDraggable={isDraggable}
-        isListening={isListening}
-        isSelected={isSelected}
-        onSelect={() => onSelect(item.id)}
-        onChange={onChange}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-      />
-    );
-  }
-
-  if (item.type === 'video') {
-    const videoItem = item as VideoItemType;
-    return (
-      <VideoItem
-        videoItem={videoItem}
-        isDraggable={isDraggable}
-        isListening={isListening}
-        isSelected={isSelected}
-        onSelect={() => onSelect(item.id)}
-        onChange={onChange}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-      />
-    );
-  }
-
-  if (item.type === 'youtube') {
-    const youtubeItem = item as YoutubeItemType;
-    return (
-      <YoutubeItem
-        youtubeItem={youtubeItem}
         isDraggable={isDraggable}
         isListening={isListening}
         isSelected={isSelected}

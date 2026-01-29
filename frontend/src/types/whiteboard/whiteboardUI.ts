@@ -1,5 +1,5 @@
 // PanelType 정의 : 묶어져 있는 것들 -> Panel 형태로 제공
-export type PanelType = 'shape' | 'media' | 'stack' | null;
+export type PanelType = 'shape' | 'stack' | null;
 
 // ToolType 정의 : whiteboard에서 사용되는 모든 도구의 종류
 // 마우스 동작(cursor) 관련 : move / select
@@ -8,7 +8,7 @@ export type PanelType = 'shape' | 'media' | 'stack' | null;
 // 화살표(arrow) 관련 : arrow / doubleArrow / chevronArrow
 // 그리기(draw) 관련 : draw
 // 텍스트(text) 관련 : text
-// 미디어(media) 관련 : image / video / youtube
+// 미디어(media) 관련 : image
 // 지우개(eraser) 관련 : eraser
 // 스택(stack) 관련 : stack
 export type ToolType =
@@ -26,8 +26,6 @@ export type ToolType =
   | 'draw'
   | 'text'
   | 'image'
-  | 'video'
-  | 'youtube'
   | 'stack'
   | 'eraser'
   | null;

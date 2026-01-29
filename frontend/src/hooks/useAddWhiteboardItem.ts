@@ -5,16 +5,8 @@ import { ShapeType } from '@/types/whiteboard';
 import { StackIconInfo } from '@/constants/stackList';
 
 export const useAddWhiteboardItem = () => {
-  const {
-    addText,
-    addArrow,
-    addLine,
-    addShape,
-    addImage,
-    addVideo,
-    addYoutube,
-    addStack,
-  } = useItemActions();
+  const { addText, addArrow, addLine, addShape, addImage, addStack } =
+    useItemActions();
 
   const getViewportCenter = () => {
     const stageRef = useWhiteboardLocalStore.getState().stageRef;
@@ -168,84 +160,6 @@ export const useAddWhiteboardItem = () => {
     input.click();
   };
 
-  // Video Item 추가 핸들러
-  const handleAddVideo = () => {
-    // 파일 선택창 설정
-    // input 태그 설정, 타입은 파일 업로드용, 비디오 파일만 선택되도록 설정
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'video/*';
-
-    // 파일 선택 후 처리 로직(파일 읽기)
-    input.onchange = (e) => {
-      // 선택한 파일 선정
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      // Blob URL 생성
-      // Blob URL : 브라우저 메모리에 임시로 저장되는 URL, 새로고침시 사라짐
-
-      // 동영상의 경우 용량이 크므로 Base64로 읽지 않고 Blob URL 사용
-      // 만약 동영상을 Base64로 읽으면 메모리 부족으로 브라우저가 멈출 수 있음
-      // TODO : 실제 서비스에서는 AWS S3 등 외부 서버에 업로드하고 그 URL을 받아와야 함
-      const videoSrc = URL.createObjectURL(file);
-
-      // 비디오 엘리먼트 생성
-      // 동영상 자체만으로 해상도를 알수 없기에 가상의 video element 생성
-      const videoElement = document.createElement('video');
-      // blob 주소와 연결
-      videoElement.src = videoSrc;
-
-      // 메타데이터 로드 후 실제 크기 파악
-      videoElement.onloadedmetadata = () => {
-        let w = videoElement.videoWidth;
-        let h = videoElement.videoHeight;
-        const MAX_SIZE = 600;
-
-        // 크기 제한 로직
-        if (w > MAX_SIZE || h > MAX_SIZE) {
-          const ratio = w / h;
-          if (w > h) {
-            w = MAX_SIZE;
-            h = MAX_SIZE / ratio;
-          } else {
-            h = MAX_SIZE;
-            w = MAX_SIZE * ratio;
-          }
-        }
-
-        // 뷰포트 중앙 좌표 계산
-        const worldPos = getViewportCenter();
-
-        addVideo({
-          src: videoSrc,
-          width: w,
-          height: h,
-          x: worldPos.x - w / 2,
-          y: worldPos.y - h / 2,
-        });
-      };
-    };
-
-    input.click();
-  };
-
-  const handleAddYoutube = (url?: string) => {
-    // 넘겨받은 url이 있으면 사용 없으면 prompt
-    const targetUrl = url ?? prompt('유튜브 URL을 입력하세요');
-    if (!targetUrl) return;
-
-    const worldPos = getViewportCenter();
-    const width = 640;
-    const height = 360;
-
-    addYoutube({
-      url: targetUrl,
-      x: worldPos.x - width / 2,
-      y: worldPos.y - height / 2,
-    });
-  };
-
   // Stack Item 추가 핸들러
   const handleAddStack = (icon: StackIconInfo) => {
     const worldPos = getViewportCenter();
@@ -269,8 +183,6 @@ export const useAddWhiteboardItem = () => {
     handleAddLine,
     handleAddShape,
     handleAddImage,
-    handleAddVideo,
-    handleAddYoutube,
     handleAddStack,
   };
 };

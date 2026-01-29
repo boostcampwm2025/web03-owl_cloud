@@ -45,7 +45,7 @@ type SelectionType =
   | 'line'
   | 'text'
   | 'drawing'
-  | 'media'
+  | 'image'
   | 'stack'
   | null;
 
@@ -87,9 +87,7 @@ export default function Sidebar() {
       case 'line':
         return 'line';
       case 'image':
-      case 'video':
-      case 'youtube':
-        return 'media';
+        return 'image';
       case 'text':
         return 'text';
       case 'drawing':
@@ -145,9 +143,7 @@ export default function Sidebar() {
         return 'Arrow';
       case 'line':
         return 'Line';
-      case 'media':
-        if (selectedItem?.type === 'youtube') return 'Youtube';
-        if (selectedItem?.type === 'video') return 'Video';
+      case 'image':
         return 'Image';
       case 'text':
         return 'Text';
@@ -321,8 +317,8 @@ export default function Sidebar() {
           />
         )}
 
-        {/* media (image/video/youtube) */}
-        {selectionType === 'media' && (
+        {/* image */}
+        {selectionType === 'image' && (
           <MediaPanel
             strokeColor={(selectedItem as ImageItem).stroke ?? 'transparent'}
             strokeWidth={(selectedItem as ImageItem).strokeWidth ?? 0}
@@ -449,7 +445,7 @@ export default function Sidebar() {
             }}
           />
         )}
-        
+
         {/* drawing */}
         {(cursorMode === 'draw' || selectionType === 'drawing') && (
           <DrawingPanel

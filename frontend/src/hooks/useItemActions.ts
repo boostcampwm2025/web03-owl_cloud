@@ -16,8 +16,6 @@ import type {
   ShapeItem,
   ShapeType,
   ImageItem,
-  VideoItem,
-  YoutubeItem,
   StackItem,
 } from '@/types/whiteboard';
 import type { YMapValue } from '@/types/whiteboard/yjs';
@@ -196,73 +194,6 @@ export function useItemActions() {
     }, yjsOrigin);
   };
 
-  // 비디오 추가
-  const addVideo = (payload: {
-    src: string;
-    x?: number;
-    y?: number;
-    width?: number;
-    height?: number;
-  }) => {
-    if (!yItems || !yItems.doc) return;
-
-    const id = uuidv4();
-    const newVideo: VideoItem = {
-      id,
-      type: 'video',
-      src: payload.src,
-      x: payload.x ?? CANVAS_WIDTH / 2 - 250,
-      y: payload.y ?? CANVAS_HEIGHT / 2 - 125,
-      width: payload.width ?? 500,
-      height: payload.height ?? 250,
-      rotation: 0,
-      stroke: undefined,
-      strokeWidth: 0,
-      cornerRadius: 0,
-      opacity: 1,
-    };
-
-    yItems.doc.transact(() => {
-      yItems.push([itemToYMap(newVideo)]);
-    }, yjsOrigin);
-  };
-
-  // 유튜브 추가
-  const addYoutube = (payload: { url: string; x?: number; y?: number }) => {
-    if (!yItems || !yItems.doc) return;
-
-    const videoId = extractYoutubeId(payload.url);
-
-    if (!videoId) {
-      alert('올바른 유튜브 URL이 아닙니다.');
-      return;
-    }
-
-    const id = uuidv4();
-    const width = 640;
-    const height = 360;
-
-    const newYoutube: YoutubeItem = {
-      id,
-      type: 'youtube',
-      url: payload.url,
-      videoId,
-      x: payload.x ?? CANVAS_WIDTH / 2 - width / 2,
-      y: payload.y ?? CANVAS_HEIGHT / 2 - height / 2,
-      width,
-      height,
-      rotation: 0,
-      stroke: undefined,
-      strokeWidth: 0,
-      cornerRadius: 10,
-      opacity: 1,
-    };
-
-    yItems.doc.transact(() => {
-      yItems.push([itemToYMap(newYoutube)]);
-    }, yjsOrigin);
-  };
-
   // 스택 아이템(아이콘) 추가
   const addStack = (payload: Partial<Omit<StackItem, 'id' | 'type'>>) => {
     if (!yItems || !yItems.doc) return;
@@ -407,8 +338,6 @@ export function useItemActions() {
     addLine,
     addShape,
     addImage,
-    addVideo,
-    addYoutube,
     addStack,
     addDrawing,
     updateItem,
