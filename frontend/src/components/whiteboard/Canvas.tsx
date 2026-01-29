@@ -293,7 +293,7 @@ export default function Canvas() {
     (e) => {
       const target = e.target as HTMLElement;
       // 사이드바 클릭은 무시
-      if (target.closest('aside')) {
+      if (target.closest('aside') || target.closest('.sidebar-toggle')) {
         return;
       }
 
