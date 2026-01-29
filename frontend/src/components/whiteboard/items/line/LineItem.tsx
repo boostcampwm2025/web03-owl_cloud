@@ -55,9 +55,14 @@ export default function LineItem({
       lineCap="round"
       lineJoin="round"
       onMouseDown={() => isInteractive && onSelect()}
+      onTouchStart={() => isInteractive && onSelect()}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onDblClick={() => {
+        if (!isInteractive) return;
+        onArrowDblClick?.(lineItem.id);
+      }}
+      onDblTap={() => {
         if (!isInteractive) return;
         onArrowDblClick?.(lineItem.id);
       }}
