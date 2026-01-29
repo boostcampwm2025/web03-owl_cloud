@@ -65,6 +65,11 @@ export default function TextItem({
         setEditingTextId(textItem.id);
         onSelect();
       }}
+      onDblTap={() => {
+        if (!isInteractive) return;
+        setEditingTextId(textItem.id);
+        onSelect();
+      }}
       onDragStart={() => {
         if (!isInteractive) return;
         setIsDragging(true);
