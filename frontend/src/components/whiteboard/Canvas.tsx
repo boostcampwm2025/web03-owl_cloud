@@ -21,6 +21,7 @@ import {
   updateBoundArrows,
   getDraggingArrowPoints,
 } from '@/utils/arrowBinding';
+import { getViewportRect, filterVisibleItems } from '@/utils/viewport';
 
 import { useElementSize } from '@/hooks/useElementSize';
 import { useClickOutside } from '@/hooks/useClickOutside';
@@ -70,7 +71,74 @@ export default function Canvas() {
     rotation?: number;
   } | null>(null);
 
+  // Viewport culling을 위한 상태
+  const [viewportRect, setViewportRect] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
   const size = useElementSize(containerRef);
+
+  // viewport 업데이트
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const updateViewport = () => {
+      setViewportRect(getViewportRect(stage));
+    };
+
+    // 초기 viewport 설정
+    updateViewport();
+
+    // Stage 이동/줌 시 viewport 업데이트
+    let rafId: number;
+    const throttledUpdate = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        updateViewport();
+        rafId = 0;
+      });
+    };
+
+    stage.on('dragmove', throttledUpdate);
+    stage.on('wheel', throttledUpdate);
+
+    return () => {
+      stage.off('dragmove', throttledUpdate);
+      stage.off('wheel', throttledUpdate);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [stageScale, stagePos]);
+
+  // 화면에 보이는 아이템만 필터링
+  const visibleItems = useMemo(() => {
+    if (!viewportRect) return items;
+    const filtered = filterVisibleItems(items, viewportRect);
+
+    console.log(
+      `[화이트보드] 전체: ${items.length} / 렌더링: ${filtered.length}`,
+    );
+
+    return filtered;
+  }, [items, viewportRect]);
+
+  // 줌 레벨에 따른 pixelRatio 조절
+  const pixelRatio = useMemo(() => {
+    let ratio: number;
+    if (stageScale >= 1.5) ratio = window.devicePixelRatio;
+    else if (stageScale >= 1) ratio = 1.5;
+    else if (stageScale >= 0.5) ratio = 1;
+    else if (stageScale >= 0.3) ratio = 0.5;
+    else ratio = 0.25;
+
+    console.log(
+      `[화이트보드] scale: ${stageScale.toFixed(2)} / pixelRatio: ${ratio}`,
+    );
+    return ratio;
+  }, [stageScale]);
 
   // viewport 크기를 store에 업데이트
   useEffect(() => {
@@ -259,6 +327,7 @@ export default function Canvas() {
         y={stagePos.y}
         scaleX={stageScale}
         scaleY={stageScale}
+        pixelRatio={pixelRatio}
         onWheel={handleWheel}
         onDragStart={() => setIsDraggingCanvas(true)}
         onDragMove={handleDragMove}
@@ -298,7 +367,7 @@ export default function Canvas() {
                 ? (items.find((it) => it.id === localDraggingId) as ShapeItem)
                 : null;
 
-            return items.map((item) => {
+            return visibleItems.map((item) => {
               // 드래그 중인 아이템의 실시간 위치
               let displayItem = item;
               if (localDraggingId === item.id && localDraggingPos) {
