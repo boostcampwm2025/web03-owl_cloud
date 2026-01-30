@@ -128,7 +128,7 @@ export class SignalingWebsocketGateway
       (client as any).disconnectReason ??          
       (client as any).conn?.closeReason ??         
       'unknown';
-    this.prom.wsDisconnectsTotal.labels(ns, reason).inc(); // 나중에는 구체적인 이유도 같이 적어주면 좋다.
+    this.prom.wsDisconnectsTotal.labels(ns, reason).inc();
 
     const user = client.data.user;
     const room_id = client.data.room_id;

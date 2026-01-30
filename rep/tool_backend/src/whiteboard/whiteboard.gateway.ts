@@ -116,6 +116,15 @@ export class WhiteboardWebsocketGateway
 
   // 연결 해제 처리
   handleDisconnect(client: Socket) {
+    // 연결이 끊겼을때 설정할 수 있다.
+    const ns = client.nsp.name;
+    this.prom.wsConnectionsCurrent.labels(ns).dec();
+    const reason =
+      (client as any).disconnectReason ??          
+      (client as any).conn?.closeReason ??         
+      'unknown';
+    this.prom.wsDisconnectsTotal.labels(ns, reason).inc();
+
     const payload: ToolBackendPayload = client.data.payload;
     const roomName = client.data.roomName;
 

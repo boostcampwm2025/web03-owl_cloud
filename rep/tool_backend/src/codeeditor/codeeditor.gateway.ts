@@ -123,7 +123,11 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
     // 연결과 관련된 네임스페이스
     const ns = client.nsp.name;
     this.prom.wsConnectionsCurrent.labels(ns).dec();
-    this.prom.wsDisconnectsTotal.labels(ns).inc();
+    const reason =
+      (client as any).disconnectReason ??          
+      (client as any).conn?.closeReason ??         
+      'unknown';
+    this.prom.wsDisconnectsTotal.labels(ns, reason).inc();
 
     const roomName = client.data.roomName;
     if (!roomName) return;
