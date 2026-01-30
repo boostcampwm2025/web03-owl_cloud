@@ -82,3 +82,12 @@ button {
   background: #737373;
   border-radius: 10px; /* 둥근 막대 */
 }
+
+.default-scrollbar::-webkit-scrollbar {
+  width: 4px; /* 스크롤바 두께 */
+}
+
+.default-scrollbar::-webkit-scrollbar-thumb {
+  background: #c6c6c6;
+  border-radius: 10px; /* 둥근 막대 */
+}

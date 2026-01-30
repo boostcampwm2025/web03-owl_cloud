@@ -14,12 +14,12 @@ export const useMeetingSocket = () => {
     const tempSocket = initSocket(accessToken);
 
     const onConnect = () => {
-      console.log('연결 완료');
+      // console.log('연결 완료');
     };
     tempSocket.on('connect', onConnect);
 
     const onDisconnect = (reason: string) => {
-      console.log(reason);
+      // console.log(reason);
     };
     tempSocket.on('disconnect', onDisconnect);
 

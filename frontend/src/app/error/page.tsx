@@ -30,7 +30,7 @@ function ErrorContent() {
 
 export default function AuthErrorPage() {
   return (
-    <main className="flex-center min-h-screen w-screen">
+    <main className="flex-center min-h-dvh w-screen">
       <Suspense fallback={<></>}>
         <ErrorContent />
       </Suspense>

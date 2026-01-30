@@ -147,7 +147,7 @@ export default function TextArea({
       onChange(textarea.value);
     };
 
-    const handleOutsideClick = (e: MouseEvent) => {
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
       const target = e.target as HTMLElement;
       if (target.closest('aside')) return;
       if (e.target !== textarea) {
@@ -165,11 +165,13 @@ export default function TextArea({
     stage.on('stageTransformChange', updatePosition);
 
     window.addEventListener('mousedown', handleOutsideClick);
+    window.addEventListener('touchstart', handleOutsideClick);
 
     return () => {
       textarea.removeEventListener('keydown', handleKeyDown);
       textarea.removeEventListener('input', handleInput);
       window.removeEventListener('mousedown', handleOutsideClick);
+      window.removeEventListener('touchstart', handleOutsideClick);
       stage.off('dragmove', updatePosition);
       stage.off('dragend', updatePosition);
       stage.off('stageTransformChange', updatePosition);

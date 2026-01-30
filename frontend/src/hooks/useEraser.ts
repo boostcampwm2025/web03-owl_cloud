@@ -34,7 +34,10 @@ export function useEraser() {
     }
   };
 
-  const handleEraserMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  const handleEraserStart = (
+    e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
+    point: { x: number; y: number },
+  ) => {
     if (cursorMode !== 'eraser') return;
 
     setIsErasing(true);
@@ -42,7 +45,10 @@ export function useEraser() {
     eraseItem(e.target);
   };
 
-  const handleEraserMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  const handleEraserMove = (
+    e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
+    point: { x: number; y: number },
+  ) => {
     if (!isErasing || cursorMode !== 'eraser') return;
 
     const stage = e.target.getStage();
@@ -57,7 +63,7 @@ export function useEraser() {
     });
   };
 
-  const handleEraserMouseUp = () => {
+  const handleEraserEnd = () => {
     if (!isErasing) return;
 
     if (erasedIds.size > 0) {
@@ -69,9 +75,9 @@ export function useEraser() {
   };
 
   return {
-    handleEraserMouseDown,
-    handleEraserMouseMove,
-    handleEraserMouseUp,
+    handleEraserStart,
+    handleEraserMove,
+    handleEraserEnd,
     isErasing,
   };
 }

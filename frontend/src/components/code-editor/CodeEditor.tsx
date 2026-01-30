@@ -5,10 +5,17 @@ import Editor from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import * as Y from 'yjs';
 import * as awarenessProtocol from 'y-protocols/awareness';
-import { Socket } from 'socket.io-client';
 
 import { colorFromClientId, injectCursorStyles } from '@/utils/code-editor';
-import { AwarenessState, LanguageState } from '@/types/code-editor';
+import {
+  AwarenessState,
+  LanguageState,
+  YjsInitPayload,
+  YjsRemoteUpdate,
+  YjsSyncReqPayload,
+  YjsSyncServerPayload,
+  YjsUpdateClientPayload,
+} from '@/types/code-editor';
 import CodeEditorToolbar from './CodeEditorToolbar';
 import { EditorLanguage } from '@/constants/code-editor';
 import { useToolSocketStore } from '@/store/useToolSocketStore';
@@ -19,77 +26,13 @@ type CodeEditorProps = {
   minimap?: boolean;
 };
 
-/**
- * ---- wire types (server <-> client) ----
- * 서버 코드 기준:
- * - server -> client: 'yjs-init' { update: Buffer, seq: number, origin: 'INIT' }
- * - server -> client: 'yjs-sync' ack|patch|full|error (+ origin)
- * - server -> client: 'yjs-update' 단일/배치 브로드캐스트
- * - client -> server: 'yjs-update' { last_seq, update? | updates? }
- * - client -> server: 'yjs-sync-req' { last_seq, reason? }
- * - client -> server: 'yjs-ready' (리스너 준비 완료 후 init 요청)
- */
-
-type YjsInitPayload = {
-  update: ArrayBuffer;
-  seq: number;
-  origin?: 'INIT';
-};
-
-type YjsRemoteUpdateSingle = { seq: number; update: ArrayBuffer };
-type YjsRemoteUpdateBatch = {
-  from_seq: number;
-  to_seq: number;
-  updates: ArrayBuffer[];
-};
-type YjsRemoteUpdate = YjsRemoteUpdateSingle | YjsRemoteUpdateBatch;
-
-type YjsSyncOrigin = 'UPDATE_REJECTED' | 'SYNC_REQ' | 'INIT';
-
-type YjsSyncServerPayload =
-  | { type: 'ack'; ok: true; server_seq: number; origin?: YjsSyncOrigin }
-  | {
-      type: 'patch';
-      ok: true;
-      from_seq: number;
-      to_seq: number;
-      updates: ArrayBuffer[];
-      server_seq: number;
-      origin: YjsSyncOrigin;
-    }
-  | {
-      type: 'full';
-      ok: true;
-      server_seq: number;
-      update: ArrayBuffer;
-      origin: YjsSyncOrigin;
-    }
-  | {
-      type: 'error';
-      ok: false;
-      code: 'BAD_PAYLOAD' | 'ROOM_NOT_FOUND' | 'INTERNAL';
-      message?: string;
-      origin?: YjsSyncOrigin;
-    };
-
-type YjsSyncReqPayload = {
-  last_seq: number;
-  reason?: 'SEQ_GAP' | 'MANUAL' | 'UNKNOWN' | 'INIT';
-};
-
-type YjsUpdateClientPayload = {
-  last_seq: number;
-  update?: Uint8Array;
-  updates?: Uint8Array[];
-};
-
 export default function CodeEditor({
   autoComplete = true,
   minimap = true,
 }: CodeEditorProps) {
+  // refs
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof import('monaco-editor') | null>(null);
-  const socketRef = useRef<Socket | null>(null);
   const providerRef = useRef<{
     ydoc: Y.Doc;
     awareness: awarenessProtocol.Awareness;
@@ -101,6 +44,17 @@ export default function CodeEditor({
   const onlyMyCursorRef = useRef(false);
   const cleanupRef = useRef<(() => void) | null>(null);
 
+  // 동기화 관련 refs
+  const syncState = useRef({
+    lastSeq: 0,
+    awaitingAck: false,
+    suppressSend: false,
+    dirty: false,
+    syncReqInFlight: false,
+    readySent: false,
+  });
+
+  // states
   const [isAutoCompleted, setIsAutoCompleted] = useState<boolean>(autoComplete);
   const [isPresenter, setIsPresenter] = useState<boolean>(false);
   const [hasPresenter, setHasPresenter] = useState<boolean>(false);
@@ -108,21 +62,11 @@ export default function CodeEditor({
     useState<EditorLanguage>('typescript');
   const [onlyMyCursor, setOnlyMyCursor] = useState<boolean>(false);
 
+  // store
   const { codeEditorSocket: socket } = useToolSocketStore();
   const { nickname } = useUserStore();
 
-  /**
-   * ---- sync control refs ----
-   */
-  const lastSeqRef = useRef<number>(0); // 내가 "적용 완료"한 서버 seq
-  const awaitingAckRef = useRef<boolean>(false); // 서버 ack 대기 중
-  const suppressSendRef = useRef<boolean>(false); // sync/remote apply 중 ydoc update 재전송 방지
-  const dirtyRef = useRef<boolean>(false); // ack 대기 중 변경이 더 생겼는지
-  const syncReqInFlightRef = useRef<boolean>(false); // sync-req 폭주 방지
-
-  // ✅ yjs-ready 중복 방지
-  const readySentRef = useRef<boolean>(false);
-
+  // editor 마운트 메인 로직
   const handleMount = async (
     editor: monaco.editor.IStandaloneCodeEditor,
     monaco: typeof import('monaco-editor'),
@@ -130,18 +74,20 @@ export default function CodeEditor({
     editorRef.current = editor;
     monacoRef.current = monaco;
 
+    // Yjs 객체 초기화
     const ydoc = new Y.Doc();
     const yLanguage = ydoc.getMap<LanguageState>('language');
     const yText = ydoc.getText('monaco');
     const awareness = new awarenessProtocol.Awareness(ydoc);
+    providerRef.current = { ydoc, awareness };
 
     const remoteOrigin = Symbol('remote');
-
     editor.getModel()?.pushStackElement();
 
     const model = editor.getModel();
     if (!model) return;
 
+    // 모나코 바인딩
     const { MonacoBinding } = await import('y-monaco');
     const binding = new MonacoBinding(
       yText,
@@ -149,22 +95,15 @@ export default function CodeEditor({
       new Set([editor]),
       awareness,
     );
-
     const undoManager = new Y.UndoManager(yText, {
       trackedOrigins: new Set([binding]),
       captureTimeout: 500,
     });
 
-    providerRef.current = { ydoc, awareness };
-
-    socketRef.current = socket;
     if (!socket) return;
 
-    /**
-     * ---- helpers ----
-     */
     const applyUpdatesNoSend = (updates: ArrayBuffer[]) => {
-      suppressSendRef.current = true;
+      syncState.current.suppressSend = true;
       try {
         ydoc.transact(() => {
           for (const u of updates) {
@@ -172,22 +111,22 @@ export default function CodeEditor({
           }
         }, remoteOrigin);
       } finally {
-        suppressSendRef.current = false;
+        syncState.current.suppressSend = false;
       }
     };
 
     const requestSync = (reason: YjsSyncReqPayload['reason'] = 'SEQ_GAP') => {
-      if (syncReqInFlightRef.current) return;
-      syncReqInFlightRef.current = true;
+      if (syncState.current.syncReqInFlight) return;
+      syncState.current.syncReqInFlight = true;
 
       socket.emit('yjs-sync-req', {
-        last_seq: lastSeqRef.current,
+        last_seq: syncState.current.lastSeq,
         reason,
       } satisfies YjsSyncReqPayload);
 
       // 타임아웃으로 inFlight 해제(서버/네트워크 이슈 대비)
       setTimeout(() => {
-        syncReqInFlightRef.current = false;
+        syncState.current.syncReqInFlight = false;
       }, 1500);
     };
 
@@ -195,25 +134,22 @@ export default function CodeEditor({
       if (!providerRef.current) return;
 
       // ack 기다리는 중이면 큐 쌓지 말고 dirty만 표시
-      if (awaitingAckRef.current) {
-        dirtyRef.current = true;
+      if (syncState.current.awaitingAck) {
+        syncState.current.dirty = true;
         return;
       }
 
       const full = Y.encodeStateAsUpdate(providerRef.current.ydoc);
-      awaitingAckRef.current = true;
-      dirtyRef.current = false;
+      syncState.current.awaitingAck = true;
+      syncState.current.dirty = false;
 
       const payload: YjsUpdateClientPayload = {
-        last_seq: lastSeqRef.current,
+        last_seq: syncState.current.lastSeq,
         update: full,
       };
       socket.emit('yjs-update', payload);
     };
 
-    /**
-     * ---- awareness: local init ----
-     */
     awareness.setLocalState({
       user: {
         name: nickname || '알 수 없음',
@@ -241,65 +177,54 @@ export default function CodeEditor({
     };
     socket.on('awareness-update', onAwarenessUpdate);
 
-    /**
-     * ---- Socket -> Yjs (init) ----
-     */
+    // Socket -> Yjs (init)
     const onYjsInit = (data: YjsInitPayload) => {
       applyUpdatesNoSend([data.update]);
-      lastSeqRef.current = data.seq;
+      syncState.current.lastSeq = data.seq;
 
-      awaitingAckRef.current = false;
-      dirtyRef.current = false;
-      syncReqInFlightRef.current = false;
-
-      console.log(data);
+      syncState.current.awaitingAck = false;
+      syncState.current.dirty = false;
+      syncState.current.syncReqInFlight = false;
     };
     socket.on('yjs-init', onYjsInit);
 
-    /**
-     * ---- Socket -> Yjs (sync) ----
-     */
+    // Socket -> Yjs (sync)
     const onYjsSync = (msg: YjsSyncServerPayload) => {
       if (!msg.ok) {
-        awaitingAckRef.current = false;
-        syncReqInFlightRef.current = false;
+        syncState.current.awaitingAck = false;
+        syncState.current.syncReqInFlight = false;
         return;
       }
 
       if (msg.type === 'ack') {
-        lastSeqRef.current = Math.max(lastSeqRef.current, msg.server_seq);
-        awaitingAckRef.current = false;
-        syncReqInFlightRef.current = false;
+        syncState.current.lastSeq = Math.max(
+          syncState.current.lastSeq,
+          msg.server_seq,
+        );
+        syncState.current.awaitingAck = false;
+        syncState.current.syncReqInFlight = false;
 
         // ack 기다리는 동안 더 입력이 있었다면 full-state 한 방
-        if (dirtyRef.current) {
+        if (syncState.current.dirty) {
           sendFullStateOnce();
         }
         return;
       }
 
-      if (msg.type === 'full') {
-        applyUpdatesNoSend([msg.update]);
-        lastSeqRef.current = Math.max(lastSeqRef.current, msg.server_seq);
+      if (msg.type === 'full' || msg.type === 'patch') {
+        applyUpdatesNoSend(msg.type === 'full' ? [msg.update] : msg.updates);
 
-        awaitingAckRef.current = false;
-        syncReqInFlightRef.current = false;
+        const syncLatestSeq = msg.type === 'full' ? msg.server_seq : msg.to_seq;
 
-        // ✅ UPDATE_REJECTED인 경우만 재전송(A안)
-        if (msg.origin === 'UPDATE_REJECTED') {
-          sendFullStateOnce();
-        }
-        return;
-      }
+        syncState.current.lastSeq = Math.max(
+          syncState.current.lastSeq,
+          syncLatestSeq,
+        );
 
-      if (msg.type === 'patch') {
-        applyUpdatesNoSend(msg.updates);
-        lastSeqRef.current = Math.max(lastSeqRef.current, msg.to_seq);
+        syncState.current.awaitingAck = false;
+        syncState.current.syncReqInFlight = false;
 
-        awaitingAckRef.current = false;
-        syncReqInFlightRef.current = false;
-
-        // ✅ UPDATE_REJECTED인 경우만 재전송(A안)
+        // UPDATE_REJECTED인 경우만 재전송(A안)
         if (msg.origin === 'UPDATE_REJECTED') {
           sendFullStateOnce();
         }
@@ -315,85 +240,73 @@ export default function CodeEditor({
     const onYjsRemoteUpdate = (msg: YjsRemoteUpdate) => {
       // 단일
       if ('seq' in msg) {
-        const expected = lastSeqRef.current + 1;
+        const expected = syncState.current.lastSeq + 1;
         if (msg.seq !== expected) {
           requestSync('SEQ_GAP');
           return;
         }
 
         applyUpdatesNoSend([msg.update]);
-        lastSeqRef.current = msg.seq;
-        syncReqInFlightRef.current = false;
+        syncState.current.lastSeq = msg.seq;
+        syncState.current.syncReqInFlight = false;
         return;
       }
 
       // 배치
-      const expectedFrom = lastSeqRef.current + 1;
+      const expectedFrom = syncState.current.lastSeq + 1;
       if (msg.from_seq !== expectedFrom) {
         requestSync('SEQ_GAP');
         return;
       }
 
       applyUpdatesNoSend(msg.updates);
-      lastSeqRef.current = msg.to_seq;
-      syncReqInFlightRef.current = false;
+      syncState.current.lastSeq = msg.to_seq;
+      syncState.current.syncReqInFlight = false;
     };
     socket.on('yjs-update', onYjsRemoteUpdate);
 
     /**
-     * ---- ✅ Ready handshake ----
      * 모든 리스너 등록이 끝난 뒤에 서버에 init 요청
      */
-    if (!readySentRef.current) {
-      readySentRef.current = true;
+    if (!syncState.current.readySent) {
+      syncState.current.readySent = true;
       socket.emit('yjs-ready');
     }
 
-    /**
-     * ---- Yjs -> Socket (local updates) ----
-     * ack 기반 backpressure + A안
-     */
+    //---- Yjs -> Socket (local updates) ----
     const onYdocUpdate = (update: Uint8Array, origin: unknown) => {
       if (origin === remoteOrigin) return;
-      if (suppressSendRef.current) return;
+      if (syncState.current.suppressSend) return;
 
-      dirtyRef.current = true;
+      syncState.current.dirty = true;
 
       // ack 기다리는 중이면 쌓지 않고 표시만
-      if (awaitingAckRef.current) return;
+      if (syncState.current.awaitingAck) return;
 
-      awaitingAckRef.current = true;
-      dirtyRef.current = false;
+      syncState.current.awaitingAck = true;
+      syncState.current.dirty = false;
 
       const payload: YjsUpdateClientPayload = {
-        last_seq: lastSeqRef.current,
+        last_seq: syncState.current.lastSeq,
         update,
       };
       socket.emit('yjs-update', payload);
     };
     ydoc.on('update', onYdocUpdate);
 
-    /**
-     * ---- monaco shortcuts ----
-     */
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, () => {
-      undoManager.undo();
-    });
-
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyY, () => {
-      undoManager.redo();
-    });
-
+    // undo/redo 단축키 관리
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, () =>
+      undoManager.undo(),
+    );
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyY, () =>
+      undoManager.redo(),
+    );
     editor.addCommand(
       monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ,
-      () => {
-        undoManager.redo();
-      },
+      () => undoManager.redo(),
     );
 
-    /**
-     * ---- cursor rendering only (기존 로직 유지) ----
-     */
+    // 커서 렌더링
     const updateRemoteDecorations = (states: Map<number, AwarenessState>) => {
       if (!editorRef.current) return;
 
@@ -479,9 +392,6 @@ export default function CodeEditor({
       });
     });
 
-    /**
-     * ---- language observe (기존 유지) ----
-     */
     yLanguage.observe(() => {
       const lang = yLanguage.get('current');
       if (!lang) return;
@@ -492,12 +402,9 @@ export default function CodeEditor({
       }
     });
 
-    /**
-     * ---- cleanup ----
-     */
     cleanupRef.current = () => {
       // ✅ ready flag reset (선택이지만 깔끔)
-      readySentRef.current = false;
+      syncState.current.readySent = false;
 
       // socket handler 제거
       socket.off('awareness-update', onAwarenessUpdate);

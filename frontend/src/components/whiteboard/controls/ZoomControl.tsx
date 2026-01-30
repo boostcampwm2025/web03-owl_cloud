@@ -53,6 +53,14 @@ export default function ZoomControls() {
       y: centerY - pointTo.y * newScale,
     };
 
+    // Stage 업데이트
+    const { stageRef } = useWhiteboardLocalStore.getState();
+    if (stageRef?.current) {
+      stageRef.current.scale({ x: newScale, y: newScale });
+      stageRef.current.position(newPos);
+      stageRef.current.batchDraw();
+    }
+
     setStageScale(newScale);
     setStagePos(newPos);
   };

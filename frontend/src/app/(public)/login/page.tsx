@@ -5,7 +5,7 @@ import GoogleLoginButton from '@/components/auth/GoogleLoginButton';
 
 export default function Login() {
   return (
-    <main className="flex min-h-screen items-center justify-center">
+    <main className="flex min-h-dvh items-center justify-center">
       <div className="flex w-full max-w-90 flex-col gap-16 px-6 py-4">
         <section
           className="flex flex-col items-center gap-8"

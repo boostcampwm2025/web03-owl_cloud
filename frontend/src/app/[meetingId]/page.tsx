@@ -150,7 +150,7 @@ export default function MeetingPage() {
   }
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-dvh">
       {!isJoined ? (
         <>
           <MeetingLobby onJoin={onJoin} />

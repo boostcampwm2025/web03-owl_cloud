@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 // 패널 컴포넌트들 임포트
 import ShapePanel from '@/components/whiteboard/sidebar/panels/ShapePanel';
 import ArrowPanel from '@/components/whiteboard/sidebar/panels/ArrowPanel';
@@ -8,6 +10,7 @@ import MediaPanel from '@/components/whiteboard/sidebar/panels/MediaPanel';
 import TextPanel from '@/components/whiteboard/sidebar/panels/TextPanel';
 import DrawingPanel from '@/components/whiteboard/sidebar/panels/DrawingPanel';
 import StackPanel from '@/components/whiteboard/sidebar/panels/StackPanel';
+import NavButton from '@/components/whiteboard/common/NavButton';
 
 import { useWhiteboardSharedStore } from '@/store/useWhiteboardSharedStore';
 import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
@@ -37,6 +40,10 @@ import {
   getItemStyle,
 } from '@/utils/sidebarStyleHelpers';
 import { LayerDirection } from '@/components/whiteboard/sidebar/sections/LayerSection';
+import {
+  ChevronLeftPipeIcon,
+  ChevronRightPipeIcon,
+} from '@/assets/icons/whiteboard/common';
 
 // 사이드 바 선택된 요소 타입
 type SelectionType =
@@ -50,6 +57,8 @@ type SelectionType =
   | null;
 
 export default function Sidebar() {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   // 스토어에서 선택된 아이템 정보 가져오기
   const selectedId = useWhiteboardLocalStore((state) => state.selectedId);
   const editingTextId = useWhiteboardLocalStore((state) => state.editingTextId);
@@ -188,310 +197,360 @@ export default function Sidebar() {
   };
 
   return (
-    <aside
-      className="absolute top-1/2 left-2 z-5 flex w-60 -translate-y-1/2 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white p-4 shadow-xl"
-      style={{ maxHeight: 'calc(100vh - 220px)' }}
-    >
-      {/* Sidebar Title */}
-      <div className="mb-2 shrink-0 border-b border-neutral-100 pb-2">
-        <h2 className="text-lg font-bold text-neutral-800">
-          {getHeaderTitle()}
-        </h2>
-      </div>
+    <>
+      {/* 접힌 상태 - 탭만 표시 */}
+      {isCollapsed && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsCollapsed(false);
+          }}
+          className="sidebar-toggle absolute top-1/2 left-2 z-100 flex h-20 w-8 -translate-y-1/2 items-center justify-center rounded-lg border border-neutral-200 bg-white p-1 shadow-sm transition-all select-none hover:bg-neutral-100"
+          title="사이드바 열기"
+        >
+          <ChevronRightPipeIcon className="h-6 w-6 text-neutral-600" />
+        </button>
+      )}
 
-      {/* 패널 영역 */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-1 pr-2">
-        {/* shape */}
-        {selectionType === 'shape' && !isEditingShapeText && (
-          <ShapePanel
-            // 테두리 색상
-            strokeColor={(selectedItem as ShapeItem).stroke ?? '#000000'}
-            // 배경 색상
-            backgroundColor={(selectedItem as ShapeItem).fill ?? 'transparent'}
-            // 테두리 두께
-            strokeWidth={(selectedItem as ShapeItem).strokeWidth ?? 2}
-            // 선 스타일
-            strokeStyle={getStrokeStyle(
-              (selectedItem as ShapeItem).dash,
-              (selectedItem as ShapeItem).strokeWidth ?? 2,
+      {/* 펼친 상태 - 전체 사이드바 */}
+      {!isCollapsed && (
+        <aside
+          className="absolute top-1/2 left-2 z-100 flex w-60 -translate-y-1/2 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white p-4 shadow-xl select-none"
+          style={{ maxHeight: 'calc(100vh - 220px)' }}
+        >
+          {/* Sidebar Title */}
+          <div className="mb-2 flex shrink-0 items-center justify-between border-b border-neutral-100 pb-2">
+            <h2 className="text-lg font-bold text-neutral-800">
+              {getHeaderTitle()}
+            </h2>
+            <NavButton
+              icon={ChevronLeftPipeIcon}
+              label="사이드바 접기"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (e.type === 'mousedown' || e.type === 'touchstart') return;
+                setIsCollapsed(true);
+              }}
+              bgColor="bg-white"
+              hvColor="bg-neutral-100"
+            />
+          </div>
+
+          {/* 패널 영역 */}
+          <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-1 pr-2">
+            {/* shape */}
+            {selectionType === 'shape' && !isEditingShapeText && (
+              <ShapePanel
+                // 테두리 색상
+                strokeColor={(selectedItem as ShapeItem).stroke ?? '#000000'}
+                // 배경 색상
+                backgroundColor={
+                  (selectedItem as ShapeItem).fill ?? 'transparent'
+                }
+                // 테두리 두께
+                strokeWidth={(selectedItem as ShapeItem).strokeWidth ?? 2}
+                // 선 스타일
+                strokeStyle={getStrokeStyle(
+                  (selectedItem as ShapeItem).dash,
+                  (selectedItem as ShapeItem).strokeWidth ?? 2,
+                )}
+                // 투명도
+                opacity={(selectedItem as ShapeItem).opacity ?? 1}
+                // 모서리 타입
+                edgeType={getEdgeType((selectedItem as ShapeItem).cornerRadius)}
+                // 테두리 색상 변경
+                onChangeStrokeColor={(color) =>
+                  updateItem(selectedId!, { stroke: color })
+                }
+                // 배경 색상 변경 핸들러 연결
+                onChangeBackgroundColor={(color) =>
+                  updateItem(selectedId!, { fill: color })
+                }
+                // 테두리 두께 변경 (두께가 바뀌면 점선 간격 비율에 맞게 재계산)
+                onChangeStrokeWidth={(width) => {
+                  const currentItem = selectedItem as ShapeItem;
+                  const currentStyle = getStrokeStyle(
+                    currentItem.dash,
+                    currentItem.strokeWidth ?? 2,
+                  );
+                  // 스타일 유지하면서 새로운 두께에 맞는 dash 배열 생성
+                  const newDash = getDashArray(currentStyle, width);
+
+                  updateItem(selectedId!, {
+                    strokeWidth: width,
+                    dash: newDash,
+                  });
+                }}
+                // 선 스타일 변경 (solid, dashed, dotted)
+                onChangeStrokeStyle={(style) => {
+                  const width = (selectedItem as ShapeItem).strokeWidth ?? 2;
+                  updateItem(selectedId!, { dash: getDashArray(style, width) });
+                }}
+                // 모서리 변경 (sharp, round)
+                onChangeEdgeType={(type) => {
+                  // round : 20
+                  // sharp : 0
+                  updateItem(selectedId!, {
+                    cornerRadius: type === 'round' ? 20 : 0,
+                  });
+                }}
+                // 투명도 변경
+                onChangeOpacity={(opacity) => {
+                  updateItem(selectedId!, { opacity });
+                }}
+                onChangeLayer={handleLayerChange}
+              />
             )}
-            // 투명도
-            opacity={(selectedItem as ShapeItem).opacity ?? 1}
-            // 모서리 타입
-            edgeType={getEdgeType((selectedItem as ShapeItem).cornerRadius)}
-            // 테두리 색상 변경
-            onChangeStrokeColor={(color) =>
-              updateItem(selectedId!, { stroke: color })
-            }
-            // 배경 색상 변경 핸들러 연결
-            onChangeBackgroundColor={(color) =>
-              updateItem(selectedId!, { fill: color })
-            }
-            // 테두리 두께 변경 (두께가 바뀌면 점선 간격 비율에 맞게 재계산)
-            onChangeStrokeWidth={(width) => {
-              const currentItem = selectedItem as ShapeItem;
-              const currentStyle = getStrokeStyle(
-                currentItem.dash,
-                currentItem.strokeWidth ?? 2,
-              );
-              // 스타일 유지하면서 새로운 두께에 맞는 dash 배열 생성
-              const newDash = getDashArray(currentStyle, width);
 
-              updateItem(selectedId!, {
-                strokeWidth: width,
-                dash: newDash,
-              });
-            }}
-            // 선 스타일 변경 (solid, dashed, dotted)
-            onChangeStrokeStyle={(style) => {
-              const width = (selectedItem as ShapeItem).strokeWidth ?? 2;
-              updateItem(selectedId!, { dash: getDashArray(style, width) });
-            }}
-            // 모서리 변경 (sharp, round)
-            onChangeEdgeType={(type) => {
-              // round : 20
-              // sharp : 0
-              updateItem(selectedId!, {
-                cornerRadius: type === 'round' ? 20 : 0,
-              });
-            }}
-            // 투명도 변경
-            onChangeOpacity={(opacity) => {
-              updateItem(selectedId!, { opacity });
-            }}
-            onChangeLayer={handleLayerChange}
-          />
-        )}
-
-        {/* arrow */}
-        {selectionType === 'arrow' && (
-          <ArrowPanel
-            stroke={(selectedItem as ArrowItem).stroke}
-            size={getArrowSize(selectedItem as ArrowItem)}
-            style={getItemStyle(selectedItem as ArrowItem)}
-            startHeadType={(selectedItem as ArrowItem).startHeadType ?? 'none'}
-            endHeadType={(selectedItem as ArrowItem).endHeadType ?? 'triangle'}
-            onChangeStroke={(color) =>
-              updateItem(selectedId!, { stroke: color })
-            }
-            onChangeSize={(size) => {
-              const preset = ARROW_SIZE_PRESETS[size];
-              updateItem(selectedId!, {
-                strokeWidth: preset.strokeWidth,
-                pointerLength: preset.pointerSize,
-                pointerWidth: preset.pointerSize,
-              });
-            }}
-            onChangeStyle={(style) => {
-              updateItem(selectedId!, { tension: ARROW_STYLE_PRESETS[style] });
-            }}
-            onChangeStartHeadType={(type) => {
-              updateItem(selectedId!, { startHeadType: type });
-            }}
-            onChangeEndHeadType={(type) => {
-              updateItem(selectedId!, { endHeadType: type });
-            }}
-            onChangeLayer={handleLayerChange}
-          />
-        )}
-
-        {/* line */}
-        {selectionType === 'line' && (
-          <LinePanel
-            stroke={(selectedItem as LineItem).stroke}
-            size={getLineSize(selectedItem as LineItem)}
-            style={getItemStyle(selectedItem as LineItem)}
-            onChangeStroke={(color) =>
-              updateItem(selectedId!, { stroke: color })
-            }
-            onChangeSize={(size) => {
-              const preset = ARROW_SIZE_PRESETS[size];
-              updateItem(selectedId!, {
-                strokeWidth: preset.strokeWidth,
-              });
-            }}
-            onChangeStyle={(style) => {
-              updateItem(selectedId!, { tension: ARROW_STYLE_PRESETS[style] });
-            }}
-            onChangeLayer={handleLayerChange}
-          />
-        )}
-
-        {/* image */}
-        {selectionType === 'image' && (
-          <MediaPanel
-            strokeColor={(selectedItem as ImageItem).stroke ?? 'transparent'}
-            strokeWidth={(selectedItem as ImageItem).strokeWidth ?? 0}
-            strokeStyle={getStrokeStyle(
-              (selectedItem as ImageItem).dash,
-              (selectedItem as ImageItem).strokeWidth ?? 0,
+            {/* arrow */}
+            {selectionType === 'arrow' && (
+              <ArrowPanel
+                stroke={(selectedItem as ArrowItem).stroke}
+                size={getArrowSize(selectedItem as ArrowItem)}
+                style={getItemStyle(selectedItem as ArrowItem)}
+                startHeadType={
+                  (selectedItem as ArrowItem).startHeadType ?? 'none'
+                }
+                endHeadType={
+                  (selectedItem as ArrowItem).endHeadType ?? 'triangle'
+                }
+                onChangeStroke={(color) =>
+                  updateItem(selectedId!, { stroke: color })
+                }
+                onChangeSize={(size) => {
+                  const preset = ARROW_SIZE_PRESETS[size];
+                  updateItem(selectedId!, {
+                    strokeWidth: preset.strokeWidth,
+                    pointerLength: preset.pointerSize,
+                    pointerWidth: preset.pointerSize,
+                  });
+                }}
+                onChangeStyle={(style) => {
+                  updateItem(selectedId!, {
+                    tension: ARROW_STYLE_PRESETS[style],
+                  });
+                }}
+                onChangeStartHeadType={(type) => {
+                  updateItem(selectedId!, { startHeadType: type });
+                }}
+                onChangeEndHeadType={(type) => {
+                  updateItem(selectedId!, { endHeadType: type });
+                }}
+                onChangeLayer={handleLayerChange}
+              />
             )}
-            edgeType={getEdgeType((selectedItem as ImageItem).cornerRadius)}
-            opacity={(selectedItem as ImageItem).opacity ?? 1}
-            onChangeStrokeColor={(color) =>
-              updateItem(selectedId!, { stroke: color })
-            }
-            onChangeStrokeWidth={(width) => {
-              const currentWidth = (selectedItem as ImageItem).strokeWidth ?? 0;
-              const currentDash = (selectedItem as ImageItem).dash;
 
-              const currentStyle = getStrokeStyle(
-                currentDash,
-                currentWidth || 2,
-              );
+            {/* line */}
+            {selectionType === 'line' && (
+              <LinePanel
+                stroke={(selectedItem as LineItem).stroke}
+                size={getLineSize(selectedItem as LineItem)}
+                style={getItemStyle(selectedItem as LineItem)}
+                onChangeStroke={(color) =>
+                  updateItem(selectedId!, { stroke: color })
+                }
+                onChangeSize={(size) => {
+                  const preset = ARROW_SIZE_PRESETS[size];
+                  updateItem(selectedId!, {
+                    strokeWidth: preset.strokeWidth,
+                  });
+                }}
+                onChangeStyle={(style) => {
+                  updateItem(selectedId!, {
+                    tension: ARROW_STYLE_PRESETS[style],
+                  });
+                }}
+                onChangeLayer={handleLayerChange}
+              />
+            )}
 
-              const newDash = getDashArray(currentStyle, width);
+            {/* image */}
+            {selectionType === 'image' && (
+              <MediaPanel
+                strokeColor={
+                  (selectedItem as ImageItem).stroke ?? 'transparent'
+                }
+                strokeWidth={(selectedItem as ImageItem).strokeWidth ?? 0}
+                strokeStyle={getStrokeStyle(
+                  (selectedItem as ImageItem).dash,
+                  (selectedItem as ImageItem).strokeWidth ?? 0,
+                )}
+                edgeType={getEdgeType((selectedItem as ImageItem).cornerRadius)}
+                opacity={(selectedItem as ImageItem).opacity ?? 1}
+                onChangeStrokeColor={(color) =>
+                  updateItem(selectedId!, { stroke: color })
+                }
+                onChangeStrokeWidth={(width) => {
+                  const currentWidth =
+                    (selectedItem as ImageItem).strokeWidth ?? 0;
+                  const currentDash = (selectedItem as ImageItem).dash;
 
-              updateItem(selectedId!, {
-                strokeWidth: width,
-                dash: newDash,
-                stroke: (selectedItem as ImageItem).stroke ?? '#000000',
-              });
-            }}
-            onChangeStrokeStyle={(style) => {
-              const currentWidth = (selectedItem as ImageItem).strokeWidth ?? 0;
+                  const currentStyle = getStrokeStyle(
+                    currentDash,
+                    currentWidth || 2,
+                  );
 
-              // 보정된 두께
-              // 두께가 0이면 내부적으로 2로 간주하여 dash 배열 계산
-              const effectiveWidth = currentWidth === 0 ? 2 : currentWidth;
+                  const newDash = getDashArray(currentStyle, width);
 
-              updateItem(selectedId!, {
-                // effectiveWidth로 dash 배열 계산
-                dash: getDashArray(style, effectiveWidth),
+                  updateItem(selectedId!, {
+                    strokeWidth: width,
+                    dash: newDash,
+                    stroke: (selectedItem as ImageItem).stroke ?? '#000000',
+                  });
+                }}
+                onChangeStrokeStyle={(style) => {
+                  const currentWidth =
+                    (selectedItem as ImageItem).strokeWidth ?? 0;
 
-                // 두께가 0이었다면 2px로 업데이트
-                strokeWidth: effectiveWidth,
+                  // 보정된 두께
+                  // 두께가 0이면 내부적으로 2로 간주하여 dash 배열 계산
+                  const effectiveWidth = currentWidth === 0 ? 2 : currentWidth;
 
-                // 색상이 없었다면 기본 색상 검정으로 설정
-                stroke: (selectedItem as ImageItem).stroke ?? '#000000',
-              });
-            }}
-            onChangeEdgeType={(type) => {
-              updateItem(selectedId!, {
-                cornerRadius: type === 'round' ? 20 : 0,
-              });
-            }}
-            onChangeOpacity={(opacity) => {
-              updateItem(selectedId!, { opacity });
-            }}
-            onChangeLayer={handleLayerChange}
-          />
-        )}
+                  updateItem(selectedId!, {
+                    // effectiveWidth로 dash 배열 계산
+                    dash: getDashArray(style, effectiveWidth),
 
-        {/* text */}
-        {selectionType === 'text' && (
-          <TextPanel
-            fill={(selectedItem as TextItem).fill}
-            size={getTextSize(selectedItem as TextItem)}
-            align={(selectedItem as TextItem).align}
-            fontStyle={(selectedItem as TextItem).fontStyle ?? 'normal'}
-            textDecoration={(selectedItem as TextItem).textDecoration ?? 'none'}
-            onChangeFill={(color) => updateItem(selectedId!, { fill: color })}
-            onChangeSize={(size) => {
-              const preset = TEXT_SIZE_PRESETS[size];
-              updateItem(selectedId!, { fontSize: preset.fontSize });
-            }}
-            onChangeAlign={(align) => updateItem(selectedId!, { align })}
-            onChangeFontStyle={(fontStyle) =>
-              updateItem(selectedId!, { fontStyle })
-            }
-            onChangeTextDecoration={(textDecoration) =>
-              updateItem(selectedId!, { textDecoration })
-            }
-            onChangeTextFormat={(format) =>
-              updateItem(selectedId!, {
-                fontStyle: format.fontStyle,
-                textDecoration: format.textDecoration,
-              })
-            }
-            onChangeLayer={handleLayerChange}
-          />
-        )}
+                    // 두께가 0이었다면 2px로 업데이트
+                    strokeWidth: effectiveWidth,
 
-        {/* 도형 내부 텍스트 편집중일때 */}
-        {isEditingShapeText && editingItem && (
-          <TextPanel
-            fill={(editingItem as ShapeItem).textColor ?? '#000000'}
-            size={getTextSize({
-              fontSize: (editingItem as ShapeItem).fontSize,
-            } as TextItem)}
-            align={(editingItem as ShapeItem).textAlign ?? 'center'}
-            fontStyle={(editingItem as ShapeItem).fontStyle ?? 'normal'}
-            textDecoration={(editingItem as ShapeItem).textDecoration ?? 'none'}
-            onChangeFill={(color) =>
-              updateItem(editingTextId!, { textColor: color })
-            }
-            onChangeSize={(size) => {
-              const preset = TEXT_SIZE_PRESETS[size];
-              updateItem(editingTextId!, { fontSize: preset.fontSize });
-            }}
-            onChangeAlign={(align) =>
-              updateItem(editingTextId!, { textAlign: align })
-            }
-            onChangeFontStyle={(fontStyle) =>
-              updateItem(editingTextId!, { fontStyle })
-            }
-            onChangeTextDecoration={(textDecoration) =>
-              updateItem(editingTextId!, { textDecoration })
-            }
-            onChangeTextFormat={(format) =>
-              updateItem(editingTextId!, {
-                fontStyle: format.fontStyle,
-                textDecoration: format.textDecoration,
-              })
-            }
-            onChangeLayer={() => {
-              if (editingTextId) handleLayerChange;
-            }}
-          />
-        )}
+                    // 색상이 없었다면 기본 색상 검정으로 설정
+                    stroke: (selectedItem as ImageItem).stroke ?? '#000000',
+                  });
+                }}
+                onChangeEdgeType={(type) => {
+                  updateItem(selectedId!, {
+                    cornerRadius: type === 'round' ? 20 : 0,
+                  });
+                }}
+                onChangeOpacity={(opacity) => {
+                  updateItem(selectedId!, { opacity });
+                }}
+                onChangeLayer={handleLayerChange}
+              />
+            )}
 
-        {/* drawing */}
-        {(cursorMode === 'draw' || selectionType === 'drawing') && (
-          <DrawingPanel
-            stroke={
-              selectedItem && selectionType === 'drawing'
-                ? (selectedItem as DrawingItem).stroke
-                : drawingStroke
-            }
-            size={
-              selectedItem && selectionType === 'drawing'
-                ? getDrawingSize(selectedItem as DrawingItem)
-                : drawingSize
-            }
-            onChangeStroke={(color) => {
-              if (selectedItem && selectionType === 'drawing') {
-                updateItem(selectedId!, { stroke: color });
-              } else {
-                setDrawingStroke(color);
-              }
-            }}
-            onChangeSize={(size) => {
-              if (selectedItem && selectionType === 'drawing') {
-                const preset = DRAWING_SIZE_PRESETS[size];
-                updateItem(selectedId!, { strokeWidth: preset.strokeWidth });
-              } else {
-                setDrawingSize(size);
-              }
-            }}
-            onChangeLayer={selectedItem ? handleLayerChange : undefined}
-          />
-        )}
+            {/* text */}
+            {selectionType === 'text' && (
+              <TextPanel
+                fill={(selectedItem as TextItem).fill}
+                size={getTextSize(selectedItem as TextItem)}
+                align={(selectedItem as TextItem).align}
+                fontStyle={(selectedItem as TextItem).fontStyle ?? 'normal'}
+                textDecoration={
+                  (selectedItem as TextItem).textDecoration ?? 'none'
+                }
+                onChangeFill={(color) =>
+                  updateItem(selectedId!, { fill: color })
+                }
+                onChangeSize={(size) => {
+                  const preset = TEXT_SIZE_PRESETS[size];
+                  updateItem(selectedId!, { fontSize: preset.fontSize });
+                }}
+                onChangeAlign={(align) => updateItem(selectedId!, { align })}
+                onChangeFontStyle={(fontStyle) =>
+                  updateItem(selectedId!, { fontStyle })
+                }
+                onChangeTextDecoration={(textDecoration) =>
+                  updateItem(selectedId!, { textDecoration })
+                }
+                onChangeTextFormat={(format) =>
+                  updateItem(selectedId!, {
+                    fontStyle: format.fontStyle,
+                    textDecoration: format.textDecoration,
+                  })
+                }
+                onChangeLayer={handleLayerChange}
+              />
+            )}
 
-        {/* stack */}
-        {selectionType === 'stack' && (
-          <StackPanel
-            src={(selectedItem as StackItem).src}
-            stackName={(selectedItem as StackItem).stackName}
-            category={(selectedItem as StackItem).category}
-            opacity={(selectedItem as StackItem).opacity ?? 1}
-            onChangeOpacity={(opacity) => {
-              updateItem(selectedId!, { opacity });
-            }}
-            onChangeLayer={handleLayerChange}
-          />
-        )}
-      </div>
-    </aside>
+            {/* 도형 내부 텍스트 편집중일때 */}
+            {isEditingShapeText && editingItem && (
+              <TextPanel
+                fill={(editingItem as ShapeItem).textColor ?? '#000000'}
+                size={getTextSize({
+                  fontSize: (editingItem as ShapeItem).fontSize,
+                } as TextItem)}
+                align={(editingItem as ShapeItem).textAlign ?? 'center'}
+                fontStyle={(editingItem as ShapeItem).fontStyle ?? 'normal'}
+                textDecoration={
+                  (editingItem as ShapeItem).textDecoration ?? 'none'
+                }
+                onChangeFill={(color) =>
+                  updateItem(editingTextId!, { textColor: color })
+                }
+                onChangeSize={(size) => {
+                  const preset = TEXT_SIZE_PRESETS[size];
+                  updateItem(editingTextId!, { fontSize: preset.fontSize });
+                }}
+                onChangeAlign={(align) =>
+                  updateItem(editingTextId!, { textAlign: align })
+                }
+                onChangeFontStyle={(fontStyle) =>
+                  updateItem(editingTextId!, { fontStyle })
+                }
+                onChangeTextDecoration={(textDecoration) =>
+                  updateItem(editingTextId!, { textDecoration })
+                }
+                onChangeTextFormat={(format) =>
+                  updateItem(editingTextId!, {
+                    fontStyle: format.fontStyle,
+                    textDecoration: format.textDecoration,
+                  })
+                }
+                onChangeLayer={handleLayerChange}
+              />
+            )}
+
+            {/* drawing */}
+            {(cursorMode === 'draw' || selectionType === 'drawing') && (
+              <DrawingPanel
+                stroke={
+                  selectedItem && selectionType === 'drawing'
+                    ? (selectedItem as DrawingItem).stroke
+                    : drawingStroke
+                }
+                size={
+                  selectedItem && selectionType === 'drawing'
+                    ? getDrawingSize(selectedItem as DrawingItem)
+                    : drawingSize
+                }
+                onChangeStroke={(color) => {
+                  if (selectedItem && selectionType === 'drawing') {
+                    updateItem(selectedId!, { stroke: color });
+                  } else {
+                    setDrawingStroke(color);
+                  }
+                }}
+                onChangeSize={(size) => {
+                  if (selectedItem && selectionType === 'drawing') {
+                    const preset = DRAWING_SIZE_PRESETS[size];
+                    updateItem(selectedId!, {
+                      strokeWidth: preset.strokeWidth,
+                    });
+                  } else {
+                    setDrawingSize(size);
+                  }
+                }}
+                onChangeLayer={selectedItem ? handleLayerChange : undefined}
+              />
+            )}
+
+            {/* stack */}
+            {selectionType === 'stack' && (
+              <StackPanel
+                src={(selectedItem as StackItem).src}
+                stackName={(selectedItem as StackItem).stackName}
+                category={(selectedItem as StackItem).category}
+                opacity={(selectedItem as StackItem).opacity ?? 1}
+                onChangeOpacity={(opacity) => {
+                  updateItem(selectedId!, { opacity });
+                }}
+                onChangeLayer={handleLayerChange}
+              />
+            )}
+          </div>
+        </aside>
+      )}
+    </>
   );
 }

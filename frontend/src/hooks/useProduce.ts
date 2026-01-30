@@ -53,6 +53,13 @@ export const useProduce = () => {
         stopNoiseSuppressor();
       });
     } catch (error) {
+      if (
+        error instanceof Error &&
+        (error.name === 'NotAllowedError' ||
+          error.name === 'PermissionDeniedError')
+      ) {
+        throw new Error('PERMISSION_DENIED');
+      }
       console.error('마이크 시작 실패:', error);
       stopNoiseSuppressor();
     } finally {
@@ -96,6 +103,13 @@ export const useProduce = () => {
         stopVideoProduce();
       });
     } catch (error) {
+      if (
+        error instanceof Error &&
+        (error.name === 'NotAllowedError' ||
+          error.name === 'PermissionDeniedError')
+      ) {
+        throw new Error('PERMISSION_DENIED');
+      }
       console.error('카메라 시작 실패:', error);
     } finally {
       setIsProducing('video', false);

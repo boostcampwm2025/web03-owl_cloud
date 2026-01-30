@@ -11,7 +11,8 @@ export function ChatListItem({
   profileImg,
   createdAt,
   content,
-}: ChatMessage) {
+  onImageLoad,
+}: ChatMessage & { onImageLoad?: () => void }) {
   const socket = useMeetingSocketStore((s) => s.socket);
   const { downloadFile, downloadingId } = useFileDownload(socket);
 
@@ -62,11 +63,12 @@ export function ChatListItem({
         {isFile && content.category === 'image' && (
           <span className="group relative rounded-sm bg-neutral-600 p-2">
             <Image
-              width={200}
-              height={200}
-              className="w-auto object-cover"
+              width={400}
+              height={300}
+              className="h-auto w-full object-contain"
               src={content.fileUrl as string}
               alt={content.filename}
+              onLoad={onImageLoad}
             />
 
             <button

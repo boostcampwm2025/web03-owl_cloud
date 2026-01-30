@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import Konva from 'konva';
 import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 import { useItemActions } from '@/hooks/useItemActions';
-import { getWorldPointerPosition } from '@/utils/coordinate';
 
 export function useDrawing() {
   const currentDrawing = useWhiteboardLocalStore(
@@ -18,7 +17,10 @@ export function useDrawing() {
   const [isDrawing, setIsDrawing] = useState(false);
   const stageRef = useRef<Konva.Stage | null>(null);
 
-  const handleDrawingMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  const handleDrawingStart = (
+    e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
+    point: { x: number; y: number },
+  ) => {
     // 기존 아이템 클릭 시 그리기 시작 안 함
     const clickedOnEmpty =
       e.target === e.target.getStage() || e.target.hasName('bg-rect');
@@ -28,12 +30,11 @@ export function useDrawing() {
     if (!stage) return;
 
     stageRef.current = stage;
-    const pos = getWorldPointerPosition(stage);
     setIsDrawing(true);
-    startDrawing(pos.x, pos.y);
+    startDrawing(point.x, point.y);
   };
 
-  // window 레벨에서 마우스 이벤트 처리 (Stage 밖에서도 그리기 유지)
+  // window 레벨에서 마우스/터치 이벤트 처리 (Stage 밖에서도 그리기 유지)
   useEffect(() => {
     if (!isDrawing || !stageRef.current) return;
 
@@ -51,7 +52,18 @@ export function useDrawing() {
       continueDrawing(x, y);
     };
 
-    const handleGlobalMouseUp = () => {
+    const handleGlobalTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 0) return;
+      const touch = e.touches[0];
+      const screenX = touch.clientX - rect.left;
+      const screenY = touch.clientY - rect.top;
+      const x = (screenX - stage.x()) / stage.scaleX();
+      const y = (screenY - stage.y()) / stage.scaleY();
+
+      continueDrawing(x, y);
+    };
+
+    const handleGlobalEnd = () => {
       setIsDrawing(false);
 
       // 그리기 완료 시 아이템 추가
@@ -65,16 +77,22 @@ export function useDrawing() {
     };
 
     window.addEventListener('mousemove', handleGlobalMouseMove);
-    window.addEventListener('mouseup', handleGlobalMouseUp);
+    window.addEventListener('mouseup', handleGlobalEnd);
+    window.addEventListener('touchmove', handleGlobalTouchMove, {
+      passive: false,
+    });
+    window.addEventListener('touchend', handleGlobalEnd);
 
     return () => {
       window.removeEventListener('mousemove', handleGlobalMouseMove);
-      window.removeEventListener('mouseup', handleGlobalMouseUp);
+      window.removeEventListener('mouseup', handleGlobalEnd);
+      window.removeEventListener('touchmove', handleGlobalTouchMove);
+      window.removeEventListener('touchend', handleGlobalEnd);
     };
   }, [isDrawing, continueDrawing, finishDrawing, addDrawing]);
 
   return {
-    handleDrawingMouseDown,
+    handleDrawingStart,
     currentDrawing,
   };
 }

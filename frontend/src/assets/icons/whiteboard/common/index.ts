@@ -1,6 +1,9 @@
 // common icons
 export { default as BgColorIcon } from '@/assets/icons/whiteboard/common/bgColorIcon.svg';
 
+export { default as ChevronLeftPipeIcon } from '@/assets/icons/whiteboard/common/chevronLeftPipe.svg';
+export { default as ChevronRightPipeIcon } from '@/assets/icons/whiteboard/common/chevronRightPipe.svg';
+
 export { default as lineDashIcon } from '@/assets/icons/whiteboard/common/lineDashed.svg';
 export { default as lineDottedIcon } from '@/assets/icons/whiteboard/common/lineDotted.svg';
 export { default as lineSolidIcon } from '@/assets/icons/whiteboard/common/lineSolid.svg';

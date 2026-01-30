@@ -14,50 +14,32 @@ export const useWhiteboardSocket = () => {
   const { setWhiteboardSocket } = useToolSocketStore();
   const { setIsOpen } = useMeetingStore();
 
-  // 연결 함수
   const connectWhiteboard = useCallback(
-    (ticket: string, type: 'main' | 'sub') => {
-      // 이미 연결된 상태면 중복 연결 방지
+    (tool: string, ticket: string, type: 'main' | 'sub') => {
       const currentSocket = useToolSocketStore.getState().whiteboardSocket;
       if (currentSocket?.connected) return;
 
       const meetingId = useMeetingStore.getState().meetingInfo.meetingId;
-      // 소켓 인스턴스 생성 및 연결 시도
       const newSocket: Socket = io(`${TOOL_BACKEND_URL}${NAMESPACE}`, {
         path: SOCKET_PATH,
         transports: ['websocket'],
-        auth: {
-          token: ticket,
-          type: type,
-        },
-        query: { room_code : meetingId }
+        auth: { token: ticket, type: type },
+        query: { room_code: meetingId },
       });
 
-      // 이벤트 리스너 설정
-      // 연결 성공 시
       newSocket.on('connect', () => {
-        // 스토어에 소켓 저장(다른 컴포넌트에서도 써야함)
-        setWhiteboardSocket(newSocket);
-
-        // 워크스페이스 열기
-        setIsOpen('isWhiteboardOpen', true);
-      });
-
-      // 연결 실패 시
-      newSocket.on('connect_error', (err) => {
-        console.error('Whiteboard 연결 실패 : ', err.message);
+        if (tool === 'whiteboard') {
+          setWhiteboardSocket(newSocket);
+          setIsOpen('isWhiteboardOpen', true);
+        }
       });
 
       // 연결 해제 시
-      newSocket.on('disconnect', (reason) => {
-        console.log('Whiteboard 연결 끊김 : ', reason);
-        setWhiteboardSocket(null);
+      newSocket.on('disconnect', () => {
+        if (tool === 'whiteboard') setWhiteboardSocket(null);
       });
 
-      // 백엔드에서 보내주는 권한 확인 메시지
-      newSocket.on('whiteboard:permission', (data) => {
-        console.log('Whiteboard 권한 확인:', data);
-      });
+      return newSocket;
     },
     [setWhiteboardSocket, setIsOpen],
   );
@@ -69,8 +51,8 @@ export const useWhiteboardSocket = () => {
     mainSocket.emit(
       'signaling:ws:open_whiteboard',
       (response: { ticket: string; tool: string }) => {
-        const { ticket } = response;
-        connectWhiteboard(ticket, 'main');
+        const { ticket, tool } = response;
+        connectWhiteboard(tool, ticket, 'main');
       },
     );
   }, [mainSocket, connectWhiteboard]);
@@ -85,7 +67,7 @@ export const useWhiteboardSocket = () => {
         { tool },
         (response: { ticket: string }) => {
           if (response?.ticket) {
-            connectWhiteboard(response.ticket, 'sub');
+            connectWhiteboard(tool, response.ticket, 'sub');
           }
         },
       );
@@ -93,24 +75,25 @@ export const useWhiteboardSocket = () => {
     [mainSocket, connectWhiteboard],
   );
 
-  // 연결 해제
-  const closeWhiteboard = useCallback(() => {
+  const closeWhiteboard = () => {
     if (!mainSocket) return;
 
     mainSocket.emit('signaling:ws:disconnect_tool', { tool: 'whiteboard' });
 
-    // 현재 소켓 가져오기
     const { whiteboardSocket } = useToolSocketStore.getState();
 
     if (whiteboardSocket) {
+<<<<<<< HEAD
       // 소켓 연결 해제
       whiteboardSocket.emit("whiteboard:disconnect");
       // 스토어 비우기
+=======
+      whiteboardSocket.emit('whiteboard:disconnect');
+
+>>>>>>> upstream/dev
       setWhiteboardSocket(null);
     }
-
-    setIsOpen('isWhiteboardOpen', false);
-  }, [mainSocket, setWhiteboardSocket, setIsOpen]);
+  };
 
   return { openWhiteboard, joinWhiteboard, closeWhiteboard };
 };

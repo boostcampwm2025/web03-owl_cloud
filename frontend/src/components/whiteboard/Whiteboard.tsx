@@ -7,7 +7,6 @@ import { useWhiteboardYjs } from '@/hooks/useWhiteboardYjs';
 import { useToolSocketStore } from '@/store/useToolSocketStore';
 
 import HistoryControl from '@/components/whiteboard/controls/HistoryControl';
-import OverlayControl from '@/components/whiteboard/controls/OverlayControl';
 import ZoomControls from '@/components/whiteboard/controls/ZoomControl';
 import Sidebar from '@/components/whiteboard/sidebar/Sidebar';
 import ToolbarContainer from '@/components/whiteboard/toolbar/ToolbarContainer';
@@ -31,7 +30,6 @@ function Whiteboard() {
       <Sidebar />
       <HistoryControl />
       <ZoomControls />
-      <OverlayControl />
       <Canvas />
       <RemoteCursors />
     </div>

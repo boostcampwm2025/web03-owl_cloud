@@ -55,6 +55,7 @@ export default function DrawingItem({
       lineJoin="round"
       strokeScaleEnabled={true}
       onMouseDown={() => isInteractive && onSelect()}
+      onTouchStart={() => isInteractive && onSelect()}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onDragStart={() => {

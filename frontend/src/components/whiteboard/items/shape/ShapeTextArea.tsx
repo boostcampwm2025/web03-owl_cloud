@@ -245,7 +245,7 @@ export default function ShapeTextArea({
 
   // 외부 클릭 시 텍스트 편집 종료하고 최종 크기/위치 반영
   useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent) => {
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
       const target = e.target as HTMLElement;
       // 사이드바 클릭은 무시 (편집 유지)
       if (target.closest('aside')) return;
@@ -290,9 +290,11 @@ export default function ShapeTextArea({
     };
 
     window.addEventListener('mousedown', handleOutsideClick);
+    window.addEventListener('touchstart', handleOutsideClick);
 
     return () => {
       window.removeEventListener('mousedown', handleOutsideClick);
+      window.removeEventListener('touchstart', handleOutsideClick);
     };
   }, [onChange, onClose, onSizeChange, shapeId, shapeItem, stageRef]);
 

@@ -21,10 +21,11 @@ import { useCodeEditorSocket } from '@/hooks/useCodeEditorSocket';
 import { useProduce } from '@/hooks/useProduce';
 import { useMeetingStore } from '@/store/useMeetingStore';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useWhiteboardSocket } from '@/hooks/useWhiteboardSocket';
 import { useWindowSize } from '@/hooks/useWindowSize';
 import { useChatStore } from '@/store/useChatStore';
+import { useClickOutside } from '@/hooks/useClickOutside';
 
 export default function MeetingMenu() {
   const { width } = useWindowSize();
@@ -73,7 +74,17 @@ export default function MeetingMenu() {
     if (audioOn) {
       stopAudioProduce();
     } else {
-      await startAudioProduce();
+      try {
+        await startAudioProduce();
+      } catch (error) {
+        if (error instanceof Error && error.message === 'PERMISSION_DENIED') {
+          setError({
+            title: '마이크 권한 필요',
+            message:
+              '브라우저 설정에서 마이크 권한을 허용해 주세요.\n(주소창 왼쪽 자물쇠 아이콘 클릭)',
+          });
+        }
+      }
     }
   };
 
@@ -82,7 +93,17 @@ export default function MeetingMenu() {
     if (videoOn) {
       stopVideoProduce();
     } else {
-      await startVideoProduce();
+      try {
+        await startVideoProduce();
+      } catch (error) {
+        if (error instanceof Error && error.message === 'PERMISSION_DENIED') {
+          setError({
+            title: '카메라 권한 필요',
+            message:
+              '브라우저 설정에서 카메라 권한을 허용해 주세요.\n(주소창 왼쪽 자물쇠 아이콘 클릭)',
+          });
+        }
+      }
     }
   };
 
@@ -135,7 +156,13 @@ export default function MeetingMenu() {
 
     if (isWhiteboardOpen) {
       // 이미 열려있으면 -> 연결 끊고 닫기
-      closeWhiteboard();
+      setIsExitModalOpen({
+        title: '화이트보드 종료',
+        message:
+          '화이트보드를 종료할까요?\n다른 사용자의 화이트보드도 함께 종료돼요.',
+        confirmText: '종료',
+        onConfirm: closeWhiteboard,
+      });
     } else {
       // 닫혀있으면 -> 연결 시도
       openWhiteboard();
@@ -157,7 +184,13 @@ export default function MeetingMenu() {
     if (isCodeEditorOpening) return;
 
     if (isCodeEditorOpen) {
-      closeCodeEditor();
+      setIsExitModalOpen({
+        title: '코드 에디터 종료',
+        message:
+          '코드 에디터를 종료할까요?\n다른 사용자의 코드 에디터도 함께 종료돼요.',
+        confirmText: '종료',
+        onConfirm: closeCodeEditor,
+      });
     } else {
       openCodeEditor();
     }
@@ -171,8 +204,12 @@ export default function MeetingMenu() {
   };
 
   const router = useRouter();
-  const [isExitModalOpen, setIsExitModalOpen] = useState(false);
-  const toggleExitModal = () => setIsExitModalOpen((prev) => !prev);
+  const [isExitModalOpen, setIsExitModalOpen] = useState<{
+    title: string;
+    message: string;
+    confirmText: string;
+    onConfirm: () => void;
+  } | null>(null);
   const onExit = () => {
     useChatStore.getState().reset();
     router.replace('/');
@@ -233,6 +270,13 @@ export default function MeetingMenu() {
     },
   ];
 
+  const moreMenuBtnRef = useRef<HTMLDivElement>(null);
+  useClickOutside(
+    moreMenuBtnRef,
+    () => setIsMoreMenuOpen(false),
+    isMoreMenuOpen,
+  );
+
   return (
     <nav className="flex w-full justify-between px-4 py-2">
       {/* 미디어 관련 메뉴 */}
@@ -287,7 +331,7 @@ export default function MeetingMenu() {
         className={`flex w-full gap-2 ${width <= BREAK_POINT ? 'max-w-44' : 'max-w-22'}`}
       >
         {width <= BREAK_POINT && (
-          <div className="relative w-full">
+          <div ref={moreMenuBtnRef} className="relative w-full">
             <MeetingButton
               icon={<MoreMenuIcon className="h-8 w-8" />}
               text="더보기"
@@ -312,19 +356,29 @@ export default function MeetingMenu() {
         <MeetingButton
           icon={<ExitMeetingIcon className="h-8 w-8" />}
           text="나가기"
-          onClick={toggleExitModal}
+          onClick={() =>
+            setIsExitModalOpen({
+              title: '회의 나가기',
+              message: '회의를 나갈까요?',
+              confirmText: '나가기',
+              onConfirm: onExit,
+            })
+          }
         />
       </section>
       {isExitModalOpen && (
         <Modal
-          title="회의 나가기"
+          title={isExitModalOpen.title}
           cancelText="취소"
-          onCancel={toggleExitModal}
-          confirmText="나가기"
-          onConfirm={onExit}
+          onCancel={() => setIsExitModalOpen(null)}
+          confirmText={isExitModalOpen.confirmText}
+          onConfirm={() => {
+            isExitModalOpen.onConfirm();
+            setIsExitModalOpen(null);
+          }}
           isWarning
         >
-          회의를 나갈까요?
+          {isExitModalOpen.message}
         </Modal>
       )}
 

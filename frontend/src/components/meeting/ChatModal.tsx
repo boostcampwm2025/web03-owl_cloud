@@ -26,12 +26,14 @@ export default function ChatModal() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isFirstRender = useRef(true);
 
   const { setIsOpen } = useMeetingStore();
 
   const [hasValue, setHasValue] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [showSizeError, setShowSizeError] = useState(false);
+  const [showScrollBtn, setScrollBtn] = useState<boolean>(false);
 
   const { userId, nickname, profilePath } = useUserStore();
   const messages = useChatStore((s) => s.messages);
@@ -45,6 +47,26 @@ export default function ChatModal() {
   });
 
   const { uploadFile, uploading, percent } = useFileUpload(socket);
+
+  const checkIsNearBottom = () => {
+    const container = scrollRef.current;
+    if (!container) return false;
+
+    const threshold = 150;
+    return (
+      container.scrollHeight - container.scrollTop - container.clientHeight <
+      threshold
+    );
+  };
+
+  // 사용자가 직접 스크롤할 때 호출되는 함수
+  const handleScroll = () => {
+    if (!showScrollBtn) return;
+
+    if (checkIsNearBottom()) {
+      if (showScrollBtn) setScrollBtn(false);
+    }
+  };
 
   // 파일 선택 핸들러
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,11 +113,38 @@ export default function ChatModal() {
 
   const onCloseClick = () => setIsOpen('isChatOpen', false);
 
+  // 메시지 수신 시 스크롤 처리
   useEffect(() => {
-    if (scrollRef.current) {
+    if (!scrollRef.current || messages.length === 0) return;
+
+    if (isFirstRender.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      isFirstRender.current = false;
+      return;
     }
-  }, [messages]);
+
+    const lastMessage = messages[messages.length - 1];
+    const isMyMessage = lastMessage.userId === userId;
+
+    const threshold = 150;
+    const isNearBottom =
+      scrollRef.current.scrollHeight -
+        scrollRef.current.scrollTop -
+        scrollRef.current.clientHeight <
+      threshold;
+
+    if (isMyMessage || isNearBottom) {
+      // 스크롤 이동 -> DOM 직접 조작은 cascading render를 유발하지 않음
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: isMyMessage ? 'auto' : 'smooth',
+      });
+      if (showScrollBtn) setScrollBtn(false);
+    } else {
+      setScrollBtn(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, userId]);
 
   // 이후 form 관련 라이브러리 사용 시 수정 필요
   const onSubmit = async (e: React.FormEvent) => {
@@ -124,10 +173,7 @@ export default function ChatModal() {
           if (res) {
             // 서버 응답 데이터를 채팅 메시지 객체로 변환
             const newMessage = mapRecvPayloadToChatMessage(res);
-
-            useChatStore.setState((state) => ({
-              messages: [...state.messages, newMessage],
-            }));
+            useChatStore.getState().addMessage(newMessage);
 
             setPendingFiles((prev) => prev.filter((f) => f.id !== item.id));
           }
@@ -188,11 +234,34 @@ export default function ChatModal() {
       {/* 채팅 내역 */}
       <section
         ref={scrollRef}
+        onScroll={handleScroll}
         className="chat-scrollbar flex-1 overflow-y-auto scroll-smooth"
       >
         {messages.map((chat) => (
-          <ChatListItem key={chat.id} {...chat} />
+          <ChatListItem
+            key={chat.id}
+            {...chat}
+            onImageLoad={() => {
+              if (!checkIsNearBottom()) return;
+              scrollRef.current?.scrollTo({
+                top: scrollRef.current.scrollHeight,
+                behavior: 'smooth',
+              });
+            }}
+          />
         ))}
+
+        {showScrollBtn && (
+          <button
+            onClick={() => {
+              scrollRef.current!.scrollTop = scrollRef.current!.scrollHeight;
+              setScrollBtn(false);
+            }}
+            className="absolute bottom-30 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-2 text-xs text-white shadow-lg"
+          >
+            새 메시지 보기 ↓
+          </button>
+        )}
       </section>
 
       {/* 채팅 입력 부분 */}

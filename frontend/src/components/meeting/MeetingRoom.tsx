@@ -310,7 +310,7 @@ export default function MeetingRoom() {
   }, [socket, device, recvTransport]);
 
   return (
-    <main className="flex h-screen w-full flex-col overflow-hidden bg-neutral-900">
+    <main className="flex h-dvh w-full flex-col overflow-hidden bg-neutral-900">
       <GlobalAudioPlayer />
 
       <MemberVideoBar />

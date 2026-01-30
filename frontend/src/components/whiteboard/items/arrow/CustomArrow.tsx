@@ -115,6 +115,10 @@ export default function CustomArrow({
         if (!isInteractive) return;
         onArrowDblClick?.(item.id);
       }}
+      onDblTap={() => {
+        if (!isInteractive) return;
+        onArrowDblClick?.(item.id);
+      }}
       onDragStart={() => {
         if (!isInteractive) return;
         setIsDragging(true);

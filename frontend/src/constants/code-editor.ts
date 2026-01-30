@@ -10,6 +10,7 @@ export const LANGUAGE_OPTIONS = [
   // Backend
   { label: 'Python', value: 'python' },
   { label: 'Java', value: 'java' },
+  { label: 'Kotlin', value: 'kotlin' },
   { label: 'Go', value: 'go' },
   { label: 'PHP', value: 'php' },
 

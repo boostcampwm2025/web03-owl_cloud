@@ -215,6 +215,7 @@ export default function ShapeItem({
     onMouseDown: onSelect,
     onTouchStart: onSelect,
     onDblClick: onDblClick,
+    onDblTap: onDblClick,
     onMouseEnter: onMouseEnter,
     onMouseLeave: onMouseLeave,
   };

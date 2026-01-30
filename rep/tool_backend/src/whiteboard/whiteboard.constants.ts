@@ -11,7 +11,7 @@ export const WHITEBOARD_EVENT_NAME = Object.freeze({
   DELETE_ELEMENT: 'whiteboard:element:delete',
   CHANGE_LAYER: 'whiteboard:element:layer',
   CURSOR_MOVE: 'whiteboard:cursor:move',
-  DISCONNECT_WHITEBOARD : "whiteboard:disconnect"
+  DISCONNECT_WHITEBOARD: 'whiteboard:disconnect',
 } as const);
 
 // [Server -> Client] : 서버가 보내는 이벤트

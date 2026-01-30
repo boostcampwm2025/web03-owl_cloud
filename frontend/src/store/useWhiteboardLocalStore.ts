@@ -25,6 +25,7 @@ interface LocalState {
   drawingStroke: string;
   drawingSize: DrawingSize;
   awarenessCallback: ((selectedId: string | null) => void) | null;
+  cursorCallback: ((cursor: { x: number; y: number } | null) => void) | null;
   stageRef: React.RefObject<Konva.Stage | null> | null;
 }
 
@@ -43,6 +44,9 @@ interface LocalActions {
   setAwarenessCallback: (
     callback: ((selectedId: string | null) => void) | null,
   ) => void;
+  setCursorCallback: (
+    callback: ((cursor: { x: number; y: number } | null) => void) | null,
+  ) => void;
   setStageRef: (ref: React.RefObject<Konva.Stage | null>) => void;
 }
 
@@ -53,6 +57,7 @@ export const useWhiteboardLocalStore = create<LocalStore>((set, get) => ({
   // Select 초기값
   selectedId: null,
   awarenessCallback: null,
+  cursorCallback: null,
   selectItem: (id) => {
     set({ selectedId: id });
     // Awareness 업데이트
@@ -62,6 +67,7 @@ export const useWhiteboardLocalStore = create<LocalStore>((set, get) => ({
     }
   },
   setAwarenessCallback: (callback) => set({ awarenessCallback: callback }),
+  setCursorCallback: (callback) => set({ cursorCallback: callback }),
 
   // Text Editing 초기값
   editingTextId: null,
