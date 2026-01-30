@@ -83,6 +83,10 @@ export class WhiteboardWebsocketGateway
   // 시점: afterInit의 미들웨어(next())가 성공적으로 호출된 직후 실행
   // 역할: 소켓을 특정 그룹(Room)에 넣고 필요한 초기 설정과 로그 작성
   async handleConnection(client: Socket) {
+    const ns : string = client.nsp.name; // 여기서는 /signal이 될 예정이다.
+    this.prom.wsConnectionsCurrent.labels(ns).inc();
+    this.prom.wsConnectionsTotal.labels(ns).inc();
+
     const payload: ToolBackendPayload = client.data.payload;
     if (!payload) {
       client.disconnect(true);
