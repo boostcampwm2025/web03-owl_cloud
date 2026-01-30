@@ -20,5 +20,5 @@ services:
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
     volumes:
       - ./redis/data:/data
-      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro # redis에 설정 파일이 들어갈 예정i
+      - ./redis/reds.conf:/usr/local/etc/redis/redis.conf:ro # redis에 설정 파일이 들어갈 예정i
     restart: unless-stopped

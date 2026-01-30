@@ -26,8 +26,3 @@ data:
   # S3
   NODE_APP_AWS_BUCKET_NAME: "owl-cloud-deploy-disk"
   NODE_APP_AWS_REGION_NAME: "ap-northeast-2"
-
-  # prometheus 태그
-  NODE_APP_PROMETHEUS_DEFAULT_PREFIX: "main_backend_"
-  NODE_APP_PROMETHEUS_SERVICE_LABEL: "main-backend"
-  NODE_APP_PROMETHEUS_SERVICE_ENV: "deploy"

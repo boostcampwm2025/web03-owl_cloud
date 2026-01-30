@@ -27,6 +27,7 @@ export class WhiteboardWebsocket {
   // socket을 모두 disconnect 하려면 socket_id가 필요하다.
   async disconnectWhiteboardRoom(room_id: string) {
     const room = `${WHITEBOARD_GROUP.WHITEBOARD}:${room_id}`;
+
     this.server.in(room).disconnectSockets(true);
   }
 }

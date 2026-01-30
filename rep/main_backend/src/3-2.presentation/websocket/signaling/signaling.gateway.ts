@@ -1,5 +1,5 @@
 // 시그널링 서버의 역할이라고 할 수 있을 것 같다.
-import { Inject, Logger, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Inject, Logger, UsePipes, ValidationPipe } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -49,11 +49,7 @@ import { CHANNEL_NAMESPACE } from '@infra/channel/channel.constants';
 import { GetRoomMembersResult } from '@app/room/queries/dto';
 import { SIGNALING_WEBSOCKET } from '@infra/websocket/websocket.constants';
 import { SignalingWebsocket } from '@infra/websocket/signaling/signaling.service';
-import { PrometheusService } from '@infra/metric/prometheus/prometheus.service';
-import { WsMetricsInterceptor } from '@infra/metric/prometheus/prometheus.intercepter';
 
-
-@UseInterceptors(WsMetricsInterceptor) // SubscribeMessage로 들어오는 이벤트를 처리한다.
 @WebSocketGateway({
   namespace: WEBSOCKET_NAMESPACE.SIGNALING,
   path: WEBSOCKET_PATH, // http 핸드세이킹이 있을때 붙게 되는
@@ -78,7 +74,6 @@ export class SignalingWebsocketGateway
     private readonly jwtGuard: JwtWsGuard,
     private readonly signalingService: SignalingWebsocketService,
     @Inject(SIGNALING_WEBSOCKET) private readonly signalingSocket: SignalingWebsocket,
-    private readonly prom : PrometheusService, // 프로메테우스 관련 
   ) {}
 
   // onGatewayInit으로 websocket 연결됐을때 사용할 함수
@@ -111,21 +106,12 @@ export class SignalingWebsocketGateway
 
   // 연결하자 마자 바로 해야 하는 하는 것 정의 가능 -> access_token을 보내준다.
   async handleConnection(client: Socket) {
-    const ns : string = client.nsp.name; // 여기서는 /signal이 될 예정이다.
-    this.prom.wsConnectionsCurrent.labels(ns).inc();
-    this.prom.wsConnectionsTotal.labels(ns).inc();
-
     const access_token: string = client.data.user.access_token;
     if (access_token) client.emit(WEBSOCKET_AUTH_CLIENT_EVENT_NAME.ACCESS_TOKEN, { access_token });
   }
 
   // 연결이 끊긴다면 -> 이때 방에 전달하는 무언가가 필요하다.
   async handleDisconnect(client: Socket) {
-    // 연결과 관련된 요청
-    const ns = client.nsp.name;
-    this.prom.wsConnectionsCurrent.labels(ns).dec();
-    this.prom.wsDisconnectsTotal.labels(ns).inc(); // 나중에는 구체적인 이유도 같이 적어주면 좋다.
-
     const user = client.data.user;
     const room_id = client.data.room_id;
 
