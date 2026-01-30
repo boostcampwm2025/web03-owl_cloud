@@ -200,7 +200,7 @@ export default function Sidebar() {
       </div>
 
       {/* 패널 영역 */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-1 pr-2">
+      <div className="default-scrollbar min-h-0 flex-1 overflow-y-auto px-1 pr-2">
         {/* shape */}
         {selectionType === 'shape' && !isEditingShapeText && (
           <ShapePanel
