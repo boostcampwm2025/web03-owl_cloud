@@ -60,7 +60,8 @@ export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // 스토어에서 선택된 아이템 정보 가져오기
-  const selectedId = useWhiteboardLocalStore((state) => state.selectedId);
+  const selectedIds = useWhiteboardLocalStore((state) => state.selectedIds);
+  const selectedId = selectedIds[0] ?? null;
   const editingTextId = useWhiteboardLocalStore((state) => state.editingTextId);
   const { updateItem, bringToFront, sendToBack, bringForward, sendBackward } =
     useItemActions();

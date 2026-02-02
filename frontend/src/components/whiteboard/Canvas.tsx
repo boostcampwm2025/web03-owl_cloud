@@ -46,9 +46,12 @@ export default function Canvas() {
   const canvasWidth = useWhiteboardSharedStore((state) => state.canvasWidth);
   const canvasHeight = useWhiteboardSharedStore((state) => state.canvasHeight);
   const items = useWhiteboardSharedStore((state) => state.items);
-  const selectedId = useWhiteboardLocalStore((state) => state.selectedId);
+  const selectedIds = useWhiteboardLocalStore((state) => state.selectedIds);
   const editingTextId = useWhiteboardLocalStore((state) => state.editingTextId);
-  const selectItem = useWhiteboardLocalStore((state) => state.selectItem);
+  const selectOnly = useWhiteboardLocalStore((state) => state.selectOnly);
+  const clearSelection = useWhiteboardLocalStore(
+    (state) => state.clearSelection,
+  );
   const { updateItem, performTransaction } = useItemActions();
   const setEditingTextId = useWhiteboardLocalStore(
     (state) => state.setEditingTextId,
@@ -242,8 +245,8 @@ export default function Canvas() {
   );
 
   const selectedItem = useMemo(
-    () => items.find((item) => item.id === selectedId),
-    [items, selectedId],
+    () => items.find((item) => item.id === selectedIds[0]),
+    [items, selectedIds],
   );
 
   const isArrowOrLineSelected =
@@ -284,7 +287,7 @@ export default function Canvas() {
       e.target === e.target.getStage() || e.target.hasName('bg-rect');
 
     if (clickedOnEmpty) {
-      selectItem(null);
+      clearSelection();
       setSelectedHandleIndex(null);
     }
   };
@@ -299,12 +302,12 @@ export default function Canvas() {
         return;
       }
 
-      if (selectedId) {
-        selectItem(null);
+      if (selectedIds.length > 0) {
+        clearSelection();
         setSelectedHandleIndex(null);
       }
     },
-    !editingTextId && !!selectedId,
+    !editingTextId && selectedIds.length > 0,
   );
 
   const { startSelection } = useSelectionBox({
@@ -489,7 +492,7 @@ export default function Canvas() {
 
               // 핸들 드래그 중인 화살표
               if (
-                displayItem.id === selectedId &&
+                displayItem.id === selectedIds[0] &&
                 (displayItem.type === 'arrow' || displayItem.type === 'line') &&
                 draggingPoints &&
                 Array.isArray(draggingPoints)
@@ -504,8 +507,8 @@ export default function Canvas() {
                 <RenderItem
                   key={item.id}
                   item={displayItem}
-                  isSelected={item.id === selectedId}
-                  onSelect={selectItem}
+                  isSelected={item.id === selectedIds[0]}
+                  onSelect={selectOnly}
                   onChange={(newAttributes) =>
                     handleItemChange(item.id, newAttributes)
                   }
@@ -583,14 +586,14 @@ export default function Canvas() {
           {/* 다른 사용자의 선택 표시 */}
           <RemoteSelectionLayer
             myUserId={myUserId}
-            selectedId={selectedId}
+            selectedId={selectedIds[0] ?? null}
             items={items}
             stageRef={stageRef}
           />
 
           {/* 내 Transformer */}
           <ItemTransformer
-            selectedId={selectedId}
+            selectedId={selectedIds[0] ?? null}
             items={items}
             stageRef={stageRef}
           />
@@ -609,7 +612,7 @@ export default function Canvas() {
             }}
             onClose={() => {
               setEditingTextId(null);
-              selectItem(null);
+              clearSelection();
             }}
           />
         </Portal>
@@ -627,7 +630,7 @@ export default function Canvas() {
             }}
             onClose={() => {
               setEditingTextId(null);
-              selectItem(null);
+              clearSelection();
             }}
             onSizeChange={(width, height, newY, newX, newText) => {
               const updates: Partial<ShapeItem> = { width, height };

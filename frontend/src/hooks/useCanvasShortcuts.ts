@@ -15,7 +15,8 @@ export const useCanvasShortcuts = ({
   selectedHandleIndex,
   deleteControlPoint,
 }: UseCanvasShortcutsProps) => {
-  const selectedId = useWhiteboardLocalStore((state) => state.selectedId);
+  const selectedIds = useWhiteboardLocalStore((state) => state.selectedIds);
+  const selectedId = selectedIds[0] ?? null;
   const editingTextId = useWhiteboardLocalStore((state) => state.editingTextId);
   const cursorMode = useWhiteboardLocalStore((state) => state.cursorMode);
   const setCursorMode = useWhiteboardLocalStore((state) => state.setCursorMode);

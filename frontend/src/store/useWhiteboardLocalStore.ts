@@ -14,7 +14,7 @@ import {
 import type { CursorMode, DrawingItem } from '@/types/whiteboard';
 
 interface LocalState {
-  selectedId: string | null;
+  selectedIds: string[];
   editingTextId: string | null;
   cursorMode: CursorMode;
   stageScale: number;
@@ -37,7 +37,12 @@ interface LocalState {
 }
 
 interface LocalActions {
-  selectItem: (id: string | null) => void;
+  selectOnly: (id: string) => void;
+  selectMultiple: (ids: string[]) => void;
+  toggleSelection: (id: string) => void;
+  addToSelection: (id: string) => void;
+  removeFromSelection: (id: string) => void;
+  clearSelection: () => void;
   setEditingTextId: (id: string | null) => void;
   setCursorMode: (mode: CursorMode) => void;
   setStageScale: (scale: number) => void;
@@ -65,17 +70,76 @@ type LocalStore = LocalState & LocalActions;
 // 개인 UI 상태(선택/편집 상태, 커서 모드, 뷰포트 (줌/팬), 임시 그리기)
 export const useWhiteboardLocalStore = create<LocalStore>((set, get) => ({
   // Select 초기값
-  selectedId: null,
+  selectedIds: [],
   awarenessCallback: null,
   cursorCallback: null,
-  selectItem: (id) => {
-    set({ selectedId: id });
-    // Awareness 업데이트
+
+  // 단일 선택
+  selectOnly: (id) => {
+    set({ selectedIds: [id] });
     const callback = get().awarenessCallback;
     if (callback) {
       callback(id);
     }
   },
+
+  // 멀티 선택
+  selectMultiple: (ids) => {
+    set({ selectedIds: ids });
+    const callback = get().awarenessCallback;
+    if (callback) {
+      callback(ids[0] ?? null);
+    }
+  },
+
+  // 토글 선택 (Ctrl+클릭)
+  toggleSelection: (id) => {
+    const current = get().selectedIds;
+    const newIds = current.includes(id)
+      ? current.filter((i) => i !== id)
+      : [...current, id];
+
+    set({ selectedIds: newIds });
+    const callback = get().awarenessCallback;
+    if (callback) {
+      callback(newIds[0] ?? null);
+    }
+  },
+
+  // 선택 추가 (Shift+클릭)
+  addToSelection: (id) => {
+    const current = get().selectedIds;
+    if (current.includes(id)) return;
+
+    const newIds = [...current, id];
+    set({ selectedIds: newIds });
+    const callback = get().awarenessCallback;
+    if (callback) {
+      callback(newIds[0] ?? null);
+    }
+  },
+
+  // 선택 제거
+  removeFromSelection: (id) => {
+    const current = get().selectedIds;
+    const newIds = current.filter((i) => i !== id);
+
+    set({ selectedIds: newIds });
+    const callback = get().awarenessCallback;
+    if (callback) {
+      callback(newIds[0] ?? null);
+    }
+  },
+
+  // 전체 선택 해제
+  clearSelection: () => {
+    set({ selectedIds: [] });
+    const callback = get().awarenessCallback;
+    if (callback) {
+      callback(null);
+    }
+  },
+
   setAwarenessCallback: (callback) => set({ awarenessCallback: callback }),
   setCursorCallback: (callback) => set({ cursorCallback: callback }),
 
