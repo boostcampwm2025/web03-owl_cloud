@@ -29,9 +29,14 @@ export default function ItemTransformer({
   }, [items]);
 
   const selectedItems = items.filter((item) => selectedIds.includes(item.id));
-  const transformableItems = selectedItems.filter(
-    (item) => item.type !== 'arrow' && item.type !== 'line',
-  );
+
+  const transformableItems =
+    selectedItems.length === 1
+      ? selectedItems.filter(
+          (item) => item.type !== 'arrow' && item.type !== 'line',
+        )
+      : selectedItems;
+
   const isSingleSelection = transformableItems.length === 1;
   const selectedItem = isSingleSelection ? transformableItems[0] : null;
   const isTextSelected = selectedItem?.type === 'text';
@@ -166,6 +171,53 @@ export default function ItemTransformer({
         }
 
         if (item.type === 'drawing') {
+          const lineNode = node as Konva.Line;
+          const currentPoints = lineNode.points();
+          const scaledPoints = currentPoints.map((p, i) =>
+            i % 2 === 0 ? p * scaleX : p * scaleY,
+          );
+          const pos = lineNode.position();
+          const adjustedPoints = scaledPoints.map((p, i) =>
+            i % 2 === 0 ? p + pos.x : p + pos.y,
+          );
+
+          lineNode.scaleX(1);
+          lineNode.scaleY(1);
+          lineNode.position({ x: 0, y: 0 });
+
+          updateItem(id, {
+            points: adjustedPoints,
+            rotation,
+          });
+          return;
+        }
+
+        if (item.type === 'arrow') {
+          const groupNode = node as Konva.Group;
+          const currentPoints = item.points;
+          const scaledPoints = currentPoints.map((p, i) =>
+            i % 2 === 0 ? p * scaleX : p * scaleY,
+          );
+          const pos = groupNode.position();
+          const adjustedPoints = scaledPoints.map((p, i) =>
+            i % 2 === 0 ? p + pos.x : p + pos.y,
+          );
+
+          groupNode.scaleX(1);
+          groupNode.scaleY(1);
+          groupNode.position({ x: 0, y: 0 });
+
+          // 바인딩 해제
+          updateItem(id, {
+            points: adjustedPoints,
+            rotation,
+            startBinding: null,
+            endBinding: null,
+          });
+          return;
+        }
+
+        if (item.type === 'line') {
           const lineNode = node as Konva.Line;
           const currentPoints = lineNode.points();
           const scaledPoints = currentPoints.map((p, i) =>
