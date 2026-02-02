@@ -26,6 +26,20 @@ export default function ItemTransformer({
   const selectedItem = isSingleSelection ? transformableItems[0] : null;
   const isTextSelected = selectedItem?.type === 'text';
   const isDrawingSelected = selectedItem?.type === 'drawing';
+  const enabledAnchors = isSingleSelection
+    ? isTextSelected
+      ? ['middle-left', 'middle-right']
+      : [
+          'top-left',
+          'top-right',
+          'bottom-left',
+          'bottom-right',
+          'top-center',
+          'bottom-center',
+          'middle-left',
+          'middle-right',
+        ]
+    : ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 
   // Transformer 연결
   useEffect(() => {
@@ -46,20 +60,7 @@ export default function ItemTransformer({
   return (
     <Transformer
       ref={transformerRef}
-      enabledAnchors={
-        isTextSelected
-          ? ['middle-left', 'middle-right']
-          : [
-              'top-left',
-              'top-right',
-              'bottom-left',
-              'bottom-right',
-              'top-center',
-              'bottom-center',
-              'middle-left',
-              'middle-right',
-            ]
-      }
+      enabledAnchors={enabledAnchors}
       rotateEnabled={isSingleSelection ? !isDrawingSelected : false}
       anchorSize={10}
       anchorCornerRadius={5}
@@ -70,7 +71,7 @@ export default function ItemTransformer({
       borderStrokeWidth={1.5}
       rotationSnaps={[0, 90, 180, 270]}
       rotationSnapTolerance={10}
-      keepRatio={false}
+      keepRatio={!isSingleSelection}
       boundBoxFunc={(oldBox, newBox) => {
         // 최소 크기 제한
         const stage = stageRef.current;
