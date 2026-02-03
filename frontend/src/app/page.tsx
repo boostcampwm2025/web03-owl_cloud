@@ -69,11 +69,13 @@ export default function Home() {
               </span>
             </motion.div>
 
-            <LogoIcon
-              className="mb-6 h-16 w-auto text-neutral-50 lg:h-30"
-              width="100%"
-              height="100%"
-            />
+            <motion.h1 variants={fadeInUp}>
+              <LogoIcon
+                className="mb-8 h-16 w-auto text-neutral-50 lg:h-30"
+                width="100%"
+                height="100%"
+              />
+            </motion.h1>
 
             <motion.h2
               variants={fadeInUp}
