@@ -8,66 +8,149 @@ describe('회의 생성 Form Validation 테스트', () => {
     password: '123456',
   };
 
-  test('정상적인 폼 데이터면 ok=true를 반환한다', () => {
+  test('모든 값이 정상 범위의 경계 안에 있으면 ok=true를 반환한다', () => {
     const result = validateMeetingForm(baseForm);
 
     expect(result.ok).toBe(true);
     expect(result.message).toBe('');
   });
 
-  test('참가 인원이 허용 범위를 벗어나면 실패한다', () => {
-    const result = validateMeetingForm({
-      ...baseForm,
-      max_participants: 0,
+  describe('참가 인원(max_participants) 경계값 테스트', () => {
+    test('최소 허용 인원(1)은 유효하다', () => {
+      const result = validateMeetingForm({
+        ...baseForm,
+        max_participants: 1,
+      });
+
+      expect(result.ok).toBe(true);
     });
 
-    expect(result.ok).toBe(false);
-    expect(result.message).toBe('최대 인원을 확인해주세요');
+    test('최대 허용 인원(100)은 유효하다', () => {
+      const result = validateMeetingForm({
+        ...baseForm,
+        max_participants: 100,
+      });
+
+      expect(result.ok).toBe(true);
+    });
+
+    test('0명은 실패한다 (하한 경계 밖)', () => {
+      const result = validateMeetingForm({
+        ...baseForm,
+        max_participants: 0,
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.message).toBe('최대 인원을 확인해주세요');
+    });
+
+    test('101명은 실패한다 (상한 경계 밖)', () => {
+      const result = validateMeetingForm({
+        ...baseForm,
+        max_participants: 101,
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.message).toBe('최대 인원을 확인해주세요');
+    });
   });
 
-  test('회의명이 비어있거나 너무 길면 실패한다', () => {
-    const emptyTitleResult = validateMeetingForm({
-      ...baseForm,
-      title: '   ',
+  describe('회의명(title) 경계값 테스트', () => {
+    test('1자 제목은 유효하다', () => {
+      const result = validateMeetingForm({
+        ...baseForm,
+        title: 'a',
+      });
+
+      expect(result.ok).toBe(true);
     });
 
-    expect(emptyTitleResult.ok).toBe(false);
-    expect(emptyTitleResult.message).toBe('회의명을 확인해주세요');
+    test('100자 제목은 유효하다', () => {
+      const result = validateMeetingForm({
+        ...baseForm,
+        title: 'a'.repeat(100),
+      });
 
-    const longTitleResult = validateMeetingForm({
-      ...baseForm,
-      title: 'a'.repeat(101),
+      expect(result.ok).toBe(true);
     });
 
-    expect(longTitleResult.ok).toBe(false);
-    expect(longTitleResult.message).toBe('회의명을 확인해주세요');
+    test('빈 문자열은 실패한다', () => {
+      const result = validateMeetingForm({
+        ...baseForm,
+        title: '',
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.message).toBe('회의명을 확인해주세요');
+    });
+
+    test('공백만 있는 문자열은 실패한다 (trim 경계)', () => {
+      const result = validateMeetingForm({
+        ...baseForm,
+        title: '   ',
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.message).toBe('회의명을 확인해주세요');
+    });
+
+    test('101자 제목은 실패한다 (상한 경계 밖)', () => {
+      const result = validateMeetingForm({
+        ...baseForm,
+        title: 'a'.repeat(101),
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.message).toBe('회의명을 확인해주세요');
+    });
   });
 
-  test('비밀번호 길이가 조건을 만족하지 않으면 실패한다', () => {
-    const shortPasswordResult = validateMeetingForm({
-      ...baseForm,
-      password: '123',
+  describe('비밀번호(password) 경계값 테스트', () => {
+    test('비밀번호가 없으면 유효하다 (선택값)', () => {
+      const result = validateMeetingForm({
+        ...baseForm,
+        password: '',
+      });
+
+      expect(result.ok).toBe(true);
     });
 
-    expect(shortPasswordResult.ok).toBe(false);
-    expect(shortPasswordResult.message).toBe('비밀번호를 확인해주세요');
+    test('최소 길이(6자)는 유효하다', () => {
+      const result = validateMeetingForm({
+        ...baseForm,
+        password: '123456',
+      });
 
-    const longPasswordResult = validateMeetingForm({
-      ...baseForm,
-      password: 'a'.repeat(20),
+      expect(result.ok).toBe(true);
     });
 
-    expect(longPasswordResult.ok).toBe(false);
-    expect(longPasswordResult.message).toBe('비밀번호를 확인해주세요');
-  });
+    test('최대 길이(16자)는 유효하다', () => {
+      const result = validateMeetingForm({
+        ...baseForm,
+        password: 'a'.repeat(16),
+      });
 
-  test('비밀번호가 없어도 유효한 폼으로 처리된다', () => {
-    const result = validateMeetingForm({
-      ...baseForm,
-      password: '',
+      expect(result.ok).toBe(true);
     });
 
-    expect(result.ok).toBe(true);
-    expect(result.message).toBe('');
+    test('5자는 실패한다 (하한 경계 밖)', () => {
+      const result = validateMeetingForm({
+        ...baseForm,
+        password: '12345',
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.message).toBe('비밀번호를 확인해주세요');
+    });
+
+    test('17자는 실패한다 (상한 경계 밖)', () => {
+      const result = validateMeetingForm({
+        ...baseForm,
+        password: 'a'.repeat(17),
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.message).toBe('비밀번호를 확인해주세요');
+    });
   });
 });
