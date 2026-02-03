@@ -236,6 +236,14 @@ export function useItemActions() {
 
     const yMap = yMaps[index];
 
+    // 로컬 store 먼저 업데이트
+    const currentItems = useWhiteboardSharedStore.getState().items;
+    const optimisticItems = currentItems.map((item) =>
+      item.id === id ? { ...item, ...changes } : item,
+    ) as WhiteboardItem[];
+    useWhiteboardSharedStore.getState().setItems(optimisticItems);
+
+    // Yjs 업데이트
     yItems.doc.transact(() => {
       Object.entries(changes).forEach(([key, value]) => {
         if (value === null) {
