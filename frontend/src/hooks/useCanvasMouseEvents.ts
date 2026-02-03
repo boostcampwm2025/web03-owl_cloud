@@ -53,7 +53,7 @@ export function useCanvasMouseEvents({
     if (cursorMode === 'draw') {
       handleDrawingStart(e, point);
     } else if (cursorMode === 'eraser') {
-      handleEraserStart(e, point);
+      handleEraserStart(e);
     } else {
       onDeselect(e);
     }

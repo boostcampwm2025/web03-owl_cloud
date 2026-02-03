@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import Konva from 'konva';
 import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 import { useItemActions } from '@/hooks/useItemActions';
+import { usePointerTracking } from '@/hooks/usePointerTracking';
 
 // Group 내부 요소를 클릭한 경우 id가 있는 최상위 아이템 찾기
 const findTopLevelItem = (node: Konva.Node): Konva.Node => {
@@ -19,51 +20,68 @@ export function useEraser() {
 
   const [isErasing, setIsErasing] = useState(false);
   const [erasedIds, setErasedIds] = useState<Set<string>>(new Set());
+  const stageRef = useRef<Konva.Stage | null>(null);
 
   // 아이템 삭제 처리
-  const eraseItem = (target: Konva.Node) => {
-    if (target.nodeType === 'Stage' || target.hasName('bg-rect')) return;
+  const eraseItem = useCallback(
+    (target: Konva.Node) => {
+      if (target.nodeType === 'Stage' || target.hasName('bg-rect')) return;
 
-    const topLevelItem = findTopLevelItem(target);
-    const id = topLevelItem.id();
+      const topLevelItem = findTopLevelItem(target);
+      const id = topLevelItem.id();
 
-    if (id && !erasedIds.has(id)) {
-      // 지울 대상은 투명도 줌
-      topLevelItem.opacity(0.3);
-      setErasedIds((prev) => new Set(prev).add(id));
-    }
-  };
+      if (id && !erasedIds.has(id)) {
+        // 지울 대상은 투명도 줌
+        topLevelItem.opacity(0.3);
+        setErasedIds((prev) => new Set(prev).add(id));
+      }
+    },
+    [erasedIds],
+  );
+
+  // Canvas 좌표에서 아이템 찾아서 지우기
+  const eraseAtPosition = useCallback(
+    (x: number, y: number) => {
+      const stage = stageRef.current;
+      if (!stage) return;
+
+      // Canvas 좌표를 Stage 좌표로 변환
+      const stagePos = stage.position();
+      const stageScale = stage.scaleX();
+      const screenX = x * stageScale + stagePos.x;
+      const screenY = y * stageScale + stagePos.y;
+
+      // 해당 위치의 모든 아이템 찾기
+      const shapes = stage.getAllIntersections({ x: screenX, y: screenY });
+      shapes.forEach((shape) => {
+        eraseItem(shape);
+      });
+    },
+    [eraseItem],
+  );
 
   const handleEraserStart = (
     e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
-    point: { x: number; y: number },
   ) => {
     if (cursorMode !== 'eraser') return;
 
+    const stage = e.target.getStage();
+    if (!stage) return;
+
+    stageRef.current = stage;
     setIsErasing(true);
     setErasedIds(new Set());
     eraseItem(e.target);
   };
 
-  const handleEraserMove = (
-    e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
-    point: { x: number; y: number },
-  ) => {
-    if (!isErasing || cursorMode !== 'eraser') return;
+  const handleMove = useCallback(
+    (x: number, y: number) => {
+      eraseAtPosition(x, y);
+    },
+    [eraseAtPosition],
+  );
 
-    const stage = e.target.getStage();
-    if (!stage) return;
-
-    const pos = stage.getPointerPosition();
-    if (!pos) return;
-
-    const shapes = stage.getAllIntersections(pos);
-    shapes.forEach((shape) => {
-      eraseItem(shape);
-    });
-  };
-
-  const handleEraserEnd = () => {
+  const handleEnd = useCallback(() => {
     if (!isErasing) return;
 
     if (erasedIds.size > 0) {
@@ -72,12 +90,18 @@ export function useEraser() {
 
     setIsErasing(false);
     setErasedIds(new Set());
-  };
+    stageRef.current = null;
+  }, [isErasing, erasedIds, deleteItems]);
+
+  usePointerTracking({
+    isActive: isErasing,
+    stageRef,
+    onMove: handleMove,
+    onEnd: handleEnd,
+  });
 
   return {
     handleEraserStart,
-    handleEraserMove,
-    handleEraserEnd,
     isErasing,
   };
 }
