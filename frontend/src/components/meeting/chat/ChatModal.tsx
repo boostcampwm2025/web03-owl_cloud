@@ -52,29 +52,19 @@ export default function ChatModal() {
   const { handleScroll, scrollToBottom, isAtBottomRef } =
     useChatScroll(scrollRef);
 
-  // 파일 선택 핸들러
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || []);
-    if (selectedFiles.length === 0) return;
+  const addFilesToPending = useCallback((files: File[]) => {
+    if (files.length === 0) return;
 
-    const oversizedFiles = selectedFiles.filter((f) => f.size > MAX_FILE_SIZE);
+    const oversizedFiles = files.filter((f) => f.size > MAX_FILE_SIZE);
     if (oversizedFiles.length > 0) {
       setShowSizeError(true);
       setTimeout(() => setShowSizeError(false), 3000);
     }
 
-    const validFiles = selectedFiles.filter((f) => f.size <= MAX_FILE_SIZE);
-
-    // 만약 모든 파일이 용량 초과라면 여기서 초기화
-    if (validFiles.length === 0) {
-      e.target.value = '';
-      return;
-    }
+    const validFiles = files.filter((f) => f.size <= MAX_FILE_SIZE);
+    if (validFiles.length === 0) return;
 
     const newFiles = validFiles.map((file) => {
-      const isImageOrVideo =
-        file.type.startsWith('image/') || file.type.startsWith('video/');
-
       const isImage = file.type.startsWith('image/');
       const isVideo = file.type.startsWith('video/');
 
@@ -85,13 +75,19 @@ export default function ChatModal() {
       return {
         file,
         mediaType,
-        id: Math.random().toString(36).substring(7),
+        id: crypto.randomUUID(),
         // 미리보기 URL 생성
-        preview: isImageOrVideo ? URL.createObjectURL(file) : undefined,
+        preview: isImage || isVideo ? URL.createObjectURL(file) : undefined,
       };
     });
 
     setPendingFiles((prev) => [...prev, ...newFiles]);
+  }, []);
+
+  // 파일 선택 핸들러
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    addFilesToPending(selectedFiles);
     e.target.value = '';
   };
 
@@ -214,6 +210,23 @@ export default function ChatModal() {
       scrollToBottom(true);
     }
   }, []);
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = Array.from(e.clipboardData.items);
+    const files: File[] = [];
+
+    for (const item of items) {
+      if (item.kind === 'file') {
+        const file = item.getAsFile();
+        if (file) files.push(file);
+      }
+    }
+
+    if (files.length > 0) {
+      e.preventDefault(); // 이미지가 textarea에 base64로 들어가는 것 방지
+      addFilesToPending(files);
+    }
+  };
 
   return (
     <aside className="meeting-side-modal z-6">
@@ -342,6 +355,7 @@ export default function ChatModal() {
           placeholder="메세지를 입력해주세요"
           onKeyDown={handleKeyDown}
           onInput={handleInput}
+          onPaste={handlePaste}
         />
 
         {/* 버튼 */}
