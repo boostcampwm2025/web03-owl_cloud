@@ -387,6 +387,7 @@ export class SignalingWebsocketService {
       user_id: payload.user_id,
       nickname: payload.nickname,
       is_paused: true,
+      is_restart : false
     };
   };
 
@@ -410,6 +411,7 @@ export class SignalingWebsocketService {
       user_id: payload.user_id,
       nickname: payload.nickname,
       is_paused: true,
+      is_restart : false
     };
   }
 
