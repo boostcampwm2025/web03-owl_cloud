@@ -259,11 +259,12 @@ import {
       provide: ResumeConsumersUsecase,
       useFactory: (
         consumerRepo: ConsumerRepositoryPort,
+        consumerTimerRepo : ConsumerTimerRepositoryPort,
         selectConsumerInfosFromCache: SelectConsumerInfosFromRedis,
       ) => {
-        return new ResumeConsumersUsecase(consumerRepo, { selectConsumerInfosFromCache });
+        return new ResumeConsumersUsecase(consumerRepo, consumerTimerRepo, { selectConsumerInfosFromCache });
       },
-      inject: [ConsumerRepository, SelectConsumerInfosFromRedis],
+      inject: [ConsumerRepository, ConsumerTimerRepository, SelectConsumerInfosFromRedis],
     },
 
     // 여러개의 consumers를 멈추는 usecase

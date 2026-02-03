@@ -40,7 +40,7 @@ export class ResumeConsumerUsecase<T> {
 
     // 레이어가 main 일때만 업데이트 하도록 설정 일단은 임시 방편으로 해둔다.
     if (consumer.appData.type === 'cam' && consumer.type === 'simulcast') {
-      consumer.setPriority(200);
+      await consumer.setPriority(200);
       await consumer.setPreferredLayers({ spatialLayer: 1 });
       await consumer.requestKeyFrame();
 
@@ -70,7 +70,40 @@ export class ResumeConsumerUsecase<T> {
     
     // encoding 할게 있을때 설정
     if (consumer.appData.type === 'screen_video') {
-      consumer.setPriority(255); // 가장 우선순위를 높게 해준다.
+      await consumer.setPriority(255); // 가장 우선순위를 높게 해준다.
+
+      const consumer_id = dto.consumer_id;
+      this.consumerTimerRepo.clear(consumer_id);
+
+      if ( consumer.type === 'simulcast' ) {
+        // simulcast인 경우 초반 뭉게짐을 좀 개선해주는 것이 좋을 수 있다. 
+        await consumer.setPreferredLayers({ spatialLayer: 0 });
+        await consumer.requestKeyFrame();
+
+        const t = setTimeout(async () => {
+          try {
+            // 예외 처리
+            const c = this.consumerRepo.get(consumer_id);
+            if (!c || c.closed || c.paused) return;
+            if (c.appData?.type !== 'screen_video' || c.type !== 'simulcast') return;
+            
+            // 화면 업그레이드 
+            await c.setPreferredLayers({ spatialLayer: 1 });
+            await c.requestKeyFrame();
+          } catch (e) {
+            this.logger.debug(e);
+          } finally {
+            if (this.consumerTimerRepo.get(consumer_id) === t) {
+              this.consumerTimerRepo.delete(consumer_id);
+            };
+          };
+        }, 200); 
+
+        this.consumerTimerRepo.set(consumer_id, t);
+        return;
+      } 
+
+      await consumer.requestKeyFrame();
     };
   };
 };
