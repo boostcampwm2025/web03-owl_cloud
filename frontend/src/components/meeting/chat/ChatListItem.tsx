@@ -29,7 +29,7 @@ export function ChatListItem({
   }, [isFile, fileId, fileName, downloadFile]);
 
   return (
-    <div className="flex w-full gap-3 p-4">
+    <div className="flex w-full gap-3 p-4 pb-2">
       {profileImg ? (
         <Image
           width={32}

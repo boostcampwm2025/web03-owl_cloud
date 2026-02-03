@@ -38,7 +38,7 @@ export default function MemberModal() {
         </button>
       </div>
 
-      <ul className="flex flex-1 flex-col overflow-y-auto">
+      <ul className="chat-scrollbar flex flex-1 flex-col overflow-y-auto">
         {totalMembers.map((member, index) => (
           <MemberListItem
             key={member.user_id}

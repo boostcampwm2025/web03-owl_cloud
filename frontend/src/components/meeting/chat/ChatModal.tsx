@@ -248,7 +248,7 @@ export default function ChatModal() {
       <section
         ref={scrollRef}
         onScroll={handleScroll}
-        className="chat-scrollbar flex-1 overflow-y-auto scroll-smooth"
+        className="chat-scrollbar flex-1 overflow-y-auto scroll-smooth pb-2"
       >
         {messages.map((chat) => (
           <ChatListItem
