@@ -16,14 +16,17 @@ export default function MyVideo({ width = '160px' }: { width?: string }) {
 
   const { media } = useMeetingStore();
   const { nickname, profilePath } = useUserStore();
-  const { producers } = useMeetingSocketStore();
+  const { camStream, producers } = useMeetingSocketStore();
 
   // 영상 정보 가져오기
   const localVideoStream = useMemo(() => {
+    if (!media.videoOn) return null;
+
+    if (camStream) return camStream;
+
     const track = producers.videoProducer?.track;
-    if (!track) return null;
-    return new MediaStream([track]);
-  }, [producers.videoProducer]);
+    return track ? new MediaStream([track]) : null;
+  }, [media.videoOn, camStream, producers.videoProducer]);
 
   // 음성 정보 가져오기
   const localAudioStream = useMemo(() => {

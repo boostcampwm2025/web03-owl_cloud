@@ -1,0 +1,29 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: main-backend
+    scheme: https
+    metrics_path: /api/metrics
+    static_configs:
+      - targets: ["www.devmeet-test.p-e.kr:443"]
+
+  # 로드 밸런서의 경우 아래와 같이 설정해주어야 한다.
+  - job_name: tool-backend-app1
+    scheme: https
+    metrics_path: /tool/metrics/app1
+    static_configs:
+      - targets: ["www.devmeet-test.p-e.kr:443"]
+
+  - job_name: tool-backend-app2
+    scheme: https
+    metrics_path: /tool/metrics/app2
+    static_configs:
+      - targets: ["www.devmeet-test.p-e.kr:443"]
+
+  - job_name: tool-backend-app3
+    scheme: https
+    metrics_path: /tool/metrics/app3
+    static_configs:
+      - targets: ["www.devmeet-test.p-e.kr:443"]

@@ -13,6 +13,7 @@ interface MeetingSocketState {
   producers: Producers;
   isProducing: IsProducing;
   consumers: Record<string, Consumer>;
+  camStream: MediaStream | null; // cam에 stream
 }
 
 interface MeetingSocketAction {
@@ -28,11 +29,13 @@ interface MeetingSocketAction {
     consumers: { producerId: string; consumer: Consumer }[],
   ) => void;
   removeConsumer: (producerId: string) => void;
+  setCamStream: (stream: MediaStream | null) => void;
+  stopCamStream : () => void;
 }
 
 export const useMeetingSocketStore = create<
   MeetingSocketState & MeetingSocketAction
->((set) => ({
+>((set, get) => ({
   socket: null,
   device: null,
   sendTransport: null,
@@ -48,6 +51,8 @@ export const useMeetingSocketStore = create<
   isProducing: { audio: false, video: false, screen: false },
 
   consumers: {},
+
+  camStream: null,
 
   setSocket: (socket) => set({ socket }),
   setMediasoupTransports: (socket, transports) => {
@@ -92,4 +97,20 @@ export const useMeetingSocketStore = create<
         consumers: remainingConsumers,
       };
     }),
+
+  setCamStream: (stream) => {
+    const prev = get().camStream;
+    if (prev && prev !== stream) {
+      prev.getTracks().forEach((t: MediaStreamTrack) => t.stop());
+    }
+    set({ camStream: stream });
+  },
+
+  stopCamStream: () => {
+    const stream = get().camStream;
+    if (stream) {
+      stream.getTracks().forEach((t: MediaStreamTrack) => t.stop());
+    }
+    set({ camStream: null });
+  },  
 }));

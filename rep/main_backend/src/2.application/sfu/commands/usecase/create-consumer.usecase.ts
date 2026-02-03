@@ -92,6 +92,10 @@ export class CreateConsumerUsecase<T> {
           .catch(() => {});
       });
 
+      // consumer.on?.("layerschange", (layers: any) => {
+      //   console.log("layerschange", consumer_id, layers);
+      // });
+
       // 해당 consume transport가 닫힌다면
       consumer.on('transportclose', () => {
         consumer?.close();

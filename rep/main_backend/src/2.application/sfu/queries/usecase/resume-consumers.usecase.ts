@@ -43,6 +43,15 @@ export class ResumeConsumersUsecase<T> {
 
       try {
         await consumer.resume();
+
+        if (consumer.appData.type === 'cam' && consumer.type === 'simulcast') {
+          consumer.setPriority(10);
+          await consumer.setPreferredLayers({ spatialLayer: 2, temporalLayer: 2 });
+        };
+
+        if (consumer.appData.type === 'screen_video') {
+          consumer.setPriority(300); // 가장 우선순위를 높게 해준다.
+        };
       } catch (err) {
         this.logger.error(err);
       }

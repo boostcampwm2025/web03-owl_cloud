@@ -33,6 +33,18 @@ export class ResumeConsumerUsecase<T> {
     if (!consumer) throw new SfuErrorMessage('consumer_id에 해당하는 consumer를 찾지 못했습니다.');
     if (consumer.closed) throw new SfuErrorMessage('consumer가 이미 종료되었습니다.');
     if (!consumer.paused) return; // 작동 중이면 다시 나옴
+
     await consumer.resume();
-  }
-}
+
+    // 레이어가 main 일때만 업데이트 하도록 설정 일단은 임시 방편으로 해둔다.
+    if (consumer.appData.type === 'cam' && consumer.type === 'simulcast') {
+      consumer.setPriority(255);
+      await consumer.setPreferredLayers({ spatialLayer: 2, temporalLayer: 2 });
+    };
+    
+    // encoding 할게 있을때 설정
+    if (consumer.appData.type === 'screen_video') {
+      consumer.setPriority(300); // 가장 우선순위를 높게 해준다.
+    };
+  };
+};

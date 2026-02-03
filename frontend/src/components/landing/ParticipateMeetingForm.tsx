@@ -30,7 +30,7 @@ export default function ParticipateMeetingForm() {
         ref={inputRef}
         id="meeting-code"
         placeholder="코드 또는 링크를 입력해주세요"
-        className="input-default input-light"
+        className="input-default input-light border-neutral-400! text-neutral-100!"
       />
 
       <Button type="submit">참여하기</Button>

@@ -46,6 +46,7 @@ import {
   PauseProducerUsecase,
   ResumeConsumersUsecase,
   ResumeConsumerUsecase,
+  resumeProducerUsecase,
 } from '@app/sfu/queries/usecase';
 import {
   SelectConsumerInfoFromRedis,
@@ -272,6 +273,29 @@ import {
         return new PauseConsumesUsecase(consumerRepo, { selectConsumerInfosFromCache });
       },
       inject: [ConsumerRepository, SelectConsumerInfosFromRedis],
+    },
+
+    // producer를 재활성화 하는 usecase
+    {
+      provide: resumeProducerUsecase,
+      useFactory: (
+        produceRepo: ProducerRepositoryPort,
+        selectUserProduceFromCache: SelectUserProducerDataFromRedis,
+        deleteUserProduceToCache: DeleteUserProducerDataToRedis,
+        updateUserProduceToCache: UpdateProducerStatusToRedis,
+      ) => {
+        return new resumeProducerUsecase(produceRepo, {
+          selectUserProduceFromCache,
+          deleteUserProduceToCache,
+          updateUserProduceToCache,
+        });
+      },
+      inject: [
+        ProducerRepository,
+        SelectUserProducerDataFromRedis,
+        DeleteUserProducerDataToRedis,
+        UpdateProducerStatusToRedis,
+      ],
     },
 
     // producer를 멈추는 usecase

@@ -32,9 +32,10 @@ export function createProduceHelper(sendTransport: Transport, device: Device) {
     //   });
     // }
 
+    // appData 부분에 메인화면에 경우 main을 붙혀서 성능을 높일 수
     return sendTransport.produce({
       track,
-      appData: { type: 'cam' },
+      appData: { type: 'cam'},
       // simulcast 방식 ( 아래로 갈수록 고화질 )
       encodings: [
         { rid: 'r0', scaleResolutionDownBy: 4, maxBitrate: 150_000 },
@@ -42,37 +43,38 @@ export function createProduceHelper(sendTransport: Transport, device: Device) {
         { rid: 'r2', scaleResolutionDownBy: 1, maxBitrate: 1_200_000 },
       ],
       codecOptions: {
-        videoGoogleStartBitrate: 600,
+        videoGoogleStartBitrate: 400,
       },
     });
   };
 
   // 가능하면 VP9 안되면 VP8로 전달
   const produceScreenVideo = (track: MediaStreamTrack) => {
-    // const vp9 = findVp9Codec();
+    const vp9 = findVp9Codec();
     // vp9은 조건 부로 써보자
-    // if (vp9) {
-    //   return sendTransport.produce({
-    //     track,
-    //     appData: { type: 'screen_video' },
-    //     codec: vp9,
-    //     encodings: [
-    //       { maxBitrate: 1_800_000 }, // cam 보다는 더 높아야 한다. (상황에 따라서 SVC를 사용할 수 있게 해주면 좋다.) ( SVC는 좀 더 나중에 세밀한 조정때 유용하다. )
-    //     ],
-    //     codecOptions: { videoGoogleStartBitrate: 400 },
-    //   });
-    // } // vp9은 실험을 통해서 진행을 해야 한다.
+    if (vp9) {
+      return sendTransport.produce({
+        track,
+        appData: { type: 'screen_video' },
+        codec: vp9,
+        encodings: [
+          { maxBitrate: 4_000_000 }, // cam 보다는 더 높아야 한다. (상황에 따라서 SVC를 사용할 수 있게 해주면 좋다.) ( SVC는 좀 더 나중에 세밀한 조정때 유용하다. )
+        ],
+        codecOptions: { videoGoogleStartBitrate: 800 },
+      });
+    } // vp9은 실험을 통해서 진행을 해야 한다.
 
+    // vp9을 지원하지 않는 경우는 문서를 기준으로 정리해주는게
     return sendTransport.produce({
       track,
       appData: { type: 'screen_video' },
       encodings: [
         {
-          maxBitrate: 2_500_000, // codec이 safari 같은 경우 호환이 안될수 있기때문에 일단 v8로 진행을 한다. 
+          maxBitrate: 3_500_000, // codec이 safari 같은 경우 호환이 안될수 있기때문에 일단 v8로 진행을 한다. 
         },
       ],
       codecOptions: {
-        videoGoogleStartBitrate: 1000, // 화면공유에 시작 비트레이트는 낮게
+        videoGoogleStartBitrate: 800, // 화면공유에 시작 비트레이트는 낮게
       },
     });
   };

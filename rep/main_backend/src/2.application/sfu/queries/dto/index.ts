@@ -4,3 +4,4 @@ export * from './resume-consumer.dto';
 export * from './resume-consumers.dto';
 export * from './pause-consumers.dto';
 export * from './pause-producer.dto';
+export * from "./resume-producer.dto";

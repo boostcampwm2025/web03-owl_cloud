@@ -40,6 +40,7 @@ import {
   PauseProducerValidate,
   ResumeConsumersValidate,
   ResumeConsumerValidate,
+  resumeProducerValidate,
   SendMessageValidate,
   SocketPayload,
   UploadFileValidate,
@@ -470,6 +471,22 @@ export class SignalingWebsocketGateway
       await this.signalingService.disconnectTool(client, validate.tool);
 
       return { ok: true };
+    } catch (err) {
+      this.logger.error(err);
+      throw new WsException({ message: err.message ?? '에러 발생', status: err.status ?? 500 });
+    }
+  }
+
+  // 카메라 or 마이크를 ON할때 사용한다.
+  @SubscribeMessage(WEBSOCKET_SIGNALING_EVENT_NAME.PRODUCE_ON)
+  async resumeProduceGateway(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() validate: resumeProducerValidate,
+  ) {
+    try {
+      const producerInfo = await this.signalingService.resumeProduce(client, validate);
+
+      return { producerInfo };
     } catch (err) {
       this.logger.error(err);
       throw new WsException({ message: err.message ?? '에러 발생', status: err.status ?? 500 });

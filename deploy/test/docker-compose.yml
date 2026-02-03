@@ -7,7 +7,7 @@ services:
     env_file:
       - ./main_backend/.env.backend
     networks:
-      - clobby-network
+      - devmeet-network
     # 서버가 죽으면 docker가 다시 켜주는 것을 말한다. ( 내가 멈춘거 제외 )
     restart: unless-stopped
     # 보안 주의 -> 이 포트는 docker에서 외부에 열어놓는거라서 nginx에 보호도 받지 못한다. -> 특정 컨테이너로 매핑
@@ -25,7 +25,7 @@ services:
     depends_on:
       - main-backend
     networks:
-      - clobby-network
+      - devmeet-network
     restart: unless-stopped
 
   # tool_backend 서버
@@ -35,7 +35,7 @@ services:
     env_file:
       - ./tool_backend/.env.backend
     networks:
-      - clobby-network 
+      - devmeet-network
     restart: unless-stopped
     # 추후 로그 라던지 저장 하는 로직이 있다면 이용하면 좋을 것 같다. - volume추가 고민 있음
 
@@ -45,7 +45,7 @@ services:
     env_file:
       - ./tool_backend/.env.backend
     networks:
-      - clobby-network
+      - devmeet-network
     restart: unless-stopped
 
   tool-backend-app-3:
@@ -54,7 +54,7 @@ services:
     env_file:
       - ./tool_backend/.env.backend
     networks:
-      - clobby-network
+      - devmeet-network
     restart: unless-stopped
 
   # backend에 로드밸런싱을 담당할 nginx 파일
@@ -69,7 +69,7 @@ services:
       - tool-backend-app-2
       - tool-backend-app-3
     networks:
-      - clobby-network
+      - devmeet-network
     restart: unless-stopped
 
   # frontend 빌드 
@@ -81,7 +81,7 @@ services:
     #   - ./.env.frontend
     # 기본적인 환경 설정은 여기서
     networks:
-      - clobby-network
+      - devmeet-network
     restart: unless-stopped 
 
   # frontend도 nginx를 따로 둘 예정이다.
@@ -93,7 +93,7 @@ services:
     depends_on:
       - frontend
     networks:
-      - clobby-network
+      - devmeet-network
     restart: unless-stopped
 
   # 실제 서빙해주는 gateway 입니다 나중에 kubernetes로 변경을 한다면 이 부분은 변경되거나 사라집니다.
@@ -112,10 +112,10 @@ services:
       - tool-backend-nginx
       - frontend-nginx
     networks:
-      - clobby-network
+      - devmeet-network
     restart: unless-stopped 
 
 # bridge 스타일로 각자가 독립적인 ip를 가지고 있음
 networks:
-  clobby-network:
+  devmeet-network:
     driver: bridge

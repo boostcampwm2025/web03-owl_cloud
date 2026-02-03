@@ -33,6 +33,7 @@ import {
   PauseProducerValidate,
   ResumeConsumersValidate,
   ResumeConsumerValidate,
+  resumeProducerValidate,
   SendMessageValidate,
   SocketPayload,
   UploadFileValidate,
@@ -365,6 +366,29 @@ export class SignalingWebsocketService {
     };
     await this.disconnectToolUsecase.execute(dto);
   }
+
+  // 특정 produce를 활성화 하고 싶을때
+  async resumeProduce(
+    client: Socket,
+    validate: resumeProducerValidate,    
+  ): Promise<CreateProduceResult & { nickname: string; is_paused: boolean }> {
+    const room_id: string = client.data.room_id;
+    const payload: SocketPayload = client.data.user;
+    const dto: PauseProducerDto = {
+      room_id,
+      user_id: payload.user_id,
+      ...validate,
+    };
+    await this.sfuServer.resumeProducers(dto);
+    return {
+      ...validate,
+      status: 'user',
+      type: validate.kind === 'video' ? 'cam' : 'mic',
+      user_id: payload.user_id,
+      nickname: payload.nickname,
+      is_paused: true,
+    };
+  };
 
   // 특정 produce를 끄겠다는 것
   async pauseProduce(

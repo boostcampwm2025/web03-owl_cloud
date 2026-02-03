@@ -181,6 +181,18 @@ export class DisConnectToolTypeValidate {
   tool: 'whiteboard' | 'codeeditor';
 }
 
+// producer를 다시 활성화 하기 위한 validate
+export class resumeProducerValidate {
+  @IsNotEmpty()
+  @IsString()
+  producer_id: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @IsIn(['audio', 'video'])
+  kind: 'audio' | 'video';
+}
+
 // producer를 멈추기 위한 validate
 export class PauseProducerValidate {
   @IsNotEmpty()

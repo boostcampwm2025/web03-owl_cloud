@@ -29,6 +29,7 @@ import {
   PauseProducerUsecase,
   ResumeConsumersUsecase,
   ResumeConsumerUsecase,
+  resumeProducerUsecase,
 } from '@app/sfu/queries/usecase';
 import {
   ConnectTransportType,
@@ -37,6 +38,7 @@ import {
   PauseProducerDto,
   ResumeConsumerDto,
   ResumeConsumersDto,
+  ResumeProducerDto,
 } from '@app/sfu/queries/dto';
 
 @Injectable()
@@ -54,6 +56,7 @@ export class SfuService {
     private readonly createConsumersUsecase: CreateConsumersUsecase<any>,
     private readonly resumeConsumersUsecase: ResumeConsumersUsecase<any>,
     private readonly pauseConsumersUsecase: PauseConsumesUsecase<any>,
+    private readonly resumeProducerUsecase : resumeProducerUsecase<any>, // producer를 다시 재활성화 하기 위한 usecase
     private readonly pauseProducerUsecase: PauseProducerUsecase<any>, // producer를 멈추기 위한 usecase
     private readonly stopScreenUsecase: StopScreenProducerUsecase<any>, // screen을 멈추기 위한 usecase
     // infra
@@ -140,12 +143,17 @@ export class SfuService {
     await this.pauseConsumersUsecase.execute(dto);
   }
 
-  // 11. producer off
+  // 11. producer on
+  async resumeProducers(dto : ResumeProducerDto) : Promise<void> {
+    await this.resumeProducerUsecase.execute(dto);
+  };
+
+  // 12. producer off
   async pauseProducers(dto: PauseProducerDto): Promise<void> {
     await this.pauseProducerUsecase.execute(dto);
   }
 
-  // 12. 스크린 producer off
+  // 13. 스크린 producer off
   async stopScreen(dto: StopScreenProducerDto): Promise<StopScreenProducerResult> {
     return this.stopScreenUsecase.execute(dto);
   }
