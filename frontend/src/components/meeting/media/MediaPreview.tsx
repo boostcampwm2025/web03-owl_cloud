@@ -11,8 +11,6 @@ export function MediaPreview() {
   const { media, stream, canRenderVideo, toggleAudio, toggleVideo } =
     useMediaPreview();
 
-  console.log(media);
-
   const hasCamDenied =
     media.cameraPermission === 'denied' || media.cameraPermission === 'unknown';
   const hasMicDenied =

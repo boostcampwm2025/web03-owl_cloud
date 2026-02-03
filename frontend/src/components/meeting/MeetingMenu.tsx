@@ -26,6 +26,7 @@ import { useWhiteboardSocket } from '@/hooks/useWhiteboardSocket';
 import { useWindowSize } from '@/hooks/useWindowSize';
 import { useChatStore } from '@/store/useChatStore';
 import { useClickOutside } from '@/hooks/useClickOutside';
+import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
 
 export default function MeetingMenu() {
   const { width } = useWindowSize();
@@ -211,6 +212,16 @@ export default function MeetingMenu() {
     onConfirm: () => void;
   } | null>(null);
   const onExit = () => {
+    const { audioProducer, videoProducer } =
+      useMeetingSocketStore.getState().producers;
+
+    // 하드웨어 정리
+    audioProducer?.track?.stop();
+    audioProducer?.close();
+    videoProducer?.track?.stop();
+    videoProducer?.close();
+    stopScreenProduce();
+
     useChatStore.getState().reset();
     router.replace('/');
   };
