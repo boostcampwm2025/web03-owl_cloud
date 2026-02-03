@@ -14,6 +14,9 @@ export const useWhiteboardClipboard = () => {
   const [clipboard, setClipboard] = useState<WhiteboardItem[]>([]);
 
   const selectedIds = useWhiteboardLocalStore((state) => state.selectedIds);
+  const selectMultiple = useWhiteboardLocalStore(
+    (state) => state.selectMultiple,
+  );
   const items = useWhiteboardSharedStore((state) => state.items);
   const yItems = useWhiteboardSharedStore((state) => state.yItems);
 
@@ -34,6 +37,8 @@ export const useWhiteboardClipboard = () => {
     // 클립보드가 비어있거나 Yjs 연결이 유효하지 않으면 중단
     if (clipboard.length === 0 || !yItems || !yItems.doc) return;
 
+    const newIds: string[] = [];
+
     performTransaction(() => {
       // 붙여넣기 시 기존 위치에서 오프셋된 위치에 삽입
       const offset = 30;
@@ -41,6 +46,7 @@ export const useWhiteboardClipboard = () => {
 
       clipboard.forEach((clipboardItem) => {
         const newId = uuidv4();
+        newIds.push(newId);
 
         // 속성 수정을 위해 임시 객체 생성
         const newItem = { ...clipboardItem } as Record<string, unknown>;
@@ -71,7 +77,9 @@ export const useWhiteboardClipboard = () => {
         yItems.push([yMap]);
       });
     });
-  }, [clipboard, yItems, performTransaction]);
+
+    selectMultiple(newIds);
+  }, [clipboard, yItems, performTransaction, selectMultiple]);
 
   return { copy, paste };
 };
