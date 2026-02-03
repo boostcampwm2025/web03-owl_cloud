@@ -53,6 +53,7 @@ export default function DrawingItem({
       {...drawingItem}
       ref={ref as React.RefObject<Konva.Line>}
       id={drawingItem.id}
+      name="whiteboard-item"
       draggable={isDraggable}
       listening={isListening}
       hitStrokeWidth={30}

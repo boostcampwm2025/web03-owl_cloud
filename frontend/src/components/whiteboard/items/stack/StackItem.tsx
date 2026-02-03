@@ -66,6 +66,7 @@ export default function StackItem({
     <KonvaImage
       ref={imageRef as React.RefObject<Konva.Image>}
       id={stackItem.id}
+      name="whiteboard-item"
       image={image}
       x={stackItem.x}
       y={stackItem.y}

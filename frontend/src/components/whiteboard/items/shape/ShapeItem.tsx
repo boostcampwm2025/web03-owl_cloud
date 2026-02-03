@@ -219,6 +219,7 @@ export default function ShapeItem({
 
   const commonProps = {
     id: shapeItem.id,
+    name: 'whiteboard-item',
     draggable: isDraggable,
     listening: isListening,
     x: displayX,

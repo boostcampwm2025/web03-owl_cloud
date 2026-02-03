@@ -106,7 +106,7 @@ export default function CustomArrow({
     <Group
       ref={groupRef as React.RefObject<Konva.Group>}
       id={item.id}
-      name="arrow-group"
+      name="whiteboard-item arrow-group"
       draggable={isDraggable}
       listening={isListening}
       onMouseDown={(e) => isInteractive && onSelect(e)}

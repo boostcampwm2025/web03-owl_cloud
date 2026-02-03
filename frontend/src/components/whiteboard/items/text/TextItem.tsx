@@ -59,6 +59,7 @@ export default function TextItem({
       {...textItem}
       ref={ref as React.RefObject<Konva.Text>}
       id={textItem.id}
+      name="whiteboard-item"
       draggable={isDraggable}
       listening={isListening}
       onMouseDown={(e) => isInteractive && onSelect(e)}

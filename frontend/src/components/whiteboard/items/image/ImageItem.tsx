@@ -66,6 +66,7 @@ export default function ImageItem({
   const commonProps = {
     ref: imageRef as React.RefObject<Konva.Image>,
     id: imageItem.id,
+    name: 'whiteboard-item',
 
     // 비트맵 연결
     image: imageBitmap,

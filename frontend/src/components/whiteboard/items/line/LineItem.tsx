@@ -51,6 +51,7 @@ export default function LineItem({
       {...lineItem}
       ref={ref as React.RefObject<Konva.Line>}
       id={lineItem.id}
+      name="whiteboard-item"
       draggable={isDraggable}
       listening={isListening}
       hitStrokeWidth={30}
