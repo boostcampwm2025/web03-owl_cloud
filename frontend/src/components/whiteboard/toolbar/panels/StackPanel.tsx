@@ -73,7 +73,7 @@ export default function StackPanel({
   };
 
   return (
-    <div className="flex max-w-[400px] min-w-[380px] flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-3 shadow-2xl">
+    <div className="flex max-w-100 min-w-95 flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-3 shadow-2xl">
       {/* 상단 검색 바 */}
       <div className="relative">
         <div className="absolute top-1/2 left-3 -translate-y-1/2 text-neutral-500">
@@ -92,7 +92,10 @@ export default function StackPanel({
       <div
         ref={scrollRef}
         onWheel={handleWheel}
-        className="no-scrollbar flex cursor-ew-resize gap-2 overflow-x-auto border-b-2 border-neutral-300 pb-5"
+        style={{
+          ['--scrollbar-thumb' as string]: '#c2c2c2',
+        }}
+        className="horizon-scrollbar flex cursor-ew-resize gap-2 overflow-x-auto border-b-2 border-neutral-300 pb-5"
       >
         {categories.map((category) => (
           <button
@@ -110,7 +113,12 @@ export default function StackPanel({
       </div>
 
       {/* 아이콘 */}
-      <div className="custom-scrollbar grid max-h-[300px] grid-cols-5 gap-3 overflow-y-auto pr-1">
+      <div
+        style={{
+          ['--scrollbar-thumb' as string]: '#c2c2c2',
+        }}
+        className="chat-scrollbar grid max-h-75 grid-cols-5 gap-3 overflow-y-auto pr-1"
+      >
         {filteredIcons.length > 0 ? (
           filteredIcons.map((icon: StackIconInfo) => (
             <button
