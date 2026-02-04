@@ -118,7 +118,7 @@ export const useProduce = () => {
       }
 
       await videoProducer.replaceTrack({ track: videoTrack });
-      videoProducer = await helpers.produceCam(videoTrack);
+      videoProducer = await helpers.produceCam(videoTrack, true);
       setMedia({ videoOn: true });
     } catch (error) {
       stopCamStream();

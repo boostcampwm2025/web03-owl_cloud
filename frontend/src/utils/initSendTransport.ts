@@ -9,12 +9,14 @@ export const initSendTransport = (socket: Socket, sendTransport: Transport) => {
     async ({ kind, rtpParameters, appData }, callback, errback) => {
       try {
         const type = appData?.type; // "mic" | "cam" | "screen_video" | "screen_audio"
+        const resume = appData?.resume;
 
         const res = await socket.emitWithAck('signaling:ws:produce', {
           transport_id: sendTransport.id,
           kind,
           type,
           rtpParameters,
+          resume
         });
 
         const id = res?.producerInfo?.producer_id ?? res?.producerInfo?.id;

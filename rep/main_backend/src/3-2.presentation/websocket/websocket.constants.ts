@@ -44,6 +44,7 @@ export const WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME = Object.freeze({
   JOINED: 'room:joined',
   ADMISSION: 'room:admission',
   ALERT_PRODUCED: 'room:alert_produced', // produce 변경을 알린다.
+  CAMERA_ON : "room:camera_on",
   SCREEN_STOP: 'room:screen_stop',
   NEW_USER: 'room:new_user',
   USER_CLOSED: 'room:user_closed',

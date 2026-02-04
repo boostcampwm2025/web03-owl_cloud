@@ -16,7 +16,7 @@ export function createProduceHelper(sendTransport: Transport, device: Device) {
     });
 
   // 웹캠 같이 움직임이 많은 경우 VP8이 오히려 좋을 수 있다. ( vp9은 따로 추가 조건이 있을때 사용하면 좋을예정 )
-  const produceCam = (track: MediaStreamTrack) => {
+  const produceCam = (track: MediaStreamTrack, resume = false) => {
     // VP9이 가능한지 체크
     // const vp9 = findVp9Codec();
 
@@ -35,7 +35,7 @@ export function createProduceHelper(sendTransport: Transport, device: Device) {
     // appData 부분에 메인화면에 경우 main을 붙혀서 성능을 높일 수
     return sendTransport.produce({
       track,
-      appData: { type: 'cam'},
+      appData: { type: 'cam', resume },
       // simulcast 방식 ( 아래로 갈수록 고화질 )
       encodings: [
         { rid: 'r0', scaleResolutionDownBy: 4, maxBitrate: 250_000 },
