@@ -54,7 +54,11 @@ export default function Header() {
   return (
     <header className="fixed top-0 left-0 z-5 flex h-16 w-screen items-center justify-between border-b border-neutral-200 bg-white px-6">
       <Link href="/">
-        <LogoIcon className="h-7.5 w-auto" width="100%" height="100%" />
+        <LogoIcon
+          className="h-7.5 w-auto text-neutral-900"
+          width="100%"
+          height="100%"
+        />
       </Link>
 
       {isLoaded &&

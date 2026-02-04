@@ -1,4 +1,5 @@
 import Modal from '@/components/common/Modal';
+import Portal from '@/components/common/Portal';
 import { useUserStore } from '@/store/useUserStore';
 import { MeetingForm } from '@/types/forms';
 import { apiWithToken } from '@/utils/apiClient';
@@ -114,14 +115,16 @@ export default function MeetingFormModal({
         </form>
       </Modal>
     ) : (
-      <div className="flex-center fixed top-0 left-0 z-50 h-screen w-screen bg-neutral-900/30 px-4 py-4">
-        <span
-          className="flex-center rounded-lg border border-neutral-200 bg-white p-6 font-bold text-neutral-600"
-          onClick={(e) => e.stopPropagation()}
-        >
-          회의를 생성 중입니다...
-        </span>
-      </div>
+      <Portal>
+        <div className="flex-center fixed top-0 left-0 z-50 h-screen w-screen bg-neutral-900/30 px-4 py-4">
+          <span
+            className="flex-center rounded-lg border border-neutral-200 bg-white p-6 font-bold text-neutral-600"
+            onClick={(e) => e.stopPropagation()}
+          >
+            회의를 생성 중입니다...
+          </span>
+        </div>
+      </Portal>
     )
   ) : (
     <Modal

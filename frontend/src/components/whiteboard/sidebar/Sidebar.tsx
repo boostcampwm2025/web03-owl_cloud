@@ -206,7 +206,7 @@ export default function Sidebar() {
             e.stopPropagation();
             setIsCollapsed(false);
           }}
-          className="sidebar-toggle absolute top-1/2 left-2 z-100 flex h-20 w-8 -translate-y-1/2 items-center justify-center rounded-lg border border-neutral-200 bg-white p-1 shadow-sm transition-all select-none hover:bg-neutral-100"
+          className="sidebar-toggle absolute top-1/2 left-2 z-40 flex h-20 w-8 -translate-y-1/2 items-center justify-center rounded-lg border border-neutral-200 bg-white p-1 shadow-sm transition-all select-none hover:bg-neutral-100"
           title="사이드바 열기"
         >
           <ChevronRightPipeIcon className="h-6 w-6 text-neutral-600" />
@@ -216,7 +216,7 @@ export default function Sidebar() {
       {/* 펼친 상태 - 전체 사이드바 */}
       {!isCollapsed && (
         <aside
-          className="absolute top-1/2 left-2 z-100 flex w-60 -translate-y-1/2 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white p-4 shadow-xl select-none"
+          className="absolute top-1/2 left-2 z-40 flex w-60 -translate-y-1/2 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white p-4 shadow-xl select-none"
           style={{ maxHeight: 'calc(100vh - 220px)' }}
         >
           {/* Sidebar Title */}

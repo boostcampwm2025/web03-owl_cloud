@@ -75,8 +75,8 @@ export const processAudioTrack = async (track: MediaStreamTrack) => {
 
     // NoiseGate 설정
     noiseGateNode = new NoiseGateWorkletNode(audioContext, {
-      openThreshold: -45,
-      closeThreshold: -50,
+      openThreshold: -40,
+      closeThreshold: -45,
       holdMs: 150,
       maxChannels: 1,
     });

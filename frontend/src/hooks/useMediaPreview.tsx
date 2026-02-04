@@ -66,70 +66,54 @@ export const useMediaPreview = (micId?: string, cameraId?: string) => {
     let cancelled = false;
 
     (async () => {
-      let combinedStream: MediaStream | null = null;
+      let audioTrack: MediaStreamTrack | null = null;
+      let videoTrack: MediaStreamTrack | null = null;
 
       try {
-        combinedStream = await navigator.mediaDevices.getUserMedia({
+        const audioStream = await navigator.mediaDevices.getUserMedia({
           audio: micId ? { deviceId: micId } : true,
-          video: cameraId ? { deviceId: cameraId } : true,
+          video: false,
         });
+        audioTrack = audioStream.getAudioTracks()[0];
 
-        if (cancelled) {
-          combinedStream.getTracks().forEach((t) => t.stop());
-          return;
-        }
-
+        if (cancelled) return;
         setMedia({
           micPermission: 'granted',
-          cameraPermission: 'granted',
-          audioOn: true,
-          videoOn: true,
+          audioOn: true, // 초기화 시 켜짐
         });
-      } catch (error) {
+      } catch {
         if (cancelled) return;
-
-        let audioTrack: MediaStreamTrack | null = null;
-        let videoTrack: MediaStreamTrack | null = null;
-
-        try {
-          const audioStream = await navigator.mediaDevices.getUserMedia({
-            audio: micId ? { deviceId: micId } : true,
-            video: false,
-          });
-          audioTrack = audioStream.getAudioTracks()[0];
-          setMedia({ micPermission: 'granted', audioOn: true });
-        } catch {
-          setMedia({ micPermission: 'denied', audioOn: false });
-        }
-
-        try {
-          const videoStream = await navigator.mediaDevices.getUserMedia({
-            audio: false,
-            video: cameraId ? { deviceId: cameraId } : true,
-          });
-          videoTrack = videoStream.getVideoTracks()[0];
-          setMedia({ cameraPermission: 'granted', videoOn: true });
-        } catch {
-          setMedia({ cameraPermission: 'denied', videoOn: false });
-        }
-
-        if (audioTrack || videoTrack) {
-          combinedStream = new MediaStream([
-            ...(audioTrack ? [audioTrack] : []),
-            ...(videoTrack ? [videoTrack] : []),
-          ]);
-        }
+        setMedia({ micPermission: 'denied', audioOn: false });
       }
 
-      if (cancelled) {
-        combinedStream?.getTracks().forEach((t) => t.stop());
-        return;
+      try {
+        const videoStream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: cameraId ? { deviceId: cameraId } : true,
+        });
+        videoTrack = videoStream.getVideoTracks()[0];
+
+        if (cancelled) return;
+        setMedia({
+          cameraPermission: 'granted',
+          videoOn: true, // 초기화 시 켜짐
+        });
+      } catch {
+        if (cancelled) return;
+        setMedia({ cameraPermission: 'denied', videoOn: false });
       }
 
-      if (combinedStream) {
-        streamRef.current = combinedStream;
-        setStream(combinedStream);
-      }
+      if (cancelled) return;
+
+      // stream 합치기
+      const tracks = [
+        ...(audioTrack ? [audioTrack] : []),
+        ...(videoTrack ? [videoTrack] : []),
+      ];
+
+      const combinedStream = new MediaStream(tracks);
+      streamRef.current = combinedStream;
+      setStream(combinedStream);
     })();
 
     return () => {
@@ -137,7 +121,7 @@ export const useMediaPreview = (micId?: string, cameraId?: string) => {
       streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     };
-  }, [micId, cameraId, setMedia]);
+  }, [micId, cameraId]);
 
   const toggleVideo = useCallback(async () => {
     if (!streamRef.current) return;
@@ -159,7 +143,10 @@ export const useMediaPreview = (micId?: string, cameraId?: string) => {
         const newTrack = newStream.getVideoTracks()[0];
 
         streamRef.current.addTrack(newTrack);
-        setMedia({ videoOn: true });
+        setMedia({
+          videoOn: true,
+          cameraPermission: 'granted',
+        });
       } catch (error) {
         // TODO: 토스트 메시지로 바꾸기
         alert('카메라 권한을 허용해주세요.');
@@ -185,7 +172,10 @@ export const useMediaPreview = (micId?: string, cameraId?: string) => {
         const newTrack = newStream.getAudioTracks()[0];
 
         streamRef.current.addTrack(newTrack);
-        setMedia({ audioOn: true });
+        setMedia({
+          audioOn: true,
+          micPermission: 'granted',
+        });
       } catch (error) {
         // TODO: 토스트 메시지로 바꾸기
         alert('마이크 권한을 허용해주세요.');
