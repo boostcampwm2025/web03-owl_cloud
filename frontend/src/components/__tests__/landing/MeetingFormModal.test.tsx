@@ -46,7 +46,7 @@ describe('MeetingFormModal 컴포넌트 테스트', () => {
     (useRouter as jest.Mock).mockReturnValue({ push });
   });
 
-  test('기본 상태로 렌더링된다', () => {
+  it('기본 상태로 렌더링된다', () => {
     render(<MeetingFormModal closeModal={closeModal} />);
 
     expect(screen.getByText('회의 생성')).toBeInTheDocument();
@@ -54,7 +54,7 @@ describe('MeetingFormModal 컴포넌트 테스트', () => {
     expect(screen.getByDisplayValue('테스터 님의 회의실')).toBeInTheDocument();
   });
 
-  test('회의명 입력값이 상태에 반영된다', () => {
+  it('회의명 입력값이 상태에 반영된다', () => {
     render(<MeetingFormModal closeModal={closeModal} />);
 
     const input = screen.getByPlaceholderText('회의명을 입력해주세요');
@@ -63,7 +63,7 @@ describe('MeetingFormModal 컴포넌트 테스트', () => {
     expect(input).toHaveValue('새 회의');
   });
 
-  test('최대 인원 0 입력 시 최소값(1)으로 보정된다', () => {
+  it('최대 인원 0 입력 시 최소값(1)으로 보정된다', () => {
     render(<MeetingFormModal closeModal={closeModal} />);
 
     const input = screen.getByRole('spinbutton');
@@ -72,7 +72,7 @@ describe('MeetingFormModal 컴포넌트 테스트', () => {
     expect(input).toHaveValue(1);
   });
 
-  test('최대 인원 1은 유효한 값이다', () => {
+  it('최대 인원 1은 유효한 값이다', () => {
     render(<MeetingFormModal closeModal={closeModal} />);
 
     const input = screen.getByRole('spinbutton');
@@ -81,7 +81,7 @@ describe('MeetingFormModal 컴포넌트 테스트', () => {
     expect(input).toHaveValue(1);
   });
 
-  test('최대 인원 100은 유효한 값이다', () => {
+  it('최대 인원 100은 유효한 값이다', () => {
     render(<MeetingFormModal closeModal={closeModal} />);
 
     const input = screen.getByRole('spinbutton');
@@ -90,7 +90,7 @@ describe('MeetingFormModal 컴포넌트 테스트', () => {
     expect(input).toHaveValue(100);
   });
 
-  test('최대 인원 101 입력 시 최대값(100)으로 보정된다', () => {
+  it('최대 인원 101 입력 시 최대값(100)으로 보정된다', () => {
     render(<MeetingFormModal closeModal={closeModal} />);
 
     const input = screen.getByRole('spinbutton');
@@ -99,7 +99,7 @@ describe('MeetingFormModal 컴포넌트 테스트', () => {
     expect(input).toHaveValue(100);
   });
 
-  test('회의명이 빈 문자열이면 validation 실패로 API를 호출하지 않는다', async () => {
+  it('회의명이 빈 문자열이면 validation 실패로 API를 호출하지 않는다', async () => {
     render(<MeetingFormModal closeModal={closeModal} />);
 
     const input = screen.getByPlaceholderText('회의명을 입력해주세요');
@@ -114,7 +114,7 @@ describe('MeetingFormModal 컴포넌트 테스트', () => {
     expect(apiWithToken.post).not.toHaveBeenCalled();
   });
 
-  test('경계값이지만 유효한 입력이면 API 호출 후 라우팅된다', async () => {
+  it('경계값이지만 유효한 입력이면 API 호출 후 라우팅된다', async () => {
     (apiWithToken.post as jest.Mock).mockResolvedValue({ code: 'room123' });
 
     render(<MeetingFormModal closeModal={closeModal} />);
@@ -132,7 +132,7 @@ describe('MeetingFormModal 컴포넌트 테스트', () => {
     expect(push).toHaveBeenCalledWith('/room123');
   });
 
-  test('제출 직후 로딩 상태가 표시된다', async () => {
+  it('제출 직후 로딩 상태가 표시된다', async () => {
     let resolveFn!: (value: { code: string }) => void;
 
     (apiWithToken.post as jest.Mock).mockImplementation(
