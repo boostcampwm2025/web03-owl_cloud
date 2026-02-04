@@ -22,6 +22,11 @@ export function useDrawing() {
     e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
     point: { x: number; y: number },
   ) => {
+    // 두 손가락 터치는 무시
+    if ('touches' in e.evt && e.evt.touches.length >= 2) {
+      return;
+    }
+
     // 기존 아이템 클릭 시 그리기 시작 안 함
     const clickedOnEmpty =
       e.target === e.target.getStage() || e.target.hasName('bg-rect');
@@ -55,6 +60,15 @@ export function useDrawing() {
     stageRef.current = null;
   }, [addDrawing, finishDrawing]);
 
+  // 그리기 취소 (핀치 줌 시작 시)
+  const cancelDrawing = useCallback(() => {
+    if (!isDrawing) return;
+
+    setIsDrawing(false);
+    finishDrawing();
+    stageRef.current = null;
+  }, [isDrawing, finishDrawing]);
+
   usePointerTracking({
     isActive: isDrawing,
     stageRef,
@@ -65,5 +79,6 @@ export function useDrawing() {
   return {
     handleDrawingStart,
     currentDrawing,
+    cancelDrawing,
   };
 }
