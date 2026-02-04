@@ -236,6 +236,18 @@ export function useItemActions() {
 
     const yMap = yMaps[index];
 
+    // 로컬 store 먼저 업데이트
+    const store = useWhiteboardSharedStore.getState();
+    const currentItems = store.items;
+    const targetItem = currentItems[index];
+
+    if (targetItem) {
+      const optimisticItems = [...currentItems];
+      optimisticItems[index] = { ...targetItem, ...changes } as WhiteboardItem;
+      store.setItems(optimisticItems);
+    }
+
+    // Yjs 업데이트
     yItems.doc.transact(() => {
       Object.entries(changes).forEach(([key, value]) => {
         if (value === null) {
