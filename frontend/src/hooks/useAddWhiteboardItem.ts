@@ -8,6 +8,14 @@ export const useAddWhiteboardItem = () => {
   const { addText, addArrow, addLine, addShape, addImage, addStack } =
     useItemActions();
 
+  const getCanvasPointFromEvent = (clientX: number, clientY: number) => {
+    const stage = useWhiteboardLocalStore.getState().stageRef?.current;
+    if (!stage) return null;
+
+    const transform = stage.getAbsoluteTransform().copy().invert();
+    return transform.point({ x: clientX, y: clientY });
+  };
+
   const getViewportCenter = () => {
     const stageRef = useWhiteboardLocalStore.getState().stageRef;
     const stage = stageRef?.current;
@@ -80,83 +88,84 @@ export const useAddWhiteboardItem = () => {
     });
   };
 
+  // Image 파일 처리 함수
+  const processImageFile = (
+    file: File,
+    position?: { x: number; y: number },
+  ) => {
+    // GIF 파일 업로드 제한
+    if (file.type === 'image/gif') {
+      alert('GIF 파일은 업로드할 수 없습니다.');
+      return;
+    }
+
+    // 용량 제한 (10MB)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      alert('이미지 용량은 10MB를 초과할 수 없습니다.');
+      return;
+    }
+
+    // 파일 읽기
+    const reader = new FileReader();
+    // 파일 읽기 완료 후 실행
+    reader.onload = (readerEvent) => {
+      const src = readerEvent.target?.result as string;
+
+      // src를 이용한 이미지 객체 생성
+      const img = new Image();
+      img.src = src;
+
+      // 이미지 로딩 후 크기 확인 후 로직
+      img.onload = () => {
+        // 원본 이미지 크기 읽기
+        let w = img.width;
+        let h = img.height;
+
+        // 제한 크기 설정
+        const MAX_SIZE = 500;
+
+        // 이미지 크기 제한 및 비율 조정
+        if (w > MAX_SIZE || h > MAX_SIZE) {
+          // 가로 세로 비율 유지하며 크기 조정
+          const ratio = w / h;
+          if (w > h) {
+            w = MAX_SIZE;
+            h = MAX_SIZE / ratio;
+          } else {
+            h = MAX_SIZE;
+            w = MAX_SIZE * ratio;
+          }
+        }
+
+        // 좌표가 전달되지 않았다면 중앙 좌표 계산
+        const finalPos = position || {
+          x: getViewportCenter().x - w / 2,
+          y: getViewportCenter().y - h / 2,
+        };
+
+        addImage({
+          src,
+          width: w,
+          height: h,
+          ...finalPos,
+        });
+      };
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Image Item 추가 핸들러
   const handleAddImage = () => {
-    // 파일 선택창 설정
-    // input 태그 설정, 타입은 파일 업로드용 , 이미지 파일만 선택되도록 설정
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
 
-    // 파일 선택 후 처리 로직(파일 읽기)
     input.onchange = (e) => {
-      // 선택한 파일 선정
       const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      // GIF 파일 업로드 제한
-      if (file.type === 'image/gif') {
-        alert('GIF 파일은 업로드할 수 없습니다.');
-        return;
-      }
-
-      // 용량 제한 로직 추가
-      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB를 바이트 단위로 계산
-      if (file.size > MAX_FILE_SIZE) {
-        alert('이미지 용량은 10MB를 초과할 수 없습니다.');
-        return;
-      }
-
-      // 파일 읽기
-      const reader = new FileReader();
-      // 파일 읽기 완료 후 실행
-      reader.onload = (readerEvent) => {
-        const src = readerEvent.target?.result as string;
-
-        // src를 이용한 이미지 객체 생성
-        const img = new Image();
-        img.src = src;
-
-        // 이미지 로딩 후 크기 확인 후 로직
-        img.onload = () => {
-          // 원본 이미지 크기 읽기
-          let w = img.width;
-          let h = img.height;
-
-          // 제한 크기 설정
-          const MAX_SIZE = 500;
-
-          // 이미지 제한 로직
-          if (w > MAX_SIZE || h > MAX_SIZE) {
-            // 가로 세로 비율 유지하며 크기 조정
-            const ratio = w / h;
-            if (w > h) {
-              w = MAX_SIZE;
-              h = MAX_SIZE / ratio;
-            } else {
-              h = MAX_SIZE;
-              w = MAX_SIZE * ratio;
-            }
-          }
-
-          const worldPos = getViewportCenter();
-
-          // store 저장
-          addImage({
-            src,
-            width: w,
-            height: h,
-            x: worldPos.x - w / 2,
-            y: worldPos.y - h / 2,
-          });
-        };
-      };
-      // Base64 형식으로 파일 읽기
-      // Base 64 : 별도 서버 업로드 과정 없이 src로 바로 사용
-      reader.readAsDataURL(file);
+      if (file) processImageFile(file);
     };
 
-    // 파일 탐색기 열기
     input.click();
   };
 
@@ -184,5 +193,7 @@ export const useAddWhiteboardItem = () => {
     handleAddShape,
     handleAddImage,
     handleAddStack,
+    processImageFile,
+    getCanvasPointFromEvent,
   };
 };

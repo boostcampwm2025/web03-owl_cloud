@@ -15,7 +15,6 @@ import type {
 import { useWhiteboardSharedStore } from '@/store/useWhiteboardSharedStore';
 import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 import { useWhiteboardAwarenessStore } from '@/store/useWhiteboardAwarenessStore';
-import { useItemActions } from '@/hooks/useItemActions';
 import { cn } from '@/utils/cn';
 import {
   updateBoundArrows,
@@ -23,12 +22,14 @@ import {
 } from '@/utils/arrowBinding';
 import { getViewportRect, filterVisibleItems } from '@/utils/viewport';
 
+import { useItemActions } from '@/hooks/useItemActions';
 import { useElementSize } from '@/hooks/useElementSize';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { useCanvasInteraction } from '@/hooks/useCanvasInteraction';
 import { useCanvasShortcuts } from '@/hooks/useCanvasShortcuts';
 import { useArrowHandles } from '@/hooks/useArrowHandles';
 import { useCanvasMouseEvents } from '@/hooks/useCanvasMouseEvents';
+import { useAddWhiteboardItem } from '@/hooks/useAddWhiteboardItem';
 import { useSelectionBox } from '@/hooks/useSelectionBox';
 import { useMultiDrag } from '@/hooks/useMultiDrag';
 
@@ -71,6 +72,8 @@ export default function Canvas() {
   const setStagePos = useWhiteboardLocalStore((state) => state.setStagePos);
   const cursorMode = useWhiteboardLocalStore((state) => state.cursorMode);
   const myUserId = useWhiteboardAwarenessStore((state) => state.myUserId);
+
+  const { processImageFile, getCanvasPointFromEvent } = useAddWhiteboardItem();
 
   const stageRef = useRef<Konva.Stage | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -314,6 +317,31 @@ export default function Canvas() {
     }
   };
 
+  // 드래그 앤 드롭
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // 드롭된 데이터에서 파일 리스트를 가져옴
+      const files = e.dataTransfer.files;
+      if (files && files.length > 0) {
+        const file = files[0];
+        // 이미지 파일인 경우 processImageFile 실행
+        if (file.type.startsWith('image/')) {
+          const point = getCanvasPointFromEvent(e.clientX, e.clientY);
+          processImageFile(file, point || undefined);
+        }
+      }
+    },
+    [processImageFile, getCanvasPointFromEvent],
+  );
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
   // 외부 클릭 시 선택 해제
   useClickOutside(
     containerRef,
@@ -488,6 +516,8 @@ export default function Canvas() {
   return (
     <div
       ref={containerRef}
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
       className={cn(
         'h-full w-full flex-none overflow-hidden bg-neutral-100',
         cursorMode === 'select' && 'cursor-default',
