@@ -134,6 +134,57 @@ dev:meet는 분리된 협업 도구로 인한 비효율을 하나의 흐름으�
 
 <br/>
 
+
+
+## ⛏️ 문제 해결 과정 및 기술 경험
+
+### [FE] 통화 음질 개선
+
+- 작성자: Tony (윤장호)
+- [🔗 링크](https://github.com/boostcampwm2025/web03-devmeet/wiki/%5BFE%5D-%ED%86%B5%ED%99%94-%EC%9D%8C%EC%A7%88-%EA%B0%9C%EC%84%A0)
+
+### [FE] React-Konva 라이브러리 환경에서의 SVG 렌더링 이슈 및 해결 방안
+
+- 작성자: Kuma (차지태)
+- [🔗 링크](https://github.com/boostcampwm2025/web03-devmeet/wiki/%5BFE%5D-React%E2%80%90Konva-%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC-%ED%99%98%EA%B2%BD%EC%97%90%EC%84%9C%EC%9D%98-SVG-%EB%A0%8C%EB%8D%94%EB%A7%81-%EC%9D%B4%EC%8A%88-%EB%B0%8F-%ED%95%B4%EA%B2%B0-%EB%B0%A9%EC%95%88)
+
+### [n8n] 코드 리뷰 자동화
+- 작성자: Kuma (차지태)
+- [🔗 링크](https://github.com/boostcampwm2025/web03-devmeet/wiki/%5BCode-Review%5D-n8n%EC%9C%BC%EB%A1%9C-%EC%BD%94%EB%93%9C%EB%A6%AC%EB%B7%B0-%EA%B0%9C%EC%84%A0-%EB%B0%8F-%EB%B3%B4%EC%99%84%ED%95%98%EA%B8%B0)
+
+### [FE] canvas 재렌더링 문제 및 개선
+
+- 작성자: Andrew (이선우)
+- [🔗 링크](https://github.com/boostcampwm2025/web03-devmeet/wiki/%5BFE%5D-canvas-%EC%9E%AC%EB%A0%8C%EB%8D%94%EB%A7%81-%EB%AC%B8%EC%A0%9C-%EB%B0%8F-%EA%B0%9C%EC%84%A0)
+
+### [FE] Redo Undo 시 아이템 중복 생성 문제 및 개선
+
+- 작성자: Andrew (이선우)
+- [🔗 링크](https://github.com/boostcampwm2025/web03-devmeet/wiki/%5BFE%5D-Redo-Undo-%EC%8B%9C-%EC%95%84%EC%9D%B4%ED%85%9C-%EC%A4%91%EB%B3%B5-%EC%83%9D%EC%84%B1-%EB%AC%B8%EC%A0%9C-%EB%B0%8F-%EA%B0%9C%EC%84%A0)
+
+### [FE] React Profiler React Compiler로 렌더링 분석 및 최적화
+
+- 작성자: Tony (윤장호)
+- [🔗 링크](https://github.com/boostcampwm2025/web03-devmeet/wiki/%5BFE%5D-React-Profiler---React-Compiler%EB%A1%9C-%EB%A0%8C%EB%8D%94%EB%A7%81-%EB%B6%84%EC%84%9D-%EB%B0%8F-%EC%B5%9C%EC%A0%81%ED%99%94)
+
+
+### [FE] next image의 비동기 로딩에 따른 Layout Shift와 채팅 스크롤 동기화 개선
+
+- 작성자: Lisey (이채민)
+- [🔗 링크](https://github.com/boostcampwm2025/web03-devmeet/wiki/%5BFE%5D-next-image%EC%9D%98-%EB%B9%84%EB%8F%99%EA%B8%B0-%EB%A1%9C%EB%94%A9%EC%97%90-%EB%94%B0%EB%A5%B8-Layout-Shift%EC%99%80-%EC%B1%84%ED%8C%85-%EC%8A%A4%ED%81%AC%EB%A1%A4-%EB%8F%99%EA%B8%B0%ED%99%94-%EA%B0%9C%EC%84%A0)
+
+### [BE] 회의 단위 협업 툴 상태 공유 문제 해결 과정
+
+- 작성자: Logan (김동완)
+- [🔗 링크](https://github.com/boostcampwm2025/web03-devmeet/wiki/%5BBE%5D-%ED%9A%8C%EC%9D%98-%EB%8B%A8%EC%9C%84-%ED%98%91%EC%97%85-%ED%88%B4-%EC%83%81%ED%83%9C-%EA%B3%B5%EC%9C%A0-%EB%AC%B8%EC%A0%9C-%ED%95%B4%EA%B2%B0-%EA%B3%BC%EC%A0%95)
+
+### [BE] Yjs 기반 문서 동기화 문제 해결 과정
+
+- 작성자: Logan (김동완)
+- [🔗 링크](https://github.com/boostcampwm2025/web03-devmeet/wiki/%5BBE%5D-Yjs-%EA%B8%B0%EB%B0%98-%EB%AC%B8%EC%84%9C-%EB%8F%99%EA%B8%B0%ED%99%94-%EB%AC%B8%EC%A0%9C-%ED%95%B4%EA%B2%B0-%EA%B3%BC%EC%A0%95)
+
+<br/>
+
 ## 🚀 빌드 & 실행 (One-shot)
 
 ### 1. 저장소 clone
@@ -349,7 +400,7 @@ docker compose up -d
 
 Docker 없이 개별 서비스 단독 실행도 가능합니다.
 
-### Frontend
+**Frontend**
 
 ```bash
 cd frontend
@@ -357,7 +408,7 @@ pnpm install
 pnpm run dev
 ```
 
-### Backend
+**Backend**
 
 ```bash
 cd rep/main_backend
@@ -379,48 +430,6 @@ pnpm start:dev
 
 <br/>
 
-## ⛏️ 문제 해결 과정 및 기술 경험
-
-### [FE] 통화 음질 개선
-
-- 작성자: Tony (윤장호)
-- [🔗 링크](https://github.com/boostcampwm2025/web03-devmeet/wiki/%5BFE%5D-%ED%86%B5%ED%99%94-%EC%9D%8C%EC%A7%88-%EA%B0%9C%EC%84%A0)
-
-### [FE] React-Konva 라이브러리 환경에서의 SVG 렌더링 이슈 및 해결 방안
-
-- 작성자: Kuma (차지태)
-- [🔗 링크](https://github.com/boostcampwm2025/web03-devmeet/wiki/%5BFE%5D-React%E2%80%90Konva-%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC-%ED%99%98%EA%B2%BD%EC%97%90%EC%84%9C%EC%9D%98-SVG-%EB%A0%8C%EB%8D%94%EB%A7%81-%EC%9D%B4%EC%8A%88-%EB%B0%8F-%ED%95%B4%EA%B2%B0-%EB%B0%A9%EC%95%88)
-
-### [n8n] 코드 리뷰 자동화
-- 작성자: Kuma (차지태)
-- [🔗 링크](https://github.com/boostcampwm2025/web03-devmeet/wiki/%5BCode-Review%5D-n8n%EC%9C%BC%EB%A1%9C-%EC%BD%94%EB%93%9C%EB%A6%AC%EB%B7%B0-%EA%B0%9C%EC%84%A0-%EB%B0%8F-%EB%B3%B4%EC%99%84%ED%95%98%EA%B8%B0)
-
-### [FE] canvas 재렌더링 문제 및 개선
-
-- 작성자: Andrew (이선우)
-- [🔗 링크](https://github.com/boostcampwm2025/web03-devmeet/wiki/%5BFE%5D-canvas-%EC%9E%AC%EB%A0%8C%EB%8D%94%EB%A7%81-%EB%AC%B8%EC%A0%9C-%EB%B0%8F-%EA%B0%9C%EC%84%A0)
-
-### [FE] Redo Undo 시 아이템 중복 생성 문제 및 개선
-
-- 작성자: Andrew (이선우)
-- [🔗 링크](https://github.com/boostcampwm2025/web03-devmeet/wiki/%5BFE%5D-Redo-Undo-%EC%8B%9C-%EC%95%84%EC%9D%B4%ED%85%9C-%EC%A4%91%EB%B3%B5-%EC%83%9D%EC%84%B1-%EB%AC%B8%EC%A0%9C-%EB%B0%8F-%EA%B0%9C%EC%84%A0)
-
-### [FE] next image의 비동기 로딩에 따른 Layout Shift와 채팅 스크롤 동기화 개선
-
-- 작성자: Lisey (이채민)
-- [🔗 링크](https://github.com/boostcampwm2025/web03-devmeet/wiki/%5BFE%5D-next-image%EC%9D%98-%EB%B9%84%EB%8F%99%EA%B8%B0-%EB%A1%9C%EB%94%A9%EC%97%90-%EB%94%B0%EB%A5%B8-Layout-Shift%EC%99%80-%EC%B1%84%ED%8C%85-%EC%8A%A4%ED%81%AC%EB%A1%A4-%EB%8F%99%EA%B8%B0%ED%99%94-%EA%B0%9C%EC%84%A0)
-
-### [BE] 회의 단위 협업 툴 상태 공유 문제 해결 과정
-
-- 작성자: Logan (김동완)
-- [🔗 링크](https://github.com/boostcampwm2025/web03-devmeet/wiki/%5BBE%5D-%ED%9A%8C%EC%9D%98-%EB%8B%A8%EC%9C%84-%ED%98%91%EC%97%85-%ED%88%B4-%EC%83%81%ED%83%9C-%EA%B3%B5%EC%9C%A0-%EB%AC%B8%EC%A0%9C-%ED%95%B4%EA%B2%B0-%EA%B3%BC%EC%A0%95)
-
-### [BE] Yjs 기반 문서 동기화 문제 해결 과정
-
-- 작성자: Logan (김동완)
-- [🔗 링크](https://github.com/boostcampwm2025/web03-devmeet/wiki/%5BBE%5D-Yjs-%EA%B8%B0%EB%B0%98-%EB%AC%B8%EC%84%9C-%EB%8F%99%EA%B8%B0%ED%99%94-%EB%AC%B8%EC%A0%9C-%ED%95%B4%EA%B2%B0-%EA%B3%BC%EC%A0%95)
-
-<br/>
 
 ## 🦉 Team OwlCloud 소개
 
