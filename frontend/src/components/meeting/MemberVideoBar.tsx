@@ -154,6 +154,24 @@ export default function MemberVideoBar() {
       // 그룹 resume
       if (allResumeIds.length > 0) {
         socket.emit('signaling:ws:resumes', { consumer_ids: allResumeIds });
+
+        allResumeIds.forEach((consumerId) => {
+          const consumer = currentConsumers[consumerId];
+          const userId = Object.values(members).find(
+            (m) => m.cam?.provider_id === consumerId,
+          )?.user_id;
+
+          if (consumer && userId) {
+            // 생산자가 진짜로 pause한 상태라면 연결하지 않음
+            if (members[userId].cam?.is_paused) {
+              removeMemberStream(userId, 'cam');
+            } else {
+              setMemberStream(userId, 'cam', new MediaStream([consumer.track]));
+            }
+          }
+        });
+
+        // 이미 활성화되어 있던 트랙들도 확실하게 다시 세팅
         visibleStreamTracks.forEach(({ userId, track }) => {
           if (members[userId].cam?.is_paused) removeMemberStream(userId, 'cam');
           else setMemberStream(userId, 'cam', new MediaStream([track]));
