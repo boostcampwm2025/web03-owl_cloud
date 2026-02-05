@@ -85,6 +85,7 @@ export interface ProducerInfo {
   type: MediaType;
   nickname: string;
   is_paused: boolean;
+  is_restart : boolean;
 }
 
 export type MemberStream = Partial<Record<MediaType, MediaStream>>;

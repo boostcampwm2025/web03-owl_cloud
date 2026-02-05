@@ -24,6 +24,7 @@ export type CreateProduceResult = {
   status: 'user' | 'main';
   kind: 'audio' | 'video'; // 개인에 produce이면 user이고 만약 전체적인 producing이면 main
   type: 'mic' | 'cam' | 'screen_video' | 'screen_audio';
+  is_restart: boolean;
 };
 
 // 데이터를 저장할때 사용된 요소

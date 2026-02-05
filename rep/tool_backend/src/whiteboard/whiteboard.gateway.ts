@@ -94,20 +94,21 @@ export class WhiteboardWebsocketGateway
     }
 
     const roomName = this.whiteboardService.makeNamespace(payload.room_id);
-    client.join(roomName);
+    await client.join(roomName);
     client.data.roomName = roomName;
 
-    // Kafka 이벤트 발행(로그,동기화)
     if (payload.clientType === 'main') {
+      // main이 불러오면 ydoc에 있는 캐시도 자동으로 불러오게 한다.
+
       this.kafkaService.emit(EVENT_STREAM_NAME.WHITEBOARD_ENTER, {
         room_id: payload.room_id,
         user_id: payload.user_id,
         tool: payload.tool,
         socket_id: payload.socket_id,
         ticket: payload.ticket,
-        at: Date.now(),
+        at: Date.now(), // 현재 보낸 시간
       });
-    }
+    };
 
     // 입장 허가 메시지 전송
     client.emit(WHITEBOARD_CLIENT_EVENT_NAME.PERMISSION, { ok: true });
@@ -229,9 +230,9 @@ export class WhiteboardWebsocketGateway
         origin: 'DELTA',
       });
 
-      this.logger.log(
-        `[Sync] DELTA: room=${room_id} from=${last_seq} to=${entry.seq} count=${updates.length}`,
-      );
+      // this.logger.log(
+      //   `[Sync] DELTA: room=${room_id} from=${last_seq} to=${entry.seq} count=${updates.length}`,
+      // );
     } catch (err) {
       this.logger.error(`Request Sync Error: ${err.message}`);
     }

@@ -32,11 +32,11 @@ export class Room {
     updated_at = new Date(),
     deleted_at = undefined,
   }: RoomProps) {
-    this.room_id = uuidv7Vo({ uuid: room_id, name: 'room_id' });
+    this.room_id = uuidv7Vo({ uuid: room_id.trim(), name: 'room_id' });
     this.code = roomCodeVo(code);
     this.title = roomTitleVo(title);
     this.password_hash = password_hash ? roomPasswordHashVo(password_hash) : null;
-    this.owner_user_id = uuidv7Vo({ uuid: owner_user_id, name: 'owner_user_id' });
+    this.owner_user_id = uuidv7Vo({ uuid: owner_user_id.trim(), name: 'owner_user_id' });
     this.max_participants = roomMaxParticipantsVo(max_participants);
     this.status = roomStatusVo(status);
     this.created_at = created_at && created_at instanceof Date ? created_at : new Date();

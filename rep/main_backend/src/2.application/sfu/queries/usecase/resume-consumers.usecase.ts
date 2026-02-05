@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ResumeConsumersDto } from '../dto';
 import { SelectDatasFromCache } from '@app/ports/cache/cache.inbound';
-import type { ConsumerRepositoryPort } from '../../ports';
+import type { ConsumerRepositoryPort, ConsumerTimerRepositoryPort } from '../../ports';
 import { Consumer } from 'mediasoup/types';
 
 type ResumeConsumersUsecaseProps<T> = {
@@ -15,6 +15,7 @@ export class ResumeConsumersUsecase<T> {
 
   constructor(
     private readonly consumerRepo: ConsumerRepositoryPort,
+    private readonly consumerTimerRepo: ConsumerTimerRepositoryPort,
     { selectConsumerInfosFromCache }: ResumeConsumersUsecaseProps<T>,
   ) {
     this.selectConsumerInfosFromCache = selectConsumerInfosFromCache;
@@ -45,13 +46,47 @@ export class ResumeConsumersUsecase<T> {
         await consumer.resume();
 
         if (consumer.appData.type === 'cam' && consumer.type === 'simulcast') {
-          consumer.setPriority(10);
-          await consumer.setPreferredLayers({ spatialLayer: 2, temporalLayer: 2 });
-        };
+          await consumer.setPriority(10);
+          await consumer.setPreferredLayers({ spatialLayer: 2 });
+          await consumer.requestKeyFrame();
+        }
 
+        // screen일 경우에
         if (consumer.appData.type === 'screen_video') {
-          consumer.setPriority(300); // 가장 우선순위를 높게 해준다.
-        };
+          await consumer.setPriority(255); // 가장 우선순위를 높게 해준다.
+
+          this.consumerTimerRepo.clear(consumer_id);
+
+          if (consumer.type === 'simulcast') {
+            // simulcast인 경우 초반 뭉게짐을 좀 개선해주는 것이 좋을 수 있다.
+            await consumer.setPreferredLayers({ spatialLayer: 0 });
+            await consumer.requestKeyFrame();
+
+            const t = setTimeout(async () => {
+              try {
+                // 예외 처리
+                const c = this.consumerRepo.get(consumer_id);
+                if (!c || c.closed || c.paused) return;
+                if (c.appData?.type !== 'screen_video' || c.type !== 'simulcast') return;
+
+                // 화면 업그레이드
+                await c.setPreferredLayers({ spatialLayer: 1 });
+                await c.requestKeyFrame();
+              } catch (e) {
+                this.logger.debug(e);
+              } finally {
+                if (this.consumerTimerRepo.get(consumer_id) === t) {
+                  this.consumerTimerRepo.delete(consumer_id);
+                }
+              }
+            }, 200);
+
+            this.consumerTimerRepo.set(consumer_id, t);
+            return;
+          }
+
+          await consumer.requestKeyFrame();
+        }
       } catch (err) {
         this.logger.error(err);
       }

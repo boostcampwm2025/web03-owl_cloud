@@ -72,7 +72,7 @@ export default function ZoomControls() {
       <div className="flex items-center gap-2 rounded-lg border border-neutral-200 bg-white p-2 shadow-sm">
         <NavButton icon={ZoomOutIcon} label="축소" onClick={handleZoomOut} />
 
-        <div className="flex h-8 w-20 items-center justify-center rounded text-sm text-neutral-700">
+        <div className="flex h-8 w-20 items-center justify-center rounded text-sm text-neutral-700 select-none">
           {zoomPercentage}%
         </div>
 

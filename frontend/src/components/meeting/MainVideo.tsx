@@ -12,7 +12,7 @@ export default function MainVideo() {
     if (state.lastSpeakerId && state.members[state.lastSpeakerId]) {
       return state.lastSpeakerId;
     }
-    // 3. 목록의 첫 번째 유저
+    // 2. 목록의 첫 번째 유저
     const firstOrderedId = state.orderedMemberIds[0];
     if (firstOrderedId && state.members[firstOrderedId]) return firstOrderedId;
 

@@ -53,7 +53,6 @@ import { SignalingWebsocket } from '@infra/websocket/signaling/signaling.service
 import { PrometheusService } from '@infra/metric/prometheus/prometheus.service';
 import { WsMetricsInterceptor } from '@infra/metric/prometheus/prometheus.intercepter';
 
-
 @UseInterceptors(WsMetricsInterceptor)
 @WebSocketGateway({
   namespace: WEBSOCKET_NAMESPACE.SIGNALING,
@@ -79,7 +78,7 @@ export class SignalingWebsocketGateway
     private readonly jwtGuard: JwtWsGuard,
     private readonly signalingService: SignalingWebsocketService,
     @Inject(SIGNALING_WEBSOCKET) private readonly signalingSocket: SignalingWebsocket,
-    private readonly prom : PrometheusService,
+    private readonly prom: PrometheusService,
   ) {}
 
   // onGatewayInit으로 websocket 연결됐을때 사용할 함수
@@ -112,7 +111,7 @@ export class SignalingWebsocketGateway
 
   // 연결하자 마자 바로 해야 하는 하는 것 정의 가능 -> access_token을 보내준다.
   async handleConnection(client: Socket) {
-    const ns : string = client.nsp.name; // 여기서는 /signal이 될 예정이다.
+    const ns: string = client.nsp.name; // 여기서는 /signal이 될 예정이다.
     this.prom.wsConnectionsCurrent.labels(ns).inc();
     this.prom.wsConnectionsTotal.labels(ns).inc();
     const access_token: string = client.data.user.access_token;
@@ -125,9 +124,7 @@ export class SignalingWebsocketGateway
     const ns = client.nsp.name;
     this.prom.wsConnectionsCurrent.labels(ns).dec();
     const reason =
-      (client as any).disconnectReason ??          
-      (client as any).conn?.closeReason ??         
-      'unknown';
+      (client as any).disconnectReason ?? (client as any).conn?.closeReason ?? 'unknown';
     this.prom.wsDisconnectsTotal.labels(ns, reason).inc();
 
     const user = client.data.user;
@@ -286,7 +283,12 @@ export class SignalingWebsocketGateway
       // 2. ( 다른 유저들에게 ) 알려야 함 -> 지금 등록했다는 사실을
       const room_id: string = client.data.room_id;
       const namespace: string = `${CHANNEL_NAMESPACE.SIGNALING}:${room_id}`;
-      client.to(namespace).emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.ALERT_PRODUCED, producerInfo);
+      if (validate.resume && validate.type === 'cam')
+        client.to(namespace).emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.CAMERA_ON, producerInfo);
+      else
+        client
+          .to(namespace)
+          .emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.ALERT_PRODUCED, producerInfo);
 
       // 3. 반환
       return { producerInfo };
@@ -489,6 +491,11 @@ export class SignalingWebsocketGateway
     try {
       const producerInfo = await this.signalingService.resumeProduce(client, validate);
 
+      // 카메라가 켜졌다고 인원에게 알려준다.
+      const room_id: string = client.data.room_id;
+      const namespace: string = `${CHANNEL_NAMESPACE.SIGNALING}:${room_id}`;
+      client.to(namespace).emit(WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME.CAMERA_ON, producerInfo);
+
       return { producerInfo };
     } catch (err) {
       this.logger.error(err);
@@ -563,7 +570,7 @@ export class SignalingWebsocketGateway
       // 모든 방에 정보를 알려야 한다.
       const roomMessage: MessageResultProps = {
         ...result,
-        thumbnail_url: result.thumnail_url,
+        thumbnail_url: result.thumbnail_url,
         message: undefined,
         type: 'file',
       };

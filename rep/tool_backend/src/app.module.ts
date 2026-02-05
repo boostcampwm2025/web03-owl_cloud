@@ -13,6 +13,7 @@ import { CodeeditorWebsocketModule } from './infra/websocket/codeeditor/codeedit
 import { WhiteboardWebsocketModule } from './infra/websocket/whiteboard/whiteboard.module';
 import { MemoryModule } from './infra/memory/memory.module';
 import { PrometheusModule } from './infra/metric/metric.module';
+import { DiskModule } from './infra/disk/disk.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { PrometheusModule } from './infra/metric/metric.module';
     KafkaModule, // kafka용 모듈
     MemoryModule, // 내장 ram을 사용하기 위한 모듈
     PrometheusModule,
+    DiskModule, // disk 모듈
     // 추가 모듈
     HealthModule,
     GuardModule,

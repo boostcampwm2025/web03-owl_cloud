@@ -9,8 +9,10 @@ import { useCallback, useState } from 'react';
 import { Socket } from 'socket.io-client';
 
 export const useFileUpload = (socket: Socket | null) => {
-  const [percent, setPercent] = useState<number>(0);
-  const [uploading, setUploading] = useState<boolean>(false);
+  // 파일별 업로드 진행률
+  const [progressMap, setProgressMap] = useState<Record<string, number>>({});
+  // 파일별 업로드 상태
+  const [uploadingMap, setUploadingMap] = useState<Record<string, boolean>>({});
 
   const requestUploadTicket = useCallback(
     async (file: File): Promise<UploadTicket> => {
@@ -35,15 +37,17 @@ export const useFileUpload = (socket: Socket | null) => {
   );
 
   const uploadFile = useCallback(
-    async (file: File) => {
+    async (file: File, pendingId: string) => {
       if (!socket) return;
 
-      setUploading(true);
-      setPercent(0);
+      const ticket = await requestUploadTicket(file);
+      const { type, file_id, direct, multipart, multipart_resume } = ticket;
+
+      // pendingId를 사용하여 상태 업데이트
+      setUploadingMap((m) => ({ ...m, [pendingId]: true }));
+      setProgressMap((m) => ({ ...m, [pendingId]: 0 }));
 
       try {
-        const ticket = await requestUploadTicket(file);
-        const { type, file_id, direct, multipart, multipart_resume } = ticket;
         let finalPayload: FileCheckPayload;
 
         const isMultipart = file.size > 10 * 1024 * 1024;
@@ -73,7 +77,8 @@ export const useFileUpload = (socket: Socket | null) => {
           });
 
           finalPayload = { file_id, type: 'direct', direct: { etag } };
-          setPercent(100);
+
+          setProgressMap((m) => ({ ...m, [pendingId]: 100 }));
         }
 
         // Multipart Upload
@@ -116,14 +121,22 @@ export const useFileUpload = (socket: Socket | null) => {
               tags.push({ part_number: p.partNumber, etag });
             }
 
-            const currentPercent = Math.floor(((i + 1) / parts.length) * 100);
-            setPercent(currentPercent);
+            // 파일별 진행률 업데이트
+            const percent = Math.floor(((i + 1) / parts.length) * 100);
+
+            setProgressMap((m) => ({
+              ...m,
+              [pendingId]: percent,
+            }));
           }
 
           finalPayload = {
             file_id,
             type: 'multipart',
-            multipart: { upload_id: activeInfo.upload_id, tags },
+            multipart: {
+              upload_id: activeInfo.upload_id,
+              tags,
+            },
           };
         }
 
@@ -133,7 +146,10 @@ export const useFileUpload = (socket: Socket | null) => {
         console.error('upload error:', err);
         throw err;
       } finally {
-        setUploading(false);
+        setUploadingMap((m) => ({
+          ...m,
+          [pendingId]: false,
+        }));
       }
     },
     [fileCheck, requestUploadTicket, socket],
@@ -141,7 +157,7 @@ export const useFileUpload = (socket: Socket | null) => {
 
   return {
     uploadFile,
-    uploading,
-    percent,
+    progressMap,
+    uploadingMap,
   };
 };

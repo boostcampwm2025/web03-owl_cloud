@@ -42,7 +42,7 @@ export type CheckUploadFileResult = {
   filename: string;
   size: number;
   category: 'image' | 'video' | 'audio' | 'text' | 'binary';
-  thumnail_url: string | undefined;
+  thumbnail_url: string | undefined;
   file_id: string;
   nickname: string;
   user_id: string;

@@ -15,7 +15,6 @@ import type {
 import { useWhiteboardSharedStore } from '@/store/useWhiteboardSharedStore';
 import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 import { useWhiteboardAwarenessStore } from '@/store/useWhiteboardAwarenessStore';
-import { useItemActions } from '@/hooks/useItemActions';
 import { cn } from '@/utils/cn';
 import {
   updateBoundArrows,
@@ -23,19 +22,26 @@ import {
 } from '@/utils/arrowBinding';
 import { getViewportRect, filterVisibleItems } from '@/utils/viewport';
 
+import { useItemActions } from '@/hooks/useItemActions';
 import { useElementSize } from '@/hooks/useElementSize';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { useCanvasInteraction } from '@/hooks/useCanvasInteraction';
-import { useCanvasShortcuts } from '@/hooks/useCanvasShortcuts';
 import { useArrowHandles } from '@/hooks/useArrowHandles';
 import { useCanvasMouseEvents } from '@/hooks/useCanvasMouseEvents';
+import { useCanvasShortcuts } from '@/hooks/useCanvasShortcuts';
+import { useAddWhiteboardItem } from '@/hooks/useAddWhiteboardItem';
+import { useSelectionBox } from '@/hooks/useSelectionBox';
+import { useMultiDrag } from '@/hooks/useMultiDrag';
+import { usePinchZoom } from '@/hooks/usePinchZoom';
 
 import RenderItem from '@/components/whiteboard/items/RenderItem';
 import TextArea from '@/components/whiteboard/items/text/TextArea';
 import ShapeTextArea from '@/components/whiteboard/items/shape/ShapeTextArea';
 import ItemTransformer from '@/components/whiteboard/controls/ItemTransformer';
 import RemoteSelectionLayer from '@/components/whiteboard/remote/RemoteSelectionLayer';
+import RemoteSelectionIndicator from '@/components/whiteboard/remote/RemoteSelectionIndicator';
 import ArrowHandles from '@/components/whiteboard/items/arrow/ArrowHandles';
+import SelectionBox from '@/components/whiteboard/SelectionBox';
 import Portal from '@/components/common/Portal';
 
 const GEOMETRY_KEYS = ['x', 'y', 'width', 'height', 'rotation'] as const;
@@ -44,9 +50,18 @@ export default function Canvas() {
   const canvasWidth = useWhiteboardSharedStore((state) => state.canvasWidth);
   const canvasHeight = useWhiteboardSharedStore((state) => state.canvasHeight);
   const items = useWhiteboardSharedStore((state) => state.items);
-  const selectedId = useWhiteboardLocalStore((state) => state.selectedId);
+  const selectedIds = useWhiteboardLocalStore((state) => state.selectedIds);
   const editingTextId = useWhiteboardLocalStore((state) => state.editingTextId);
-  const selectItem = useWhiteboardLocalStore((state) => state.selectItem);
+  const selectOnly = useWhiteboardLocalStore((state) => state.selectOnly);
+  const toggleSelection = useWhiteboardLocalStore(
+    (state) => state.toggleSelection,
+  );
+  const addToSelection = useWhiteboardLocalStore(
+    (state) => state.addToSelection,
+  );
+  const clearSelection = useWhiteboardLocalStore(
+    (state) => state.clearSelection,
+  );
   const { updateItem, performTransaction } = useItemActions();
   const setEditingTextId = useWhiteboardLocalStore(
     (state) => state.setEditingTextId,
@@ -58,6 +73,8 @@ export default function Canvas() {
   const setStagePos = useWhiteboardLocalStore((state) => state.setStagePos);
   const cursorMode = useWhiteboardLocalStore((state) => state.cursorMode);
   const myUserId = useWhiteboardAwarenessStore((state) => state.myUserId);
+
+  const { processImageFile, getCanvasPointFromEvent } = useAddWhiteboardItem();
 
   const stageRef = useRef<Konva.Stage | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -72,6 +89,15 @@ export default function Canvas() {
     height?: number;
     rotation?: number;
   } | null>(null);
+
+  // 멀티 드래그 훅
+  const {
+    startMultiDrag,
+    updateMultiDrag,
+    finishMultiDrag,
+    isMultiDragging,
+    getMultiDragPosition,
+  } = useMultiDrag({ selectedIds, items });
 
   // Viewport culling을 위한 상태
   const [viewportRect, setViewportRect] = useState<{
@@ -239,13 +265,18 @@ export default function Canvas() {
     [items, editingTextId],
   );
 
+  const singleSelectedId = selectedIds.length === 1 ? selectedIds[0] : null;
   const selectedItem = useMemo(
-    () => items.find((item) => item.id === selectedId),
-    [items, selectedId],
+    () =>
+      singleSelectedId
+        ? items.find((item) => item.id === singleSelectedId)
+        : null,
+    [items, singleSelectedId],
   );
 
   const isArrowOrLineSelected =
-    selectedItem?.type === 'arrow' || selectedItem?.type === 'line';
+    !!singleSelectedId &&
+    (selectedItem?.type === 'arrow' || selectedItem?.type === 'line');
 
   // 화살표/선 훅
   const {
@@ -257,14 +288,21 @@ export default function Canvas() {
     handleArrowEndDrag,
     handleHandleDragEnd,
     handleArrowDblClick,
-    deleteControlPoint,
     draggingPoints,
     snapIndicator,
+    deleteControlPoint,
   } = useArrowHandles({
     arrow: isArrowOrLineSelected ? (selectedItem as ArrowItem) : null,
     items,
     stageRef,
     updateItem,
+  });
+
+  // 키보드 단축키 훅
+  useCanvasShortcuts({
+    isArrowOrLineSelected,
+    selectedHandleIndex,
+    deleteControlPoint,
   });
 
   // 도형 더블클릭 핸들러 (텍스트 편집 모드)
@@ -282,10 +320,35 @@ export default function Canvas() {
       e.target === e.target.getStage() || e.target.hasName('bg-rect');
 
     if (clickedOnEmpty) {
-      selectItem(null);
+      clearSelection();
       setSelectedHandleIndex(null);
     }
   };
+
+  // 드래그 앤 드롭
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // 드롭된 데이터에서 파일 리스트를 가져옴
+      const files = e.dataTransfer.files;
+      if (files && files.length > 0) {
+        const file = files[0];
+        // 이미지 파일인 경우 processImageFile 실행
+        if (file.type.startsWith('image/')) {
+          const point = getCanvasPointFromEvent(e.clientX, e.clientY);
+          processImageFile(file, point || undefined);
+        }
+      }
+    },
+    [processImageFile, getCanvasPointFromEvent],
+  );
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
 
   // 외부 클릭 시 선택 해제
   useClickOutside(
@@ -297,42 +360,118 @@ export default function Canvas() {
         return;
       }
 
-      if (selectedId) {
-        selectItem(null);
+      if (selectedIds.length > 0) {
+        clearSelection();
         setSelectedHandleIndex(null);
       }
     },
-    !editingTextId && !!selectedId,
+    !editingTextId && selectedIds.length > 0,
+  );
+
+  const { startSelection, cancelSelection } = useSelectionBox({
+    stageRef,
+    enabled: cursorMode === 'select',
+  });
+
+  const handleSelectItem = useCallback(
+    (id: string, e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+      const nativeEvent = e?.evt as MouseEvent | TouchEvent | undefined;
+      const shiftKey =
+        !!nativeEvent && 'shiftKey' in nativeEvent && nativeEvent.shiftKey;
+      const ctrlKey =
+        !!nativeEvent && 'ctrlKey' in nativeEvent && nativeEvent.ctrlKey;
+      const metaKey =
+        !!nativeEvent && 'metaKey' in nativeEvent && nativeEvent.metaKey;
+
+      if (ctrlKey || metaKey) {
+        toggleSelection(id);
+        return;
+      }
+
+      if (shiftKey) {
+        addToSelection(id);
+        return;
+      }
+
+      if (selectedIds.includes(id)) {
+        return;
+      }
+
+      selectOnly(id);
+    },
+    [addToSelection, selectOnly, toggleSelection, selectedIds],
   );
 
   // 마우스 이벤트 통합 훅
+  const { handlePointerDown, handlePointerMove, cancelDrawing, cancelErasing } =
+    useCanvasMouseEvents({
+      onDeselect: handleCheckDeselect,
+      onSelectionBoxStart: startSelection,
+    });
+
+  // 핀치 줌 훅
   const {
-    handlePointerDown,
-    handlePointerMove,
-    handlePointerUp,
-    handlePointerLeave,
-    currentDrawing,
-  } = useCanvasMouseEvents({
-    onDeselect: handleCheckDeselect,
+    isActive: isPinching,
+    handleTouchStart: handlePinchStart,
+    handleTouchMove: handlePinchMove,
+    handleTouchEnd: handlePinchEnd,
+  } = usePinchZoom({
+    stageRef,
+    onScaleChange: setStageScale,
+    onPositionChange: setStagePos,
+    onPinchStart: () => {
+      // 핀치 시작 시 그리기/지우개/선택박스 취소
+      cancelDrawing();
+      cancelErasing();
+      cancelSelection();
+      // 아이템 선택 해제
+      clearSelection();
+    },
   });
 
-  // 캔버스 드래그 가능 여부
-  const isDraggable = useWhiteboardLocalStore(
-    (state) => state.cursorMode === 'move',
+  // 캔버스 드래그 가능 여부 (핀치 줌 중에는 비활성화함)
+  const isDraggable =
+    useWhiteboardLocalStore((state) => state.cursorMode === 'move') &&
+    !isPinching;
+
+  const handleTouchStart = useCallback(
+    (e: Konva.KonvaEventObject<TouchEvent>) => {
+      if (e.evt.touches.length === 2) {
+        handlePinchStart(e.evt);
+      } else {
+        handlePointerDown(e);
+      }
+    },
+    [handlePinchStart, handlePointerDown],
   );
 
-  useCanvasShortcuts({
-    isArrowOrLineSelected,
-    selectedHandleIndex,
-    deleteControlPoint,
-  });
+  const handleTouchMove = useCallback(
+    (e: Konva.KonvaEventObject<TouchEvent>) => {
+      if (e.evt.touches.length === 2) {
+        handlePinchMove(e.evt);
+      } else {
+        handlePointerMove(e);
+      }
+    },
+    [handlePinchMove, handlePointerMove],
+  );
+
+  const handleTouchEnd = useCallback(
+    (e: Konva.KonvaEventObject<TouchEvent>) => {
+      handlePinchEnd(e.evt);
+    },
+    [handlePinchEnd],
+  );
 
   const handleItemChange = useCallback(
     (id: string, newAttributes: Partial<WhiteboardItem>) => {
+      if (isMultiDragging(id)) {
+        return;
+      }
+
       performTransaction(() => {
         updateItem(id, newAttributes);
 
-        // 도형에 연결된 화살표 업데이트
         const isGeometryChanged = GEOMETRY_KEYS.some(
           (key) => key in newAttributes,
         );
@@ -341,17 +480,16 @@ export default function Canvas() {
         const changedItem = items.find((item) => item.id === id);
         if (!changedItem || changedItem.type !== 'shape') return;
 
+        if (selectedIds.length > 1 && selectedIds.includes(id)) {
+          return;
+        }
+
         const updatedShape = { ...changedItem, ...newAttributes } as ShapeItem;
         updateBoundArrows(id, updatedShape, items, updateItem);
       });
     },
-    [items, updateItem, performTransaction],
+    [items, updateItem, performTransaction, isMultiDragging, selectedIds],
   );
-
-  const handleDragMoveItem = useCallback((id: string, x: number, y: number) => {
-    setLocalDraggingId(id);
-    setLocalDraggingPos((prev) => (prev ? { ...prev, x, y } : { x, y }));
-  }, []);
 
   const handleTransformMoveItem = useCallback(
     (
@@ -362,17 +500,54 @@ export default function Canvas() {
       h: number,
       rotation: number,
     ) => {
-      setLocalDraggingId(id);
-      setLocalDraggingPos({ x, y, width: w, height: h, rotation });
+      setLocalDraggingId((prev) => (prev === id ? prev : id));
+      setLocalDraggingPos((prev) => {
+        if (
+          prev &&
+          prev.x === x &&
+          prev.y === y &&
+          prev.width === w &&
+          prev.height === h &&
+          prev.rotation === rotation
+        ) {
+          return prev;
+        }
+        return { x, y, width: w, height: h, rotation };
+      });
     },
     [],
+  );
+
+  const handleDragMoveItem = useCallback(
+    (id: string, x: number, y: number) => {
+      const isMulti = updateMultiDrag(id, x, y);
+
+      if (isMulti) return;
+
+      const hasArrowBinding = items.some(
+        (item) =>
+          item.type === 'arrow' &&
+          (item.startBinding?.elementId === id ||
+            item.endBinding?.elementId === id),
+      );
+
+      if (hasArrowBinding) {
+        setLocalDraggingId((prev) => (prev === id ? prev : id));
+        setLocalDraggingPos((prev) => {
+          if (prev && prev.x === x && prev.y === y) return prev;
+          return { x, y };
+        });
+      }
+    },
+    [updateMultiDrag, items],
   );
 
   const handleDragEndItem = useCallback(() => {
     setIsDraggingArrow(false);
     setLocalDraggingId(null);
     setLocalDraggingPos(null);
-  }, []);
+    finishMultiDrag();
+  }, [finishMultiDrag]);
 
   // width={0} height={0}으로 canvas 렌더링 방지
   if (size.width === 0 || size.height === 0) {
@@ -387,6 +562,8 @@ export default function Canvas() {
   return (
     <div
       ref={containerRef}
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
       className={cn(
         'h-full w-full flex-none overflow-hidden bg-neutral-100',
         cursorMode === 'select' && 'cursor-default',
@@ -411,13 +588,13 @@ export default function Canvas() {
         }}
         onMouseDown={handlePointerDown}
         onMouseMove={handlePointerMove}
-        onMouseUp={handlePointerUp}
-        onMouseLeave={handlePointerLeave}
-        onTouchStart={handlePointerDown}
-        onTouchMove={handlePointerMove}
-        onTouchEnd={handlePointerUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <Layer
+          name="main-layer"
+          className="main-layer"
           clipX={0}
           clipY={0}
           clipWidth={canvasWidth}
@@ -437,99 +614,83 @@ export default function Canvas() {
           />
 
           {/* 아이템 렌더링 */}
-          {(() => {
-            const draggingTargetShape =
-              localDraggingId && localDraggingPos
-                ? (items.find((it) => it.id === localDraggingId) as ShapeItem)
-                : null;
+          {visibleItems.map((item) => {
+            let displayItem = item;
 
-            return visibleItems.map((item) => {
-              // 드래그 중인 아이템의 실시간 위치
-              let displayItem = item;
-              if (localDraggingId === item.id && localDraggingPos) {
-                displayItem = {
-                  ...item,
-                  x: localDraggingPos.x,
-                  y: localDraggingPos.y,
-                } as WhiteboardItem;
-              }
+            const multiDragPos = getMultiDragPosition(item.id);
+            if (multiDragPos && 'x' in item && 'y' in item) {
+              displayItem = {
+                ...item,
+                x: multiDragPos.x,
+                y: multiDragPos.y,
+              } as WhiteboardItem;
+            }
 
-              // 화살표인 경우, 부착 대상이 드래그 중인지 확인하고 계산
-              if (
-                item.type === 'arrow' &&
-                localDraggingId &&
-                localDraggingPos &&
-                draggingTargetShape
-              ) {
+            if (
+              !multiDragPos &&
+              item.type === 'arrow' &&
+              localDraggingId &&
+              localDraggingPos &&
+              (item.startBinding?.elementId === localDraggingId ||
+                item.endBinding?.elementId === localDraggingId)
+            ) {
+              const targetShape = items.find(
+                (it) => it.id === localDraggingId,
+              ) as ShapeItem;
+              if (targetShape) {
                 const tempPoints = getDraggingArrowPoints(
                   item as ArrowItem,
                   localDraggingId,
                   localDraggingPos.x,
                   localDraggingPos.y,
-                  draggingTargetShape,
+                  targetShape,
                   localDraggingPos.width,
                   localDraggingPos.height,
                   localDraggingPos.rotation,
                 );
-                if (tempPoints && Array.isArray(tempPoints)) {
+                if (tempPoints) {
                   displayItem = {
                     ...displayItem,
                     points: tempPoints,
                   } as WhiteboardItem;
                 }
               }
+            }
 
-              // 핸들 드래그 중인 화살표
-              if (
-                displayItem.id === selectedId &&
-                (displayItem.type === 'arrow' || displayItem.type === 'line') &&
-                draggingPoints &&
-                Array.isArray(draggingPoints)
-              ) {
-                displayItem = {
-                  ...displayItem,
-                  points: draggingPoints,
-                } as WhiteboardItem;
-              }
+            if (
+              displayItem.id === singleSelectedId &&
+              (displayItem.type === 'arrow' || displayItem.type === 'line') &&
+              draggingPoints
+            ) {
+              displayItem = {
+                ...displayItem,
+                points: draggingPoints,
+              } as WhiteboardItem;
+            }
 
-              return (
-                <RenderItem
-                  key={item.id}
-                  item={displayItem}
-                  isSelected={item.id === selectedId}
-                  onSelect={selectItem}
-                  onChange={(newAttributes) =>
-                    handleItemChange(item.id, newAttributes)
+            return (
+              <RenderItem
+                key={item.id}
+                item={displayItem}
+                isSelected={selectedIds.includes(item.id)}
+                onSelect={handleSelectItem}
+                onChange={(newAttributes) =>
+                  handleItemChange(item.id, newAttributes)
+                }
+                onArrowDblClick={handleArrowDblClick}
+                onShapeDblClick={handleShapeDblClick}
+                onDragStart={() => {
+                  if (item.type === 'arrow' || item.type === 'line') {
+                    setIsDraggingArrow(true);
                   }
-                  onArrowDblClick={handleArrowDblClick}
-                  onShapeDblClick={handleShapeDblClick}
-                  onDragStart={() => {
-                    if (item.type === 'arrow' || item.type === 'line') {
-                      setIsDraggingArrow(true);
-                    }
-                    setLocalDraggingId(item.id);
-                    const geoItem = item as {
-                      x: number;
-                      y: number;
-                      width?: number;
-                      height?: number;
-                      rotation?: number;
-                    };
-                    setLocalDraggingPos({
-                      x: geoItem.x,
-                      y: geoItem.y,
-                      width: geoItem.width,
-                      height: geoItem.height,
-                      rotation: geoItem.rotation,
-                    });
-                  }}
-                  onDragMove={handleDragMoveItem}
-                  onTransformMove={handleTransformMoveItem}
-                  onDragEnd={handleDragEndItem}
-                />
-              );
-            });
-          })()}
+                  startMultiDrag(item.id);
+                }}
+                onDragMove={handleDragMoveItem}
+                onTransformMove={handleTransformMoveItem}
+                onDragEnd={handleDragEndItem}
+              />
+            );
+          })}
           {isArrowOrLineSelected && selectedItem && !isDraggingArrow && (
             <ArrowHandles
               arrow={selectedItem as ArrowItem}
@@ -557,29 +718,32 @@ export default function Canvas() {
             />
           )}
 
-          {/* 그리는 중인 선 */}
-          {currentDrawing && (
-            <Line
-              points={currentDrawing.points}
-              stroke={currentDrawing.stroke}
-              strokeWidth={currentDrawing.strokeWidth}
-              tension={0.5}
-              lineCap="round"
-              lineJoin="round"
-            />
-          )}
+          {/* 선택 박스 */}
+          <SelectionBox />
+
+          {/* 내 멀티 선택 개별 박스 */}
+          {selectedIds.length > 1 &&
+            selectedIds.map((itemId) => (
+              <RemoteSelectionIndicator
+                key={`my-selection-${itemId}`}
+                selectedId={itemId}
+                userColor="#0369A1"
+                items={items}
+                stageRef={stageRef}
+              />
+            ))}
 
           {/* 다른 사용자의 선택 표시 */}
           <RemoteSelectionLayer
             myUserId={myUserId}
-            selectedId={selectedId}
+            selectedId={singleSelectedId}
             items={items}
             stageRef={stageRef}
           />
 
           {/* 내 Transformer */}
           <ItemTransformer
-            selectedId={selectedId}
+            selectedIds={selectedIds}
             items={items}
             stageRef={stageRef}
           />
@@ -598,7 +762,7 @@ export default function Canvas() {
             }}
             onClose={() => {
               setEditingTextId(null);
-              selectItem(null);
+              clearSelection();
             }}
           />
         </Portal>
@@ -616,7 +780,7 @@ export default function Canvas() {
             }}
             onClose={() => {
               setEditingTextId(null);
-              selectItem(null);
+              clearSelection();
             }}
             onSizeChange={(width, height, newY, newX, newText) => {
               const updates: Partial<ShapeItem> = { width, height };

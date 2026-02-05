@@ -2,6 +2,7 @@
 
 import Konva from 'konva';
 import { useWhiteboardAwarenessStore } from '@/store/useWhiteboardAwarenessStore';
+import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 import RemoteSelectionIndicator from './RemoteSelectionIndicator';
 import type { WhiteboardItem } from '@/types/whiteboard';
 
@@ -20,32 +21,37 @@ export default function RemoteSelectionLayer({
 }: RemoteSelectionLayerProps) {
   const users = useWhiteboardAwarenessStore((state) => state.users);
 
+  const mySelectedIds = useWhiteboardLocalStore((state) => state.selectedIds);
+  const mySelectedSet = new Set(mySelectedIds);
+
   const displayedItemIds = new Set<string>();
 
   return (
     <>
-      {Array.from(users.values())
-        .filter((user) => {
-          if (
-            user.id === myUserId ||
-            !user.selectedId ||
-            user.selectedId === selectedId
-          ) {
-            return false;
-          }
-          if (displayedItemIds.has(user.selectedId)) return false;
-          displayedItemIds.add(user.selectedId);
-          return true;
-        })
-        .map((user) => (
-          <RemoteSelectionIndicator
-            key={user.id}
-            selectedId={user.selectedId!}
-            userColor={user.color}
-            items={items}
-            stageRef={stageRef}
-          />
-        ))}
+      {Array.from(users.values()).flatMap((user) => {
+        if (user.id === myUserId) return [];
+
+        if (!user.selectedIds || user.selectedIds.length === 0) return [];
+
+        return user.selectedIds
+          .filter((itemId) => {
+            if (mySelectedSet.has(itemId)) return false;
+
+            if (displayedItemIds.has(itemId)) return false;
+
+            displayedItemIds.add(itemId);
+            return true;
+          })
+          .map((itemId) => (
+            <RemoteSelectionIndicator
+              key={`${user.id}-${itemId}`}
+              selectedId={itemId}
+              userColor={user.color}
+              items={items}
+              stageRef={stageRef}
+            />
+          ));
+      })}
     </>
   );
 }

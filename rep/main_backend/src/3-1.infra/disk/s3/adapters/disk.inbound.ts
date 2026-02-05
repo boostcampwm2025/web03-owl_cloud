@@ -373,7 +373,7 @@ export class GetCompleteMultipartTagsFromAwsS3 extends GetMultiPartVerCompleteGr
   }): Promise<Array<CompletePartsType>> {
     const disk = this.disk;
 
-    let parts: Array<CompletePartsType> = [];
+    const parts: Array<CompletePartsType> = [];
     let nextPartNumberMarker: string | undefined = undefined;
 
     while (true) {
@@ -483,7 +483,7 @@ export class GetPresingendUrlsFromAwsS3 extends GetUploadUrlsFromDisk<S3Client> 
 
 // 실제 다운로드용 url은 여기서 받는다
 @Injectable()
-export class GetThumnailUrlFromS3Client extends GetDownloadUrlFromDisk<S3Client> {
+export class GetThumbnailUrlFromS3Client extends GetDownloadUrlFromDisk<S3Client> {
   constructor(
     @Inject(S3_DISK) disk: S3Client,
     private readonly config: ConfigService,

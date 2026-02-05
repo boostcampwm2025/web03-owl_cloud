@@ -25,7 +25,7 @@ export const WEBSOCKET_SIGNALING_EVENT_NAME = Object.freeze({
   CONSUMES: 'signaling:ws:consumes',
   RESUMES: 'signaling:ws:resumes',
   PAUSES: 'signaling:ws:pauses',
-  PRODUCE_ON : "signaling:ws:produce_on",
+  PRODUCE_ON: 'signaling:ws:produce_on',
   PRODUCE_OFF: 'signaling:ws:produce_off', // 비디오 or 마이크 off
   SCREEN_STOP: 'signaling:ws:screen_stop', // 화면 공유 stop -> 추가적으로
   UPLOAD_FILE: 'signaling:ws:upload_file', // 파일을 전송하는 이벤트
@@ -44,6 +44,7 @@ export const WEBSOCKET_SIGNALING_CLIENT_EVENT_NAME = Object.freeze({
   JOINED: 'room:joined',
   ADMISSION: 'room:admission',
   ALERT_PRODUCED: 'room:alert_produced', // produce 변경을 알린다.
+  CAMERA_ON: 'room:camera_on',
   SCREEN_STOP: 'room:screen_stop',
   NEW_USER: 'room:new_user',
   USER_CLOSED: 'room:user_closed',

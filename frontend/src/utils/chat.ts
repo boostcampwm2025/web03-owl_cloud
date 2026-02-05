@@ -32,6 +32,8 @@ export const sliceFile = (file: File, partSize: number) => {
   return parts;
 };
 
+// S3 storage에 presigned URL로 파일(blob)을 업로드하고
+// 업로드 결과로 ETag를 받아오는 함수
 export async function putToPresignedUrl({
   upload_url,
   blob,
@@ -123,3 +125,16 @@ export function mapRecvPayloadToChatMessage(
     },
   };
 }
+
+export const isSameMinute = (a: string, b: string) => {
+  const da = new Date(a);
+  const db = new Date(b);
+
+  return (
+    da.getFullYear() === db.getFullYear() &&
+    da.getMonth() === db.getMonth() &&
+    da.getDate() === db.getDate() &&
+    da.getHours() === db.getHours() &&
+    da.getMinutes() === db.getMinutes()
+  );
+};

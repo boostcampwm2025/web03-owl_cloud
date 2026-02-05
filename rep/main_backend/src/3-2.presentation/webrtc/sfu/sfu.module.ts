@@ -12,6 +12,7 @@ import {
 } from '@app/sfu/commands/usecase';
 import {
   ConsumerRepository,
+  ConsumerTimerRepository,
   ProducerRepository,
   RoomCreateLockRepo,
   RoomRouterRepository,
@@ -19,6 +20,7 @@ import {
 } from '@infra/memory/sfu';
 import {
   ConsumerRepositoryPort,
+  ConsumerTimerRepositoryPort,
   ProducerRepositoryPort,
   RoomCreateLockPort,
   RoomRouterRepositoryPort,
@@ -205,11 +207,14 @@ import {
       provide: ResumeConsumerUsecase,
       useFactory: (
         consumerRepo: ConsumerRepositoryPort,
+        consumerTimerRepo: ConsumerTimerRepositoryPort,
         selectConsumerInfoFromCache: SelectConsumerInfoFromRedis,
       ) => {
-        return new ResumeConsumerUsecase(consumerRepo, { selectConsumerInfoFromCache });
+        return new ResumeConsumerUsecase(consumerRepo, consumerTimerRepo, {
+          selectConsumerInfoFromCache,
+        });
       },
-      inject: [ConsumerRepository, SelectConsumerInfoFromRedis],
+      inject: [ConsumerRepository, ConsumerTimerRepository, SelectConsumerInfoFromRedis],
     },
 
     // consumer를 멈추는 usecase
@@ -256,11 +261,14 @@ import {
       provide: ResumeConsumersUsecase,
       useFactory: (
         consumerRepo: ConsumerRepositoryPort,
+        consumerTimerRepo: ConsumerTimerRepositoryPort,
         selectConsumerInfosFromCache: SelectConsumerInfosFromRedis,
       ) => {
-        return new ResumeConsumersUsecase(consumerRepo, { selectConsumerInfosFromCache });
+        return new ResumeConsumersUsecase(consumerRepo, consumerTimerRepo, {
+          selectConsumerInfosFromCache,
+        });
       },
-      inject: [ConsumerRepository, SelectConsumerInfosFromRedis],
+      inject: [ConsumerRepository, ConsumerTimerRepository, SelectConsumerInfosFromRedis],
     },
 
     // 여러개의 consumers를 멈추는 usecase

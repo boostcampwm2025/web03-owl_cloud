@@ -5,6 +5,7 @@ import Konva from 'konva';
 
 import { Rect, Ellipse, Line, Group, Text } from 'react-konva';
 import { ShapeItem as ShapeItemType } from '@/types/whiteboard';
+import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 import { useItemAnimation } from '@/hooks/useItemAnimation';
 
 interface ShapeItemProps {
@@ -13,7 +14,7 @@ interface ShapeItemProps {
   isListening: boolean;
   isSelected: boolean;
 
-  onSelect: () => void;
+  onSelect: (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => void;
   onChange: (newAttrs: Partial<ShapeItemType>) => void;
   onDblClick?: () => void;
 
@@ -49,6 +50,9 @@ export default function ShapeItem({
 }: ShapeItemProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isTransforming, setIsTransforming] = useState(false);
+  const selectedIds = useWhiteboardLocalStore((state) => state.selectedIds);
+  const isMultiSelected =
+    selectedIds.length > 1 && selectedIds.includes(shapeItem.id);
 
   const width = shapeItem.width || 0;
   const height = shapeItem.height || 0;
@@ -81,9 +85,11 @@ export default function ShapeItem({
       const newY = group.y();
       const newRotation = group.rotation();
 
-      onTransformMove?.(newX, newY, newWidth, newHeight, newRotation);
+      if (!isMultiSelected) {
+        onTransformMove?.(newX, newY, newWidth, newHeight, newRotation);
+      }
 
-      // 2. 텍스트 자동 크기 조절 (있는 경우)
+      // 텍스트 자동 크기 조절 (있는 경우)
       if (!shapeItem.text) return;
 
       // 회전만 하는 경우 넘김(계산 안함)
@@ -109,12 +115,20 @@ export default function ShapeItem({
       textNode.x(offsetX);
       textNode.y(0);
     },
-    [shapeItem.text, shapeItem.width, shapeItem.height, onTransformMove],
+    [
+      shapeItem.text,
+      shapeItem.width,
+      shapeItem.height,
+      onTransformMove,
+      isMultiSelected,
+    ],
   );
 
   const handleTransformEnd = useCallback(
     (e: Konva.KonvaEventObject<Event>) => {
       setIsTransforming(false);
+      if (isMultiSelected) return;
+
       const node = e.target as Konva.Group;
       const scaleX = node.scaleX();
       const scaleY = node.scaleY();
@@ -162,7 +176,13 @@ export default function ShapeItem({
         rotation: node.rotation(),
       });
     },
-    [shapeItem.width, shapeItem.height, shapeItem.text, onChange],
+    [
+      shapeItem.width,
+      shapeItem.height,
+      shapeItem.text,
+      onChange,
+      isMultiSelected,
+    ],
   );
 
   // 공통 Drag 핸들러
@@ -184,7 +204,6 @@ export default function ShapeItem({
   const handleDragEnd = useCallback(
     (e: Konva.KonvaEventObject<DragEvent>) => {
       setIsDragging(false);
-
       const newX = e.target.x();
       const newY = e.target.y();
 
@@ -200,6 +219,7 @@ export default function ShapeItem({
 
   const commonProps = {
     id: shapeItem.id,
+    name: 'whiteboard-item',
     draggable: isDraggable,
     listening: isListening,
     x: displayX,

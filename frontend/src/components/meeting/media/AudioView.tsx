@@ -1,6 +1,8 @@
 import { useVoiceActivity } from '@/hooks/useVoiceActivity';
+import { useWindowSize } from '@/hooks/useWindowSize';
 import { useMeetingStore } from '@/store/useMeetingStore';
-import { useEffect, useRef } from 'react';
+import { getMembersPerPage } from '@/utils/meeting';
+import { useEffect, useMemo, useRef } from 'react';
 
 export default function AudioView({
   stream,
@@ -9,6 +11,12 @@ export default function AudioView({
   stream: MediaStream;
   userId: string;
 }) {
+  const { width } = useWindowSize();
+
+  const membersPerPage = useMemo(() => {
+    return getMembersPerPage(width);
+  }, [width]);
+
   const audioRef = useRef<HTMLAudioElement>(null);
   const isSpeaking = useVoiceActivity(stream);
   const { media, setSpeaking } = useMeetingStore();
@@ -30,8 +38,8 @@ export default function AudioView({
   }, [media.speakerId, userId]);
 
   useEffect(() => {
-    setSpeaking(userId, isSpeaking);
-    return () => setSpeaking(userId, false);
+    setSpeaking(userId, isSpeaking, membersPerPage);
+    return () => setSpeaking(userId, false, membersPerPage);
   }, [isSpeaking, userId, setSpeaking]);
 
   return <audio ref={audioRef} autoPlay playsInline muted={false} />;

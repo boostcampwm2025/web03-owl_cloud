@@ -56,7 +56,7 @@ export class SfuService {
     private readonly createConsumersUsecase: CreateConsumersUsecase<any>,
     private readonly resumeConsumersUsecase: ResumeConsumersUsecase<any>,
     private readonly pauseConsumersUsecase: PauseConsumesUsecase<any>,
-    private readonly resumeProducerUsecase : resumeProducerUsecase<any>, // producer를 다시 재활성화 하기 위한 usecase
+    private readonly resumeProducerUsecase: resumeProducerUsecase<any>, // producer를 다시 재활성화 하기 위한 usecase
     private readonly pauseProducerUsecase: PauseProducerUsecase<any>, // producer를 멈추기 위한 usecase
     private readonly stopScreenUsecase: StopScreenProducerUsecase<any>, // screen을 멈추기 위한 usecase
     // infra
@@ -144,9 +144,9 @@ export class SfuService {
   }
 
   // 11. producer on
-  async resumeProducers(dto : ResumeProducerDto) : Promise<void> {
+  async resumeProducers(dto: ResumeProducerDto): Promise<void> {
     await this.resumeProducerUsecase.execute(dto);
-  };
+  }
 
   // 12. producer off
   async pauseProducers(dto: PauseProducerDto): Promise<void> {

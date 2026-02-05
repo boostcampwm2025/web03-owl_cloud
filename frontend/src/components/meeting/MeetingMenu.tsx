@@ -26,6 +26,7 @@ import { useWhiteboardSocket } from '@/hooks/useWhiteboardSocket';
 import { useWindowSize } from '@/hooks/useWindowSize';
 import { useChatStore } from '@/store/useChatStore';
 import { useClickOutside } from '@/hooks/useClickOutside';
+import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
 
 export default function MeetingMenu() {
   const { width } = useWindowSize();
@@ -212,7 +213,7 @@ export default function MeetingMenu() {
   } | null>(null);
   const onExit = () => {
     useChatStore.getState().reset();
-    router.replace('/');
+    window.location.href = '/';
   };
 
   const MENU_ITEMS = [

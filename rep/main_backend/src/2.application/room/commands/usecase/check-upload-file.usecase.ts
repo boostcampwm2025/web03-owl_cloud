@@ -24,7 +24,7 @@ type CheckUploadFileUsecaseProps<T, ST> = {
   checkUploadsFromDisk: CheckUploadDatasFromDisk<ST>; // upload가 제대로 되는지 disk로 확인
   completeUploadToDisk: CompleteUploadFileToDisk<ST>; // file을 최종적으로 upload 확인
   updateFileInfoToCache: InsertDataToCache<T>; // 데이터를 업데이트 하는 로직
-  getUploadUrlFromDisk: GetDownloadUrlFromDisk<ST>; // upload_url을 가져오는 로직 ( thumnail_url이 필요한 경우 )
+  getUploadUrlFromDisk: GetDownloadUrlFromDisk<ST>; // upload_url을 가져오는 로직 ( thumbnail_url이 필요한 경우 )
 };
 
 @Injectable()
@@ -69,7 +69,7 @@ export class CheckUploadFileUsecase<T, ST> {
 
     const pathName: string = `${dto.room_id}/${dto.file_id}`;
     const standardSize: number = 10 * 1024 * 1024;
-    let thumnail_url: string | undefined = undefined;
+    let thumbnail_url: string | undefined = undefined;
     // 데이터 체크
     if (dto.type === 'direct') {
       // 하나일 경우
@@ -105,9 +105,9 @@ export class CheckUploadFileUsecase<T, ST> {
       }
     }
 
-    // image나 video인경우 thumnail을 가져온다.
+    // image나 video인경우 thumbnail을 가져온다.
     if (checkResult.category === 'image' || checkResult.category === 'video')
-      thumnail_url = await this.getUploadUrlFromDisk.getUrl({
+      thumbnail_url = await this.getUploadUrlFromDisk.getUrl({
         pathName: [dto.room_id, dto.file_id],
         filename: undefined,
       });
@@ -123,7 +123,7 @@ export class CheckUploadFileUsecase<T, ST> {
       filename: checkResult.filename,
       size: checkResult.size,
       category: checkResult.category,
-      thumnail_url,
+      thumbnail_url,
       file_id: dto.file_id,
       nickname: checkResult.nickname,
       user_id: dto.user_id,

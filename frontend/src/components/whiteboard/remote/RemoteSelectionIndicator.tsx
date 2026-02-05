@@ -46,6 +46,7 @@ export default function RemoteSelectionIndicator({
       rotateEnabled={false}
       borderStroke={userColor}
       borderStrokeWidth={3}
+      opacity={0.6}
       padding={8}
     />
   );

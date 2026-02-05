@@ -95,7 +95,7 @@ export const useProduce = () => {
           ...(media.cameraId ? { deviceId: { exact: media.cameraId } } : {}),
           width:  { ideal: 1280 },
           height: { ideal: 720 },
-          frameRate: { ideal: 24, max: 30 },
+          frameRate: { ideal: 24, max: 24 },
         },
       });
       
@@ -118,7 +118,7 @@ export const useProduce = () => {
       }
 
       await videoProducer.replaceTrack({ track: videoTrack });
-      videoProducer = await helpers.produceCam(videoTrack);
+      videoProducer = await helpers.produceCam(videoTrack, true);
       setMedia({ videoOn: true });
     } catch (error) {
       stopCamStream();
@@ -167,9 +167,9 @@ export const useProduce = () => {
       // screen에 경우는 video의 설정을 적어서 보내준다.
       stream = await navigator.mediaDevices.getDisplayMedia({
         video: {
-          frameRate: { ideal: 15, max: 30 },
+          frameRate: { ideal: 30, max: 30 },
           width:  { ideal: 1920 }, // 화면 공유쪽 테스팅 진행
-          height: { ideal: 1026 },
+          height: { ideal: 1080 },
         }, 
         audio: true,
       });

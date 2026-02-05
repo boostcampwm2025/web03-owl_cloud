@@ -5,7 +5,7 @@ export interface User {
   name: string;
   color: string;
   cursor: { x: number; y: number } | null;
-  selectedId: string | null;
+  selectedIds: string[];
 }
 
 interface AwarenessState {
@@ -41,10 +41,14 @@ export const useWhiteboardAwarenessStore = create<AwarenessStore>((set) => ({
         const updatedUser = { ...user, ...data };
 
         // 실제로 변경되었는지 확인
+        const selectedIdsChanged =
+          JSON.stringify(updatedUser.selectedIds) !==
+          JSON.stringify(user.selectedIds);
+
         const isSame =
           updatedUser.name === user.name &&
           updatedUser.color === user.color &&
-          updatedUser.selectedId === user.selectedId &&
+          !selectedIdsChanged &&
           updatedUser.cursor?.x === user.cursor?.x &&
           updatedUser.cursor?.y === user.cursor?.y;
 
@@ -62,7 +66,7 @@ export const useWhiteboardAwarenessStore = create<AwarenessStore>((set) => ({
           name: data.name || 'Anonymous',
           color: data.color || '#000000',
           cursor: data.cursor || null,
-          selectedId: data.selectedId || null,
+          selectedIds: data.selectedIds || [],
         });
         return { users: newUsers };
       }

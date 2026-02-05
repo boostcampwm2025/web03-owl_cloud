@@ -4,13 +4,25 @@ import {
   MicOffIcon,
   MicOnIcon,
 } from '@/assets/icons/meeting';
-import Button from '@/components/common/button';
 import VideoView from './VideoView';
 import { useMediaPreview } from '@/hooks/useMediaPreview';
 
 export function MediaPreview() {
   const { media, stream, canRenderVideo, toggleAudio, toggleVideo } =
     useMediaPreview();
+
+  const hasCamDenied =
+    media.cameraPermission === 'denied' || media.cameraPermission === 'unknown';
+  const hasMicDenied =
+    media.micPermission === 'denied' || media.micPermission === 'unknown';
+
+  const getDeniedMediaText = () => {
+    if (hasCamDenied && hasMicDenied) return '카메라와 마이크';
+    if (hasCamDenied) return '카메라';
+    if (hasMicDenied) return '마이크';
+    return '';
+  };
+  const deniedText = getDeniedMediaText();
 
   return (
     <div
@@ -22,29 +34,13 @@ export function MediaPreview() {
       {/* Placeholder Layer */}
       {!canRenderVideo && (
         <div className="flex h-full flex-col items-center justify-center gap-6 text-center">
-          <p className="text-sm font-bold text-white">
-            {media.cameraPermission === 'denied' ? (
-              <>
-                브라우저 주소창의 자물쇠 아이콘을 눌러
-                <br />
-                {`카메라${media.micPermission === 'denied' ? `와 마이크` : ''} 권한을 허용해 주세요.`}
-              </>
+          <p className="text-sm font-bold whitespace-pre-wrap text-white">
+            {hasCamDenied || hasMicDenied ? (
+              <>{`브라우저 설정에서\n${deniedText} 권한을 허용해 주세요`}</>
             ) : (
               <>카메라가 꺼져 있어요</>
             )}
           </p>
-
-          {(media.cameraPermission === 'unknown' ||
-            media.micPermission === 'unknown') && (
-            <Button
-              size="sm"
-              shape="square"
-              className="px-3 py-2 text-sm"
-              //   onClick={requestPermission}
-            >
-              마이크 및 카메라 접근 허용
-            </Button>
-          )}
         </div>
       )}
 

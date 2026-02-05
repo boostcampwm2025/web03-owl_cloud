@@ -5,6 +5,7 @@ import { Line } from 'react-konva';
 import Konva from 'konva';
 import { useItemInteraction } from '@/hooks/useItemInteraction';
 import { usePointsAnimation } from '@/hooks/useItemAnimation';
+import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 import type { DrawingItem as DrawingItemType } from '@/types/whiteboard';
 
 interface DrawingItemProps {
@@ -12,11 +13,12 @@ interface DrawingItemProps {
   isDraggable: boolean;
   isListening: boolean;
   isSelected: boolean;
-  onSelect: () => void;
+  onSelect: (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => void;
   onChange: (changes: Partial<DrawingItemType>) => void;
   onMouseEnter: (e: Konva.KonvaEventObject<MouseEvent>) => void;
   onMouseLeave: (e: Konva.KonvaEventObject<MouseEvent>) => void;
   onDragStart?: () => void;
+  onDragMove?: (x: number, y: number) => void;
   onDragEnd?: () => void;
 }
 
@@ -30,11 +32,15 @@ export default function DrawingItem({
   onMouseEnter,
   onMouseLeave,
   onDragStart,
+  onDragMove,
   onDragEnd,
 }: DrawingItemProps) {
   const { isInteractive } = useItemInteraction();
 
   const [isDragging, setIsDragging] = useState(false);
+  const selectedIds = useWhiteboardLocalStore((state) => state.selectedIds);
+  const isMultiSelected =
+    selectedIds.length > 1 && selectedIds.includes(drawingItem.id);
 
   const ref = usePointsAnimation({
     points: drawingItem.points,
@@ -47,6 +53,7 @@ export default function DrawingItem({
       {...drawingItem}
       ref={ref as React.RefObject<Konva.Line>}
       id={drawingItem.id}
+      name="whiteboard-item"
       draggable={isDraggable}
       listening={isListening}
       hitStrokeWidth={30}
@@ -54,8 +61,8 @@ export default function DrawingItem({
       lineCap="round"
       lineJoin="round"
       strokeScaleEnabled={true}
-      onMouseDown={() => isInteractive && onSelect()}
-      onTouchStart={() => isInteractive && onSelect()}
+      onMouseDown={(e) => isInteractive && onSelect(e)}
+      onTouchStart={(e) => isInteractive && onSelect(e)}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onDragStart={() => {
@@ -63,9 +70,21 @@ export default function DrawingItem({
         setIsDragging(true);
         onDragStart?.();
       }}
+      onDragMove={(e) => {
+        if (!isInteractive) return;
+        const pos = e.target.position();
+        onDragMove?.(pos.x, pos.y);
+      }}
       onDragEnd={(e) => {
         if (!isInteractive) return;
         setIsDragging(false);
+
+        if (isMultiSelected) {
+          e.target.position({ x: 0, y: 0 });
+          onDragEnd?.();
+          return;
+        }
+
         const pos = e.target.position();
         const newPoints = drawingItem.points.map((p, i) =>
           i % 2 === 0 ? p + pos.x : p + pos.y,
@@ -100,6 +119,9 @@ export default function DrawingItem({
       }}
       onTransformEnd={(e) => {
         if (!isInteractive) return;
+        // 멀티 선택 시에는 ItemTransformer에서 일괄 처리
+        if (isMultiSelected) return;
+
         const node = e.target;
 
         if (node.getClassName() !== 'Line') return;

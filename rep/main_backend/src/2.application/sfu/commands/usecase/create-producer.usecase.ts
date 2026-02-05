@@ -117,6 +117,7 @@ export class CreateProduceUsecase<T> {
             status: 'user',
             kind: dto.kind,
             type: userProduceProps.type, // 찾아낸 type으로 하는게 맞는것 같다.
+            is_restart: true,
           };
         }
       }
@@ -225,6 +226,7 @@ export class CreateProduceUsecase<T> {
         user_id: dto.user_id,
         type: dto.type,
         status: dto.type === 'cam' || dto.type === 'mic' ? 'user' : 'main',
+        is_restart: false,
       };
     } catch (err) {
       producer.close();

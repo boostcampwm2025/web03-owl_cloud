@@ -103,7 +103,7 @@ export class CodeeditorWebsocketGateway implements OnGatewayInit, OnGatewayConne
         ticket: payload.ticket,
         at: Date.now(), // 현재 보낸 시간
       });
-    }
+    };
 
     client.emit(CODEEDITOR_CLIENT_EVENT_NAME.PERMISSION, { ok: true });
   }

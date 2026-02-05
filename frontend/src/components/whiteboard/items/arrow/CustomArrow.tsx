@@ -8,12 +8,14 @@ import CustomArrowHead from './CustomArrowHead';
 import { useItemInteraction } from '@/hooks/useItemInteraction';
 import { useCursorStyle } from '@/hooks/useCursorStyle';
 import { usePointsAnimation } from '@/hooks/useItemAnimation';
+import { useWhiteboardLocalStore } from '@/store/useWhiteboardLocalStore';
 
 interface CustomArrowProps {
   item: ArrowItem;
-  onSelect: (id: string) => void;
+  onSelect: (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => void;
   onChange: (newAttributes: Partial<WhiteboardItem>) => void;
   onDragStart?: () => void;
+  onDragMove?: (x: number, y: number) => void;
   onDragEnd?: () => void;
   onArrowDblClick?: (id: string) => void;
   isSelected: boolean;
@@ -24,6 +26,7 @@ export default function CustomArrow({
   onSelect,
   onChange,
   onDragStart,
+  onDragMove,
   onDragEnd,
   onArrowDblClick,
   isSelected,
@@ -31,6 +34,10 @@ export default function CustomArrow({
   const [isDragging, setIsDragging] = useState(false);
   const startHeadType = item.startHeadType ?? 'none';
   const endHeadType = item.endHeadType ?? 'triangle';
+
+  const selectedIds = useWhiteboardLocalStore((state) => state.selectedIds);
+  const isMultiSelected =
+    selectedIds.length > 1 && selectedIds.includes(item.id);
 
   // 아이템 인터랙션 상태
   const { isInteractive, isDraggable, isListening } = useItemInteraction();
@@ -104,11 +111,11 @@ export default function CustomArrow({
     <Group
       ref={groupRef as React.RefObject<Konva.Group>}
       id={item.id}
-      name="arrow-group"
+      name="whiteboard-item arrow-group"
       draggable={isDraggable}
       listening={isListening}
-      onMouseDown={() => isInteractive && onSelect(item.id)}
-      onTouchStart={() => isInteractive && onSelect(item.id)}
+      onMouseDown={(e) => isInteractive && onSelect(e)}
+      onTouchStart={(e) => isInteractive && onSelect(e)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onDblClick={() => {
@@ -124,9 +131,21 @@ export default function CustomArrow({
         setIsDragging(true);
         onDragStart?.();
       }}
+      onDragMove={(e) => {
+        if (!isInteractive) return;
+        const pos = e.target.position();
+        onDragMove?.(pos.x, pos.y);
+      }}
       onDragEnd={(e) => {
         if (!isInteractive) return;
         setIsDragging(false);
+
+        if (isMultiSelected) {
+          e.target.position({ x: 0, y: 0 });
+          onDragEnd?.();
+          return;
+        }
+
         const pos = e.target.position();
         const newPoints = item.points.map((p, i) =>
           i % 2 === 0 ? p + pos.x : p + pos.y,

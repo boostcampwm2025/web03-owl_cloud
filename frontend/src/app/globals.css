@@ -73,21 +73,26 @@ button {
   @apply text-sm leading-5 text-[#1F1F1F];
 }
 
-/* 채팅창 전용 커스텀 스크롤바 */
+/* 세로 스크롤 전용 커스텀 스크롤바 */
 .chat-scrollbar::-webkit-scrollbar {
   width: 6px; /* 스크롤바 두께 */
 }
 
 .chat-scrollbar::-webkit-scrollbar-thumb {
-  background: #737373;
+  background: var(--scrollbar-thumb, #737373);
   border-radius: 10px; /* 둥근 막대 */
 }
 
-.default-scrollbar::-webkit-scrollbar {
-  width: 4px; /* 스크롤바 두께 */
+/* 가로 스크롤 전용 커스텀 스크롤바 */
+.horizon-scrollbar::-webkit-scrollbar {
+  height: 6px; /* 가로 스크롤바 두께 */
 }
 
-.default-scrollbar::-webkit-scrollbar-thumb {
-  background: #c6c6c6;
-  border-radius: 10px; /* 둥근 막대 */
+.horizon-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb, #737373);
+  border-radius: 10px;
+}
+
+.horizon-scrollbar::-webkit-scrollbar-track {
+  background: var(--scrollbar-track, transparent);
 }

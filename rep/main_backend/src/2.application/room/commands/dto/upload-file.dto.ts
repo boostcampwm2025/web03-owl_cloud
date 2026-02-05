@@ -52,17 +52,10 @@ export type MultipartUploadResumeInfo = {
 };
 
 // 데이터를 insert할때 사용되는 dto
-export type InsertUploadFileInfoDto = {
-  filename: string;
-  mime_type: string;
-  category: FileCategory;
-  size: number;
-  upload_id: string | undefined;
-  user_id: string;
-  nickname: string;
-  room_id: string;
+export interface InsertUploadFileInfoDto extends UploadFileDto {
   file_id: string;
-};
+  upload_id?: string;
+}
 
 export type UploadFileResult = {
   type: 'direct' | 'multipart' | 'multipart_resume' | 'multipart_completed'; // multipart_complete가 upload 남은거

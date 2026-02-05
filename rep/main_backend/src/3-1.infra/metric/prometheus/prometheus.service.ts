@@ -1,12 +1,10 @@
-import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { collectDefaultMetrics, Counter, Gauge, Histogram, Registry } from "prom-client";
-
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { collectDefaultMetrics, Counter, Gauge, Histogram, Registry } from 'prom-client';
 
 @Injectable()
 export class PrometheusService {
-
-  private readonly registry : Registry;
+  private readonly registry: Registry;
   // 요청 수
   readonly httpRequestsTotal: Counter<string>;
   // 지연시간
@@ -17,22 +15,20 @@ export class PrometheusService {
   readonly wsConnectionsTotal: Counter<string>;
   readonly wsDisconnectsTotal: Counter<string>;
   readonly wsEventDuration: Histogram<string>;
-    
-  constructor(
-    config : ConfigService
-  ) {
+
+  constructor(config: ConfigService) {
     this.registry = new Registry();
 
     // metrics를 모을때 기본적으로 붙이는 꼬리표
     this.registry.setDefaultLabels({
-      service : config.get<string>("NODE_APP_PROMETHEUS_SERVICE_LABEL" , "main-backend"), // 어디 서비스인지 확인
-      env : config.get<string>("NODE_APP_PROMETHEUS_SERVICE_ENV", "local") // 어느 환경인지 정한다.
+      service: config.get<string>('NODE_APP_PROMETHEUS_SERVICE_LABEL', 'main-backend'), // 어디 서비스인지 확인
+      env: config.get<string>('NODE_APP_PROMETHEUS_SERVICE_ENV', 'local'), // 어느 환경인지 정한다.
     });
 
     // 기본적으로 현재 프로세스인 node 메트릭만 수집이 가능하다 ( CPU, 메모리, event loop등 )
     collectDefaultMetrics({
-      register : this.registry,
-      prefix : config.get<string>("NODE_APP_PROMETHEUS_DEFAULT_PREFIX", "main_backend_") // 기본 메트릭 앞에 붙는 이름
+      register: this.registry,
+      prefix: config.get<string>('NODE_APP_PROMETHEUS_DEFAULT_PREFIX', 'main_backend_'), // 기본 메트릭 앞에 붙는 이름
     });
 
     // 메트릭을 담는 그릇을 설정
@@ -80,10 +76,9 @@ export class PrometheusService {
       buckets: [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2],
       registers: [this.registry],
     });
+  }
 
-  };
-
-  getRegistry() : Registry {
+  getRegistry(): Registry {
     return this.registry;
-  };
-};
+  }
+}

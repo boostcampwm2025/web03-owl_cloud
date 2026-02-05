@@ -5,25 +5,33 @@ import MyVideo from '@/components/meeting/MyVideo';
 import MemberVideo from '@/components/meeting/MemberVideo';
 import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
 import { useMeetingStore } from '@/store/useMeetingStore';
-import { ConsumerInfo } from '@/types/meeting';
+import { ConsumerInfo, ProducerInfo } from '@/types/meeting';
 import {
   getConsumerInstances,
   getMembersPerPage,
   getVideoConsumerIds,
 } from '@/utils/meeting';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useWindowSize } from '@/hooks/useWindowSize';
 
 export default function MemberVideoBar() {
   const { width } = useWindowSize();
 
-  const MEMBERS_PER_PAGE = useMemo(() => {
+  const membersPerPage = useMemo(() => {
     return getMembersPerPage(width);
   }, [width]);
-  const firstPageMemberCount = MEMBERS_PER_PAGE - 1;
+  const firstPageMemberCount = membersPerPage - 1;
 
-  const { members, setMemberStream, removeMemberStream, orderedMemberIds } =
-    useMeetingStore();
+  const {
+    members,
+    setMemberStream,
+    removeMemberStream,
+    orderedMemberIds,
+    pinnedMemberIds,
+    lastSpeakerId,
+    moveToFront,
+  } = useMeetingStore();
+
   const { socket, recvTransport, device, addConsumers } =
     useMeetingSocketStore();
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,10 +40,8 @@ export default function MemberVideoBar() {
   const totalPages = useMemo(() => {
     const memberCount = Object.values(members).length;
     if (memberCount <= firstPageMemberCount) return 1;
-    return (
-      1 + Math.ceil((memberCount - firstPageMemberCount) / MEMBERS_PER_PAGE)
-    );
-  }, [members, firstPageMemberCount, MEMBERS_PER_PAGE]);
+    return 1 + Math.ceil((memberCount - firstPageMemberCount) / membersPerPage);
+  }, [members, firstPageMemberCount, membersPerPage]);
 
   if (currentPage > totalPages) {
     setCurrentPage(totalPages);
@@ -48,14 +54,47 @@ export default function MemberVideoBar() {
   // 현재 페이지에 보여야 할 멤버 리스트 계산
   const visibleMembers = useMemo(() => {
     const isFirstPage = currentPage === 1;
-
     const start = isFirstPage
       ? 0
-      : (currentPage - 2) * MEMBERS_PER_PAGE + firstPageMemberCount;
-    const end = isFirstPage ? firstPageMemberCount : start + MEMBERS_PER_PAGE;
+      : (currentPage - 2) * membersPerPage + firstPageMemberCount;
+    const end = isFirstPage ? firstPageMemberCount : start + membersPerPage;
 
     return sortedMembers.slice(start, end);
-  }, [sortedMembers, currentPage, firstPageMemberCount, MEMBERS_PER_PAGE]);
+  }, [sortedMembers, currentPage, firstPageMemberCount, membersPerPage]);
+
+  const mainDisplayMember = useMemo(() => {
+    // 고정된 멤버
+    const firstPinnedId = pinnedMemberIds[0];
+    if (firstPinnedId && members[firstPinnedId]) return members[firstPinnedId];
+
+    // 최근 발언자
+    if (lastSpeakerId && members[lastSpeakerId]) {
+      return members[lastSpeakerId];
+    }
+
+    // 목록의 첫 번째 유저 (보통 visibleMembers에 포함되지만, 페이지 넘기면 아닐 수 있음)
+    const firstOrderedId = orderedMemberIds[0];
+    if (firstOrderedId && members[firstOrderedId])
+      return members[firstOrderedId];
+
+    return null;
+  }, [pinnedMemberIds, lastSpeakerId, orderedMemberIds, members]);
+
+  // 실제로 영상을 수신해야(Resume) 할 멤버 합집합 계산
+  // (상단 바에 보이는 멤버들 + 메인에 보이는 멤버)
+  const targetStreamMembers = useMemo(() => {
+    const targets = [...visibleMembers];
+
+    // 메인 멤버가 존재하고, 현재 visible 리스트에 없다면 추가
+    if (
+      mainDisplayMember &&
+      !targets.find((m) => m.user_id === mainDisplayMember.user_id)
+    ) {
+      targets.push(mainDisplayMember);
+    }
+
+    return targets;
+  }, [visibleMembers, mainDisplayMember]);
 
   const hasPrevPage = currentPage > 1;
   const hasNextPage = currentPage < totalPages;
@@ -72,7 +111,7 @@ export default function MemberVideoBar() {
         pauseConsumerIds,
         visibleStreamTracks,
         hiddenUserIds,
-      } = getVideoConsumerIds(members, visibleMembers, currentConsumers);
+      } = getVideoConsumerIds(members, targetStreamMembers, currentConsumers);
 
       const allResumeIds = [...resumeConsumerIds];
 
@@ -115,6 +154,24 @@ export default function MemberVideoBar() {
       // 그룹 resume
       if (allResumeIds.length > 0) {
         socket.emit('signaling:ws:resumes', { consumer_ids: allResumeIds });
+
+        allResumeIds.forEach((consumerId) => {
+          const consumer = currentConsumers[consumerId];
+          const userId = Object.values(members).find(
+            (m) => m.cam?.provider_id === consumerId,
+          )?.user_id;
+
+          if (consumer && userId) {
+            // 생산자가 진짜로 pause한 상태라면 연결하지 않음
+            if (members[userId].cam?.is_paused) {
+              removeMemberStream(userId, 'cam');
+            } else {
+              setMemberStream(userId, 'cam', new MediaStream([consumer.track]));
+            }
+          }
+        });
+
+        // 이미 활성화되어 있던 트랙들도 확실하게 다시 세팅
         visibleStreamTracks.forEach(({ userId, track }) => {
           if (members[userId].cam?.is_paused) removeMemberStream(userId, 'cam');
           else setMemberStream(userId, 'cam', new MediaStream([track]));
@@ -129,7 +186,84 @@ export default function MemberVideoBar() {
     };
 
     syncVideoStreams();
-  }, [visibleMembers, socket, recvTransport, device]);
+  }, [
+    targetStreamMembers,
+    socket,
+    recvTransport,
+    device,
+    members,
+    setMemberStream,
+    removeMemberStream,
+    addConsumers,
+  ]);
+
+  const checkAndMoveToFront = useCallback(
+    (userId: string) => {
+      // 현재 정렬된 멤버 목록에서 1페이지에 들어가는 멤버들의 ID를 추출
+      // (orderedMemberIds는 전체 순서이므로, 0부터 firstPageMemberCount까지가 1페이지 멤버임)
+      const firstPageMemberIds = orderedMemberIds.slice(
+        0,
+        firstPageMemberCount,
+      );
+
+      // 이미 1페이지에 존재한다면(포함되어 있다면) 이동하지 않음
+      if (firstPageMemberIds.includes(userId)) {
+        return;
+      }
+
+      // 1페이지에 없다면 앞으로 이동
+      moveToFront(userId);
+    },
+    [orderedMemberIds, firstPageMemberCount, moveToFront],
+  );
+
+  useEffect(() => {
+    if (!socket || !recvTransport || !device) return;
+
+    const onCameraProduced = async (producerInfo: ProducerInfo) => {
+      const { user_id: userId, producer_id: producerId, type } = producerInfo;
+
+      // 기존 컨슈머가 있는지 확인 (Resume 처리)
+      const consumers = useMeetingSocketStore.getState().consumers;
+      const existingConsumer = consumers[producerId];
+
+      if (existingConsumer) {
+        // 이미 연결된 적이 있다면 Resume 요청
+        try {
+          await socket.emitWithAck('signaling:ws:resume', {
+            consumer_id: existingConsumer.id,
+          });
+
+          // 스트림 다시 연결
+          setMemberStream(
+            userId,
+            type,
+            new MediaStream([existingConsumer.track]),
+          );
+        } catch (error) {
+          console.error('Resume failed:', error);
+        }
+      }
+
+      if (type === 'cam') {
+        checkAndMoveToFront(userId);
+      }
+    };
+
+    const onAlertProduced = (producerInfo: ProducerInfo) => {
+      if (producerInfo.type === 'cam' && producerInfo.is_restart) {
+        checkAndMoveToFront(producerInfo.user_id);
+      }
+    };
+
+    socket.on('room:camera_on', onCameraProduced);
+    socket.on('room:alert_produced', onAlertProduced);
+
+    return () => {
+      socket.off('room:camera_on', onCameraProduced);
+      socket.off('room:alert_produced', onAlertProduced);
+    };
+  }, [socket, recvTransport, device, setMemberStream, checkAndMoveToFront]);
 
   const onPrevClick = () => {
     if (!hasPrevPage) return;

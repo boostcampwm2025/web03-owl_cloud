@@ -1,7 +1,7 @@
 'use client';
 
 import CodeEditor from '@/components/code-editor/CodeEditor';
-import ChatModal from '@/components/meeting/ChatModal';
+import ChatModal from './chat/ChatModal';
 import { GlobalAudioPlayer } from '@/components/meeting/GlobalAudioPlayer';
 import InfoModal from '@/components/meeting/InfoModal';
 import MeetingMenu from '@/components/meeting/MeetingMenu';
@@ -170,6 +170,7 @@ export default function MeetingRoom() {
               type: info.type,
               nickname: info.nickname,
               is_paused: false,
+              is_restart: false,
             };
 
             try {
@@ -302,6 +303,7 @@ export default function MeetingRoom() {
         }
       }
     };
+
     socket.on('room:alert_produced', onAlertProduced);
 
     return () => {

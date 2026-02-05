@@ -56,7 +56,7 @@ import {
   GetMultipartUploadIdFromS3Bucket,
   GetPresignedUrlFromS3Bucket,
   GetPresignedUrlsFromS3Bucket,
-  GetThumnailUrlFromS3Client,
+  GetThumbnailUrlFromS3Client,
 } from '@infra/disk/s3/adapters/disk.inbound';
 import { CompleteUploadToAwsS3 } from '@/3-1.infra/disk/s3/adapters/disk.outbound';
 
@@ -235,7 +235,7 @@ import { CompleteUploadToAwsS3 } from '@/3-1.infra/disk/s3/adapters/disk.outboun
         checkUploadsFromDisk: CheckUploadDatasFromAwsS3,
         completeUploadToDisk: CompleteUploadToAwsS3,
         updateFileInfoToCache: UpdateFileInfoToRedis,
-        getUploadUrlFromDisk: GetThumnailUrlFromS3Client,
+        getUploadUrlFromDisk: GetThumbnailUrlFromS3Client,
       ) => {
         return new CheckUploadFileUsecase({
           checkUserAndSelectFileInfoFromCache,
@@ -252,7 +252,7 @@ import { CompleteUploadToAwsS3 } from '@/3-1.infra/disk/s3/adapters/disk.outboun
         CheckUploadDatasFromAwsS3,
         CompleteUploadToAwsS3,
         UpdateFileInfoToRedis,
-        GetThumnailUrlFromS3Client,
+        GetThumbnailUrlFromS3Client,
       ],
     },
 
