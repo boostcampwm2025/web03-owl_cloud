@@ -11,7 +11,7 @@ module.exports = {
   },
   // jest 테스트가 경로를 인식할 수 있게해주는 설정
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
+    '^@/(.*)$': '<rootDir>/src/$1',
     '^@infra/(.*)$': '<rootDir>/src/infra/$1',
   },
 };

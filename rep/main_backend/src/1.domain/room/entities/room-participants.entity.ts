@@ -10,8 +10,8 @@ export class RoomParticipant {
 
   constructor({ id, room_id, user_id, joined_at, left_at = undefined }: RoomParticipantProps) {
     this.id = idVo(id);
-    this.room_id = uuidv7Vo({ uuid: room_id, name: 'room_id' });
-    this.user_id = uuidv7Vo({ uuid: user_id, name: 'user_id' });
+    this.room_id = uuidv7Vo({ uuid: room_id.trim(), name: 'room_id' });
+    this.user_id = uuidv7Vo({ uuid: user_id.trim(), name: 'user_id' });
     this.joined_at = joined_at instanceof Date ? joined_at : new Date();
     this.left_at = left_at && left_at instanceof Date ? left_at : null;
 
