@@ -302,17 +302,6 @@ describe('useWhiteboardLocalStore', () => {
       ]);
     });
 
-    it('continueDrawing: 2px 미만 이동은 무시', () => {
-      const { result } = renderHook(() => useWhiteboardLocalStore());
-
-      act(() => {
-        result.current.startDrawing(100, 200);
-        result.current.continueDrawing(100.5, 200.5);
-      });
-
-      expect(result.current.currentDrawing?.points).toEqual([100, 200]);
-    });
-
     it('continueDrawing: 그리기 중이 아니면 무시', () => {
       const { result } = renderHook(() => useWhiteboardLocalStore());
 

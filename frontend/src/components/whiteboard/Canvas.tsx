@@ -28,6 +28,7 @@ import { useClickOutside } from '@/hooks/useClickOutside';
 import { useCanvasInteraction } from '@/hooks/useCanvasInteraction';
 import { useArrowHandles } from '@/hooks/useArrowHandles';
 import { useCanvasMouseEvents } from '@/hooks/useCanvasMouseEvents';
+import { useCanvasShortcuts } from '@/hooks/useCanvasShortcuts';
 import { useSelectionBox } from '@/hooks/useSelectionBox';
 import { useMultiDrag } from '@/hooks/useMultiDrag';
 import { usePinchZoom } from '@/hooks/usePinchZoom';
@@ -286,11 +287,19 @@ export default function Canvas() {
     handleArrowDblClick,
     draggingPoints,
     snapIndicator,
+    deleteControlPoint,
   } = useArrowHandles({
     arrow: isArrowOrLineSelected ? (selectedItem as ArrowItem) : null,
     items,
     stageRef,
     updateItem,
+  });
+
+  // 키보드 단축키 훅
+  useCanvasShortcuts({
+    isArrowOrLineSelected,
+    selectedHandleIndex,
+    deleteControlPoint,
   });
 
   // 도형 더블클릭 핸들러 (텍스트 편집 모드)
@@ -366,16 +375,11 @@ export default function Canvas() {
   );
 
   // 마우스 이벤트 통합 훅
-  const {
-    handlePointerDown,
-    handlePointerMove,
-    currentDrawing,
-    cancelDrawing,
-    cancelErasing,
-  } = useCanvasMouseEvents({
-    onDeselect: handleCheckDeselect,
-    onSelectionBoxStart: startSelection,
-  });
+  const { handlePointerDown, handlePointerMove, cancelDrawing, cancelErasing } =
+    useCanvasMouseEvents({
+      onDeselect: handleCheckDeselect,
+      onSelectionBoxStart: startSelection,
+    });
 
   // 핀치 줌 훅
   const {
@@ -559,6 +563,8 @@ export default function Canvas() {
         onTouchEnd={handleTouchEnd}
       >
         <Layer
+          name="main-layer"
+          className="main-layer"
           clipX={0}
           clipY={0}
           clipWidth={canvasWidth}
@@ -679,18 +685,6 @@ export default function Canvas() {
               stroke="#0096FF"
               strokeWidth={3}
               cornerRadius={3}
-            />
-          )}
-
-          {/* 그리는 중인 선 */}
-          {currentDrawing && (
-            <Line
-              points={currentDrawing.points}
-              stroke={currentDrawing.stroke}
-              strokeWidth={currentDrawing.strokeWidth}
-              tension={0.5}
-              lineCap="round"
-              lineJoin="round"
             />
           )}
 

@@ -12,7 +12,6 @@ import {
 } from '@/constants/drawingPresets';
 
 import type { CursorMode, DrawingItem } from '@/types/whiteboard';
-import { useWhiteboardSharedStore } from './useWhiteboardSharedStore';
 
 interface LocalState {
   selectedIds: string[];
@@ -198,17 +197,9 @@ export const useWhiteboardLocalStore = create<LocalStore>((set, get) => ({
     const state = get();
     if (!state.currentDrawing) return;
 
-    const points = state.currentDrawing.points;
-    const lastX = points[points.length - 2];
-    const lastY = points[points.length - 1];
-
-    // 최소 거리 체크 (성능 최적화)
-    const distance = Math.sqrt(Math.pow(x - lastX, 2) + Math.pow(y - lastY, 2));
-    if (distance < 2) return;
-
     const updatedDrawing = {
       ...state.currentDrawing,
-      points: [...points, x, y],
+      points: [...state.currentDrawing.points, x, y],
     };
 
     set({ currentDrawing: updatedDrawing });
