@@ -28,7 +28,7 @@ export function useCanvasMouseEvents({
   const cursorMode = useWhiteboardLocalStore((state) => state.cursorMode);
   const lastCursorUpdateRef = useRef(0);
 
-  const { handleDrawingStart, currentDrawing, cancelDrawing } = useDrawing();
+  const { handleDrawingStart, cancelDrawing } = useDrawing();
   const { handleEraserStart, cancelErasing } = useEraser();
 
   // 커서 위치 업데이트 (스로틀링 30ms)
@@ -80,7 +80,6 @@ export function useCanvasMouseEvents({
   return {
     handlePointerDown,
     handlePointerMove,
-    currentDrawing,
     cancelDrawing,
     cancelErasing,
   };
