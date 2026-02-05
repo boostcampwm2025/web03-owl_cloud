@@ -77,13 +77,14 @@ export function useDrawing() {
     }
 
     const points = tempLineRef.current.points();
-    tempLineRef.current.destroy();
-    layerRef.current?.batchDraw();
 
     const drawing = useWhiteboardLocalStore.getState().currentDrawing;
     if (drawing && points.length >= 4) {
       addDrawing({ ...drawing, points });
     }
+
+    tempLineRef.current.destroy();
+    layerRef.current?.batchDraw();
 
     finishDrawing();
     tempLineRef.current = null;
