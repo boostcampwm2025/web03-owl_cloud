@@ -9,16 +9,8 @@ import ProfileImg from '@/components/common/ProfileImg';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { useMeetingStore } from '@/store/useMeetingStore';
 import { useUserStore } from '@/store/useUserStore';
+import { MemberListItemProps } from '@/types/meeting';
 import { useRef, useState } from 'react';
-
-interface MemberListItemProps {
-  id: string;
-  name: string;
-  audio: boolean;
-  video: boolean;
-  profileImg: string | null;
-  reverseDropdown?: boolean;
-}
 
 export default function MemberListItem({
   id,

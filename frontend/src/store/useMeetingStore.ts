@@ -1,36 +1,17 @@
 import {
+  INITIAL_MEDIA_STATE,
+  INITIAL_MEETING_INFO,
+  VISIBLE_COUNT,
+} from '@/constants/meeting';
+import {
   MediaState,
   MediaType,
-  MeetingInfoResponse,
+  MeetingInfo,
   MeetingMemberInfo,
   MemberStream,
 } from '@/types/meeting';
+import { reorderMembers } from '@/utils/meeting';
 import { create } from 'zustand';
-
-const INITIAL_MEDIA_STATE: MediaState = {
-  videoOn: false,
-  audioOn: false,
-  screenShareOn: false,
-  cameraPermission: 'unknown',
-  micPermission: 'unknown',
-  speakerId: '',
-  micId: '',
-  cameraId: '',
-};
-
-const INITIAL_MEETING_INFO: MeetingInfo = {
-  title: '',
-  host_nickname: '',
-  current_participants: 0,
-  max_participants: 0,
-  has_password: false,
-  meetingId: '',
-};
-
-type MeetingInfo = MeetingInfoResponse & {
-  meetingId: string;
-  isHosted?: boolean;
-};
 
 interface MeetingState {
   media: MediaState;

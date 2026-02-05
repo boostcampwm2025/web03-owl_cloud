@@ -3,7 +3,7 @@ export const formatFileSize = (bytes: number, decimals: number = 2): string => {
 
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
 
   // 1024를 몇 번 나누어야 하는지 지수(i)를 계산합니다.
   const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -13,6 +13,10 @@ export const formatFileSize = (bytes: number, decimals: number = 2): string => {
 
 export const formatTimestamp = (timestamp: string) => {
   const date = new Date(timestamp);
+
+  if (isNaN(date.getTime())) {
+    return '';
+  }
 
   return new Intl.DateTimeFormat('ko-KR', {
     hour: 'numeric',
