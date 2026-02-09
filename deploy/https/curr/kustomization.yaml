@@ -11,12 +11,12 @@ resources:
   - main_backend/main-backend-deploy.yaml
   - main_backend/main-backend-service.yaml
   - main_backend/main-backend-config.yaml
-  - main_backend/main-backend-secret.enc.yaml
+  - main_backend/main-backend-secret.dec.yaml
   # tool_backend 관련
   - tool_backend/tool-backend-deploy.yaml
   - tool_backend/tool-backend-service.yaml
   - tool_backend/tool-backend-config.yaml
-  - tool_backend/tool-backend-secret.enc.yaml
+  - tool_backend/tool-backend-secret.dec.yaml
   # ingress-nginx 관련
   - devmeet-gateway-ingress.yaml
   - devmeet-tool-ws-gateway-ingress.yaml
