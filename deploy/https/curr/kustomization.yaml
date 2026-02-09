@@ -17,7 +17,6 @@ resources:
   - tool_backend/tool-backend-service.yaml
   - tool_backend/tool-backend-config.yaml
   - tool_backend/tool-backend-secret.dec.yaml
-  - tool-backend-pdb.yaml
   # ingress-nginx 관련
   - devmeet-gateway-ingress.yaml
   - devmeet-tool-ws-gateway-ingress.yaml
