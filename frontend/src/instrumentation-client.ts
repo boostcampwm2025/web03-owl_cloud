@@ -17,6 +17,10 @@ Sentry.init({
   debug: !isProd,
   enabled: true,
 
+  _experiments: {
+    metrics: true,
+  },
+
   // Enable logs to be sent to Sentry
   enableLogs: true,
 
