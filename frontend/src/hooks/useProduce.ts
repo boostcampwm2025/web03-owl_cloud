@@ -167,9 +167,9 @@ export const useProduce = () => {
       // screen에 경우는 video의 설정을 적어서 보내준다.
       stream = await navigator.mediaDevices.getDisplayMedia({
         video: {
-          frameRate: { ideal: 15, max: 15 },
-          width:  { ideal: 1920 }, // 화면 공유쪽 테스팅 진행
-          height: { ideal: 1080 },
+          frameRate: { ideal: 30, max: 30 },
+          width:  { ideal: 1280 }, // 화면 공유쪽 테스팅 진행
+          height: { ideal: 720 },
         }, 
         audio: true,
       });
