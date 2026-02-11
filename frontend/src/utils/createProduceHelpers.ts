@@ -58,7 +58,7 @@ export function createProduceHelper(sendTransport: Transport, device: Device) {
         appData: { type: 'screen_video' },
         codec: vp9,
         encodings: [
-          { maxBitrate: 5_000_000 }, // cam 보다는 더 높아야 한다. (상황에 따라서 SVC를 사용할 수 있게 해주면 좋다.) ( SVC는 좀 더 나중에 세밀한 조정때 유용하다. )
+          { maxBitrate: 2_500_000 }, // cam 보다는 더 높아야 한다. (상황에 따라서 SVC를 사용할 수 있게 해주면 좋다.) ( SVC는 좀 더 나중에 세밀한 조정때 유용하다. )
         ],
         codecOptions: { videoGoogleStartBitrate: 1200 },
       });
