@@ -146,10 +146,17 @@ export const useFileUpload = (socket: Socket | null) => {
         console.error('upload error:', err);
         throw err;
       } finally {
-        setUploadingMap((m) => ({
-          ...m,
-          [pendingId]: false,
-        }));
+        setUploadingMap((m) => {
+          const next = { ...m };
+          delete next[pendingId];
+          return next;
+        });
+
+        setProgressMap((m) => {
+          const next = { ...m };
+          delete next[pendingId];
+          return next;
+        });
       }
     },
     [fileCheck, requestUploadTicket, socket],
