@@ -28,6 +28,8 @@ export default function ChatModal() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isFirstRender = useRef(true);
+  const sizeErrorTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingFilesRef = useRef<PendingFile[]>([]);
 
   const { setIsOpen } = useMeetingStore();
 
@@ -58,7 +60,10 @@ export default function ChatModal() {
     const oversizedFiles = files.filter((f) => f.size > MAX_FILE_SIZE);
     if (oversizedFiles.length > 0) {
       setShowSizeError(true);
-      setTimeout(() => setShowSizeError(false), 3000);
+      if (sizeErrorTimerRef.current) {
+        clearTimeout(sizeErrorTimerRef.current);
+      }
+      sizeErrorTimerRef.current = setTimeout(() => setShowSizeError(false), 3000);
     }
 
     const validFiles = files.filter((f) => f.size <= MAX_FILE_SIZE);
@@ -172,7 +177,7 @@ export default function ChatModal() {
             // 여기서 펜딩애들 제거
             setPendingFiles((prev) => prev.filter((f) => f.id !== item.id));
           }
-        } catch (err) {
+        } catch {
           console.error(`${item.file.name} 업로드에 실패했습니다.`);
         }
       });
@@ -186,7 +191,7 @@ export default function ChatModal() {
 
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      onSubmit(e);
+      e.currentTarget.form?.requestSubmit();
     }
   };
 
@@ -203,10 +208,31 @@ export default function ChatModal() {
     setHasValue(obj.value.trim().length > 0);
   };
 
-  const handleImageLoad = useCallback((isMine: boolean) => {
-    if (isAtBottomRef.current || isMine) {
-      scrollToBottom(true);
-    }
+  const handleImageLoad = useCallback(
+    (isMine: boolean) => {
+      if (isAtBottomRef.current || isMine) {
+        scrollToBottom(true);
+      }
+    },
+    [isAtBottomRef, scrollToBottom],
+  );
+
+  useEffect(() => {
+    pendingFilesRef.current = pendingFiles;
+  }, [pendingFiles]);
+
+  useEffect(() => {
+    return () => {
+      if (sizeErrorTimerRef.current) {
+        clearTimeout(sizeErrorTimerRef.current);
+      }
+
+      pendingFilesRef.current.forEach((file) => {
+        if (file.preview) {
+          URL.revokeObjectURL(file.preview);
+        }
+      });
+    };
   }, []);
 
   const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
@@ -406,7 +432,6 @@ export default function ChatModal() {
                 ? 'cursor-pointer text-neutral-200 hover:bg-neutral-600'
                 : 'cursor-default text-neutral-400 hover:bg-transparent'
             } `}
-            onClick={onSubmit}
           >
             <SendIcon className="h-4 w-4" />
           </button>
