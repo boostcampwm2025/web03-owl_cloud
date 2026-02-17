@@ -3,7 +3,11 @@ import { isSameMinute } from '@/utils/chat';
 import { ChatListItem } from './ChatListItem';
 import { memo, useMemo } from 'react';
 
-function ChatList() {
+type ChatListProps = {
+  onMediaLoad?: () => void;
+};
+
+function ChatList({ onMediaLoad }: ChatListProps) {
   const messages = useChatStore((s) => s.messages);
 
   const chatItems = useMemo(
@@ -18,10 +22,15 @@ function ChatList() {
         const showProfile = isDifferentUser || isDifferentTime;
 
         return (
-          <ChatListItem key={chat.id} {...chat} showProfile={showProfile} />
+          <ChatListItem
+            key={chat.id}
+            {...chat}
+            showProfile={showProfile}
+            onImageLoad={onMediaLoad ? () => onMediaLoad() : undefined}
+          />
         );
       }),
-    [messages],
+    [messages, onMediaLoad],
   );
 
   return <section className="pb-4">{chatItems}</section>;

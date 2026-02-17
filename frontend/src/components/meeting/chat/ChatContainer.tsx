@@ -1,6 +1,6 @@
 import { useChatScroll } from '@/hooks/chat/useChatScroll';
 import { useChatStore } from '@/store/useChatStore';
-import { useLayoutEffect, useRef } from 'react';
+import { useCallback, useLayoutEffect, useRef } from 'react';
 import ChatList from './ChatList';
 import { useUserStore } from '@/store/useUserStore';
 
@@ -12,6 +12,7 @@ export default function ChatContainer() {
   const { ref, isAtBottom, scrollToBottom, handleScroll } = useChatScroll();
 
   const prevLengthRef = useRef(0);
+  const shouldAutoScrollRef = useRef(true);
 
   const shouldAutoScroll = isAtBottom || lastMessage?.userId === userId;
 
@@ -20,9 +21,18 @@ export default function ChatContainer() {
 
     const isFirst = prevLengthRef.current === 0;
 
+    const isImageMessage =
+      lastMessage.content.type === 'file' &&
+      lastMessage.content.category === 'image';
+
+    // 이미지면 여기서 스크롤하지 않음
+    if (isImageMessage) return;
+
     if (isFirst) {
       scrollToBottom('auto');
     } else {
+      shouldAutoScrollRef.current = shouldAutoScroll;
+
       if (shouldAutoScroll) {
         scrollToBottom(lastMessage?.userId === userId ? 'auto' : 'smooth');
       }
@@ -40,13 +50,22 @@ export default function ChatContainer() {
     scrollToBottom('smooth');
   };
 
+  const handleMediaLoad = useCallback(() => {
+    // 이미지
+    if (shouldAutoScrollRef.current || isAtBottom) {
+      requestAnimationFrame(() => {
+        scrollToBottom('smooth');
+      });
+    }
+  }, [isAtBottom, scrollToBottom]);
+
   return (
     <div
       ref={ref}
       onScroll={handleScroll}
       className="chat-scrollbar flex-1 overflow-y-auto scroll-smooth"
     >
-      <ChatList />
+      <ChatList onMediaLoad={handleMediaLoad} />
 
       {showScrollButton && (
         <button
