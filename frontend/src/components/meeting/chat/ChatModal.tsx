@@ -10,7 +10,7 @@ import { useUserStore } from '@/store/useUserStore';
 import { mapRecvPayloadToChatMessage } from '@/utils/chat';
 import { formatFileSize } from '@/utils/formatter';
 import Image from 'next/image';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ChatList from './ChatList';
 
 type PendingFile = {
@@ -22,20 +22,24 @@ type PendingFile = {
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
-export default function ChatModal() {
+function ChatModal() {
+  console.count('ChatModal render');
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sizeErrorTimerRef = useRef<NodeJS.Timeout | null>(null);
   const pendingFilesRef = useRef<PendingFile[]>([]);
 
-  const { setIsOpen } = useMeetingStore();
+  const setIsOpen = useMeetingStore((s) => s.setIsOpen);
 
   const [hasValue, setHasValue] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [showSizeError, setShowSizeError] = useState(false);
 
-  const { userId, nickname, profilePath } = useUserStore();
+  const userId = useUserStore((s) => s.userId);
+  const nickname = useUserStore((s) => s.nickname);
+  const profilePath = useUserStore((s) => s.profilePath);
   const socket = useMeetingSocketStore((s) => s.socket);
 
   const { sendMessage: sendTextMessage } = useChatSender({
@@ -209,7 +213,10 @@ export default function ChatModal() {
     }
   };
 
-  const isUploading = Object.values(uploadingMap).some(Boolean);
+  const isUploading = useMemo(
+    () => Object.values(uploadingMap).some(Boolean),
+    [uploadingMap],
+  );
 
   return (
     <aside className="meeting-side-modal z-6">
@@ -362,3 +369,5 @@ export default function ChatModal() {
     </aside>
   );
 }
+
+export default memo(ChatModal);
