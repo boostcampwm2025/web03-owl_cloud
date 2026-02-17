@@ -7,12 +7,11 @@ import { useChatStore } from '@/store/useChatStore';
 import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
 import { useMeetingStore } from '@/store/useMeetingStore';
 import { useUserStore } from '@/store/useUserStore';
-import { isSameMinute, mapRecvPayloadToChatMessage } from '@/utils/chat';
+import { mapRecvPayloadToChatMessage } from '@/utils/chat';
 import { formatFileSize } from '@/utils/formatter';
 import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ChatListItem } from './ChatListItem';
-import { useChatScroll } from '@/hooks/chat/useChatScroll';
+import ChatList from './ChatList';
 
 type PendingFile = {
   file: File;
@@ -27,7 +26,6 @@ export default function ChatModal() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isFirstRender = useRef(true);
   const sizeErrorTimerRef = useRef<NodeJS.Timeout | null>(null);
   const pendingFilesRef = useRef<PendingFile[]>([]);
 
@@ -36,10 +34,8 @@ export default function ChatModal() {
   const [hasValue, setHasValue] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [showSizeError, setShowSizeError] = useState(false);
-  const [showScrollBtn, setScrollBtn] = useState<boolean>(false);
 
   const { userId, nickname, profilePath } = useUserStore();
-  const messages = useChatStore((s) => s.messages);
   const socket = useMeetingSocketStore((s) => s.socket);
 
   const { sendMessage: sendTextMessage } = useChatSender({
@@ -51,9 +47,6 @@ export default function ChatModal() {
 
   const { uploadFile, progressMap, uploadingMap } = useFileUpload(socket);
 
-  const { handleScroll, scrollToBottom, isAtBottomRef } =
-    useChatScroll(scrollRef);
-
   const addFilesToPending = useCallback((files: File[]) => {
     if (files.length === 0) return;
 
@@ -63,7 +56,10 @@ export default function ChatModal() {
       if (sizeErrorTimerRef.current) {
         clearTimeout(sizeErrorTimerRef.current);
       }
-      sizeErrorTimerRef.current = setTimeout(() => setShowSizeError(false), 3000);
+      sizeErrorTimerRef.current = setTimeout(
+        () => setShowSizeError(false),
+        3000,
+      );
     }
 
     const validFiles = files.filter((f) => f.size <= MAX_FILE_SIZE);
@@ -112,36 +108,6 @@ export default function ChatModal() {
   };
 
   const onCloseClick = () => setIsOpen('isChatOpen', false);
-
-  // 메시지 수신 시 스크롤 처리
-  useEffect(() => {
-    if (!scrollRef.current || messages.length === 0) return;
-
-    if (isFirstRender.current) {
-      scrollToBottom();
-      isFirstRender.current = false;
-      return;
-    }
-
-    const lastMessage = messages[messages.length - 1];
-    const isMyMessage = lastMessage.userId === userId;
-
-    const isImageMessage =
-      lastMessage.content.type === 'file' &&
-      lastMessage.content.category === 'image';
-
-    // 이미지면 여기서 스크롤하지 않음
-    if (isImageMessage) return;
-
-    if (isMyMessage || isAtBottomRef.current) {
-      scrollToBottom(isMyMessage);
-      setScrollBtn((prev) => (prev !== false ? false : prev));
-    } else {
-      setScrollBtn((prev) => (prev !== true ? true : prev));
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages, userId]);
 
   // 이후 form 관련 라이브러리 사용 시 수정 필요
   const onSubmit = async (e: React.FormEvent) => {
@@ -208,15 +174,6 @@ export default function ChatModal() {
     setHasValue(obj.value.trim().length > 0);
   };
 
-  const handleImageLoad = useCallback(
-    (isMine: boolean) => {
-      if (isAtBottomRef.current || isMine) {
-        scrollToBottom(true);
-      }
-    },
-    [isAtBottomRef, scrollToBottom],
-  );
-
   useEffect(() => {
     pendingFilesRef.current = pendingFiles;
   }, [pendingFiles]);
@@ -271,42 +228,7 @@ export default function ChatModal() {
       </div>
 
       {/* 채팅 내역 */}
-      <section
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="chat-scrollbar flex-1 overflow-y-auto scroll-smooth pb-4"
-      >
-        {messages.map((chat, idx) => {
-          const prevMsg = messages[idx - 1];
-
-          const isDifferentUser = !prevMsg || prevMsg.userId !== chat.userId;
-          const isDifferentTime =
-            !prevMsg || !isSameMinute(chat.createdAt, prevMsg.createdAt);
-
-          const showProfile = isDifferentUser || isDifferentTime;
-
-          return (
-            <ChatListItem
-              key={chat.id}
-              {...chat}
-              showProfile={showProfile}
-              onImageLoad={() => handleImageLoad(chat.userId === userId)}
-            />
-          );
-        })}
-
-        {showScrollBtn && (
-          <button
-            onClick={() => {
-              scrollToBottom(true);
-              setScrollBtn(false);
-            }}
-            className="absolute bottom-30 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-2 text-xs text-white shadow-lg"
-          >
-            새 메시지 보기 ↓
-          </button>
-        )}
-      </section>
+      <ChatList scrollRef={scrollRef} />
 
       {/* 채팅 입력 부분 */}
       <form
