@@ -37,6 +37,12 @@ jest.mock('@/components/common/Modal', () => {
   };
 });
 
+jest.mock('@/components/common/Portal', () => {
+  return function MockPortal({ children }: { children: React.ReactNode }) {
+    return <div id="mock-portal">{children}</div>;
+  };
+});
+
 describe('MeetingFormModal 컴포넌트 테스트', () => {
   const closeModal = jest.fn();
   const push = jest.fn();
