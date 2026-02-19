@@ -1,9 +1,9 @@
 import { useState, useRef, useCallback, useMemo } from 'react';
 import { useFileUpload } from '@/hooks/chat/useFileUpload';
 import { useChatSender } from '@/hooks/chat/useChatSender';
-import { useChatStore } from '@/store/useChatStore';
 import { mapRecvPayloadToChatMessage } from '@/utils/chat';
 import { Socket } from 'socket.io-client';
+import { useAddMessage } from '@/store/useChatStore';
 
 type PendingFile = {
   file: File;
@@ -27,6 +27,7 @@ export const useChatForm = (
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [showSizeError, setShowSizeError] = useState(false);
 
+  const addMessage = useAddMessage();
   const { sendMessage: sendTextMessage } = useChatSender({
     socket,
     userId,
@@ -115,8 +116,7 @@ export const useChatForm = (
             if (res) {
               // 서버 응답 데이터를 채팅 메시지 객체로 변환
               const newMessage = mapRecvPayloadToChatMessage(res);
-              useChatStore.getState().addMessage(newMessage);
-
+              addMessage(newMessage);
               clearFilePreview(item); // 성공하면 메모리 해제
 
               // 여기서 펜딩애들 제거

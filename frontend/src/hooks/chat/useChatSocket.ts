@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { Socket } from 'socket.io-client';
-import { useChatStore } from '@/store/useChatStore';
 import { mapRecvPayloadToChatMessage } from '@/utils/chat';
 import { FileCategory } from '@/types/chat';
+import { useAddMessage } from '@/store/useChatStore';
 
 type BaseUserPayload = {
   user_id: string;
@@ -29,7 +29,7 @@ export type RecvMessagePayload =
   | (FileMessagePayload & BaseUserPayload);
 
 export const useChatSocket = (socket: Socket | null) => {
-  const addMessage = useChatStore((s) => s.addMessage);
+  const addMessage = useAddMessage();
 
   useEffect(() => {
     if (!socket) return;

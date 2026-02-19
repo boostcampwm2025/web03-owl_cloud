@@ -24,9 +24,9 @@ import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { useWhiteboardSocket } from '@/hooks/useWhiteboardSocket';
 import { useWindowSize } from '@/hooks/useWindowSize';
-import { useChatStore } from '@/store/useChatStore';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { useMeetingSocketStore } from '@/store/useMeetingSocketStore';
+import { useResetMessages } from '@/store/useChatStore';
 
 export default function MeetingMenu() {
   const { width } = useWindowSize();
@@ -61,6 +61,8 @@ export default function MeetingMenu() {
 
   // 화이트보드 연결 / 해제 함수 가져오기
   const { openWhiteboard, closeWhiteboard } = useWhiteboardSocket();
+
+  const resetMessages = useResetMessages();
 
   const isSomeoneSharing = screenSharer !== null;
   const isDisabledSharing = isSomeoneSharing && !screenShareOn;
@@ -212,7 +214,7 @@ export default function MeetingMenu() {
     onConfirm: () => void;
   } | null>(null);
   const onExit = () => {
-    useChatStore.getState().reset();
+    resetMessages();
     window.location.href = '/';
   };
 

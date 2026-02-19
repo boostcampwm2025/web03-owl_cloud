@@ -1,4 +1,4 @@
-import { useChatStore } from '@/store/useChatStore';
+import { useMessages } from '@/store/useChatStore';
 import { isSameMinute } from '@/utils/chat';
 import { ChatListItem } from './ChatListItem';
 import { memo, useMemo } from 'react';
@@ -8,7 +8,7 @@ type ChatListProps = {
 };
 
 function ChatList({ onMediaLoad }: ChatListProps) {
-  const messages = useChatStore((s) => s.messages);
+  const messages = useMessages();
 
   const chatItems = useMemo(
     () =>

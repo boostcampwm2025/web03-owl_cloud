@@ -1,12 +1,12 @@
 import { useChatScroll } from '@/hooks/chat/useChatScroll';
-import { useChatStore } from '@/store/useChatStore';
+import { useLastMessage, useMessageLength } from '@/store/useChatStore';
 import { useCallback, useLayoutEffect, useRef } from 'react';
 import ChatList from './ChatList';
 import { useUserStore } from '@/store/useUserStore';
 
 export default function ChatContainer() {
-  const messageLength = useChatStore((s) => s.messages.length);
-  const lastMessage = useChatStore((s) => s.messages[s.messages.length - 1]);
+  const messageLength = useMessageLength();
+  const lastMessage = useLastMessage();
   const userId = useUserStore((s) => s.userId);
 
   const { ref, isAtBottom, scrollToBottom, handleScroll } = useChatScroll();
