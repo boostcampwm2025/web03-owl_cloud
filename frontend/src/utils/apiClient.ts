@@ -1,3 +1,6 @@
+import { ErrorType } from '@/types/error';
+import { captureError } from './logging';
+
 type RequestOptions = RequestInit & {
   params?: Record<string, string>;
 };
@@ -26,6 +29,12 @@ const baseApi = async <T>(
 
     // 토큰이 필요한 API 호출에 토큰이 없는 경우 API 호출 X (매번 401 에러 로그 표시 방지)
     if (withToken && !token) {
+      captureError({
+        error: new Error('NO_TOKEN'),
+        type: ErrorType.AUTH,
+        message: '토큰 없음 — 인증 API 차단',
+      });
+
       return Promise.reject(new Error('NO_TOKEN'));
     }
   }
@@ -58,7 +67,24 @@ const baseApi = async <T>(
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
-    throw new Error(errorBody.message || 'API 요청 실패');
+    const msg = errorBody.message || 'API 요청 실패';
+
+    captureError({
+      error: new Error(msg),
+      type: ErrorType.HTTP,
+      message: msg,
+      tags: {
+        endpoint,
+        method: config.method || 'GET',
+        status: String(response.status),
+      },
+      extra: {
+        url,
+        body: rest.body,
+      },
+    });
+
+    throw new Error(msg);
   }
 
   return response.json();
