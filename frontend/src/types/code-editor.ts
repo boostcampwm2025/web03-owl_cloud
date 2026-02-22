@@ -1,4 +1,9 @@
 import { EditorLanguage } from '@/constants/code-editor';
+import type { RefObject } from 'react';
+import type { Socket } from 'socket.io-client';
+import type * as monaco from 'monaco-editor';
+import type * as Y from 'yjs';
+import type * as awarenessProtocol from 'y-protocols/awareness';
 
 export type CursorState = {
   lineNumber: number;
@@ -22,6 +27,35 @@ export type AwarenessState = {
   user?: UserState;
   cursor?: CursorState | null;
 };
+
+export type MonacoNamespace = typeof import('monaco-editor');
+
+export type YjsProviderRef = {
+  ydoc: Y.Doc;
+  awareness: awarenessProtocol.Awareness;
+};
+
+export type SyncState = {
+  lastSeq: number;
+  awaitingAck: boolean;
+  suppressSend: boolean;
+  dirty: boolean;
+  syncReqInFlight: boolean;
+  readySent: boolean;
+  lastSendAt: number;
+};
+
+export type UseCodeEditorSessionParams = {
+  autoComplete: boolean;
+  minimap: boolean;
+  onlyMyCursor: boolean;
+  nickname: string;
+  socket: Socket | null;
+};
+
+export type CursorCollectionsRef = RefObject<
+  Map<number, monaco.editor.IEditorDecorationsCollection>
+>;
 
 /* Yjs - payload 및 요구타입 정의 */
 
